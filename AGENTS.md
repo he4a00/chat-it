@@ -18,9 +18,11 @@ This file records architecture decisions, agent conventions, and a running log o
 
 - **Framework**: Next.js 16 (Turbopack, App Router, React 19)
 - **Styling**: Tailwind CSS v4 (`@theme inline`), OKLCH semantic color tokens
-- **UI System**: shadcn/ui with Base UI primitives (`base-sera` style, taupe theme)
+- **Design System & Theme**: VTRON (tweakcn) with high-contrast STEM/math palette (royal blue primary `#2e67ff`, deep midnight navy `#0e142b`, obsidian dark mode)
+- **UI System**: shadcn/ui with Base UI primitives (`base-sera` style)
 - **Primary Typography**: IBM Plex Sans (self-hosted via `next/font/local`)
 - **Icon Library**: `lucide-react`
+- **Product Architecture**: Detailed in [`arch.md`](file:///d:/Programming/chat-it/arch.md)
 - **Package Manager**: npm
 
 ---
@@ -70,3 +72,26 @@ This file records architecture decisions, agent conventions, and a running log o
 
 6. **Repository Verification**:
    - Verified clean compilation with `npm run typecheck`, `npm run lint`, and `npm run build`.
+
+### [2026-10-10] VTRON Design System & Architectural Specification (`arch.md`)
+
+1. **Theme Installation**:
+   - Installed the **VTRON** theme via `npx shadcn@latest add https://tweakcn.com/r/themes/cmjhgwebp000404jl22fv5sh6 -y`.
+   - Updated `app/globals.css` with semantic color tokens: crisp light background, deep midnight navy (`#0e142b`) foreground, royal blue (`#2e67ff`) primary, obsidian black dark mode (`#000000`), and card surfaces.
+   - Preserved self-hosted **IBM Plex Sans** typography mapping via `--font-sans: var(--font-sans)`.
+
+2. **Architectural Specification Document (`arch.md`)**:
+   - Authored [`arch.md`](file:///d:/Programming/chat-it/arch.md) capturing the complete product specification from the interview:
+     - ChatGPT-style responsive layout with left sidebar, session groupings, and dedicated Learner Profile & Memory drawer.
+     - Onboarding modal workflow (subject default: Math, skill levels, goals).
+     - Generative UI interactive widgets (Multiple-Choice Quiz, Flashcard Deck, Step-by-Step Math Problem, True/False Quick Check).
+     - Hybrid feedback loop (instant visual widget validation + automated context notification to LLM).
+     - Full widget state & session persistence via PostgreSQL and Drizzle ORM.
+     - Dual memory engine: deterministic topic accuracy metrics + LLM autonomous `updateLearnerNotes` tool.
+     - Socratic, encouraging pedagogical persona.
+     - Full technical blueprint (Next.js 16, React 19, Vercel AI SDK with Gemini 2.0 Flash, Clerk Auth with dev fallback, KaTeX).
+
+3. **Repository Verification**:
+   - Verified 0 type errors with `npm run typecheck`.
+   - Verified 0 lint errors with `npm run lint`.
+   - Verified clean Turbopack build with `npm run build`.
