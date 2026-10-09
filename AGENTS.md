@@ -95,3 +95,36 @@ This file records architecture decisions, agent conventions, and a running log o
    - Verified 0 type errors with `npm run typecheck`.
    - Verified 0 lint errors with `npm run lint`.
    - Verified clean Turbopack build with `npm run build`.
+
+### [2026-10-10] Clerk Authentication Integration (`feat/clerk-auth`)
+
+1. **Branch Creation**:
+   - Created dedicated feature branch `feat/clerk-auth`.
+
+2. **Clerk CLI & Linking**:
+   - Verified Clerk CLI (v3.4.1) and authenticated via `clerk auth login`.
+   - Initialized project linked to application `app_3KTglJfnW6cKUCwtBeb3Y9NxNIS`.
+   - Configured `.env.local` keys automatically via CLI.
+
+3. **Proxy & Routing**:
+   - Updated `proxy.ts` matcher to include Clerk auto-proxy path (`'/__clerk/:path*'`).
+   - Scaffolding added dedicated catch-all auth routes `app/sign-in/[[...sign-in]]/page.tsx` and `app/sign-up/[[...sign-up]]/page.tsx`.
+
+4. **shadcn/ui & Theme Integration**:
+   - Installed `@clerk/ui` and imported `@clerk/ui/themes/shadcn.css` in `app/globals.css`.
+   - Wrapped application body in `<ClerkProvider appearance={{ theme: shadcn }}>` within `app/layout.tsx`.
+
+5. **Auth Controls UI**:
+   - Implemented polished top navigation and landing screen in `app/page.tsx` using Clerk's `Show`, `SignInButton`, `SignUpButton`, and `UserButton` styled with VTRON theme tokens.
+
+6. **Input Component & Theme Normalization**:
+   - Replaced underline-only style in `components/ui/input.tsx` with standard full-bordered, rounded input styling (`rounded-md border border-input px-3 py-1 bg-transparent`).
+   - Normalized dark mode `--input` and `--border` from saturated dark blue (`oklch(0.2697 0.0888 269.7716)`) to crisp neutral (`oklch(0.26 0 0)`).
+   - Normalized `--radius` from exaggerated `1.3rem` (21px pill) to clean standard `0.5rem` (8px).
+   - Added normalized styles in `app/globals.css` ensuring Clerk's inputs render with standard borders, neutral surfaces, and clean placeholder text.
+
+7. **Verification**:
+   - Passed `clerk doctor` health check with 0 warnings/errors.
+   - Verified 0 TypeScript errors (`npm run typecheck`).
+   - Verified 0 ESLint errors (`npm run lint`).
+   - Verified clean production build with Next.js Turbopack (`npm run build`).
