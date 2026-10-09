@@ -1,16 +1,23 @@
-import { Geist, Geist_Mono, Noto_Sans, Playfair_Display } from "next/font/google"
+import localFont from "next/font/local"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { cn } from "@/lib/utils";
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
-const playfairDisplayHeading = Playfair_Display({subsets:['latin'],variable:'--font-heading'});
-
-const notoSans = Noto_Sans({subsets:['latin'],variable:'--font-sans'})
-
-const fontMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
+const ibmPlexSans = localFont({
+  src: [
+    {
+      path: "./fonts/ibm-plex-sans-latin-wght-normal.woff2",
+      style: "normal",
+    },
+    {
+      path: "./fonts/ibm-plex-sans-latin-wght-italic.woff2",
+      style: "italic",
+    },
+  ],
+  variable: "--font-sans",
+  display: "swap",
 })
 
 export default function RootLayout({
@@ -22,10 +29,12 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", notoSans.variable, playfairDisplayHeading.variable)}
+      className={cn("antialiased font-sans", ibmPlexSans.variable)}
     >
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
