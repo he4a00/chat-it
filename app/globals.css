@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "@clerk/ui/themes/shadcn.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -19,16 +20,15 @@
     --muted-foreground: oklch(0.1994 0.0470 270.6494);
     --accent: oklch(1.0000 0 0);
     --accent-foreground: oklch(0.5729 0.2337 264.3664);
-    --destructive: oklch(0.7058 0.1918 39.5760);
-    --border: oklch(0.9212 0.0033 17.2170);
-    --input: oklch(0.8452 0 0);
+    --border: oklch(0.88 0 0);
+    --input: oklch(0.88 0 0);
     --ring: oklch(0.5784 0.2303 263.8862);
     --chart-1: oklch(0.5729 0.2337 264.3664);
     --chart-2: oklch(0.7677 0.1312 194.1427);
     --chart-3: oklch(0.9649 0.1962 111.4216);
     --chart-4: oklch(0.8439 0.1679 169.5646);
     --chart-5: oklch(0.6411 0.2446 28.5713);
-    --radius: 1.3rem;
+    --radius: 0.5rem;
     --sidebar: oklch(0.9851 0 0);
     --sidebar-foreground: oklch(0.1994 0.0470 270.6494);
     --sidebar-primary: oklch(0.5729 0.2337 264.3664);
@@ -71,13 +71,12 @@
     --primary-foreground: oklch(1.0000 0 0);
     --secondary: oklch(1.0000 0 0);
     --secondary-foreground: oklch(0.1994 0.0470 270.6494);
-    --muted: oklch(0.2090 0 0);
-    --muted-foreground: oklch(0.5953 0.0215 276.1101);
+    --muted-foreground: oklch(0.68 0 0);
     --accent: oklch(0.1880 0.0868 261.9799);
     --accent-foreground: oklch(0.5683 0.2366 264.2478);
     --destructive: oklch(0.7058 0.1918 39.5760);
-    --border: oklch(0.2746 0.0130 279.0717);
-    --input: oklch(0.2697 0.0888 269.7716);
+    --border: oklch(0.26 0 0);
+    --input: oklch(0.26 0 0);
     --ring: oklch(0.5784 0.2303 263.8862);
     --chart-1: oklch(0.5729 0.2337 264.3664);
     --chart-2: oklch(0.7677 0.1312 194.1427);
@@ -93,7 +92,7 @@
     --sidebar-border: oklch(0.3706 0.0642 269.1117);
     --sidebar-ring: oklch(0.5784 0.2303 263.8862);
     --destructive-foreground: oklch(1.0000 0 0);
-    --radius: 1.3rem;
+    --radius: 0.5rem;
     --font-sans: Open Sans, sans-serif;
     --font-serif: Georgia, serif;
     --font-mono: Menlo, monospace;
