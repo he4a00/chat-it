@@ -128,3 +128,135 @@ This file records architecture decisions, agent conventions, and a running log o
    - Verified 0 TypeScript errors (`npm run typecheck`).
    - Verified 0 ESLint errors (`npm run lint`).
    - Verified clean production build with Next.js Turbopack (`npm run build`).
+
+### [2026-10-10] Shawky (شوقي) Frontend Workspace Shell Implementation
+
+1. **Rebranding to Shawky (شوقي)**:
+   - Updated product naming to **Shawky** (English) and **شوقي** (Arabic) with brand mark (`SH` / `ش`).
+
+2. **Modular Chat Workspace Components**:
+   - `components/chat/sidebar.tsx`: Collapsible sidebar with session partitions (`Today`, `Previous 7 Days`), search, "New Chat" button, Learner Memory trigger, Clerk auth footer, theme switcher, and language switcher.
+   - `components/chat/header.tsx`: Active subject pill, session title, and Memory sheet trigger.
+   - `components/chat/empty-state.tsx`: Shawky monogram emblem, personal greeting, and sleek horizontal triad action pills (`Learn`, `Quiz`, `Flashcards`).
+   - `components/chat/composer.tsx`: Floating capsule pill input (`rounded-full`, `#212121` surface, `+` button, raw input, `Think` badge, mic, cobalt blue circle send button).
+   - `components/chat/message-item.tsx`: User message bubble and Assistant Socratic card with KaTeX math rendering, interactive quiz widget, and ChatGPT-style action icons (Copy, Thumbs up/down, Read aloud, Regenerate).
+   - `components/chat/math-renderer.tsx`: KaTeX math parser safely rendering inline (`$...$`) and block display (`$$...$$`) LaTeX formulas.
+   - `components/chat/memory-drawer.tsx`: Slide-over sheet displaying practice streak, topic mastery matrix, and AI pedagogical notes.
+   - `app/page.tsx`: Unified workspace shell with bilingual Arabic RTL layout support and Clerk auth gating.
+
+3. **Typography & Styling**:
+   - Enforced **IBM Plex Sans** and **IBM Plex Sans Arabic** across the entire application.
+   - Isolated KaTeX math rendering in LTR inside Arabic RTL contexts.
+   - Provided `pb-40` bottom padding ensuring message streams never get obscured by the floating input pill.
+
+4. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`).
+   - Verified 0 ESLint errors (`npm run lint`).
+   - Verified clean Next.js Turbopack build (`npm run build`) in 2.0s with 0 warnings.
+
+### [2026-10-10] Phase 0: AI SDK Setup, Memory Drawer Removal & Mock Cleanup
+
+1. **AI SDK Dependencies Installed**:
+   - Installed `ai` (v7.0.137), `@ai-sdk/react` (v4.0.140), and `@ai-sdk/google` (v4.0.93).
+   - Added `GOOGLE_GENERATIVE_AI_API_KEY` placeholder configuration to `.env.local`.
+
+2. **Memory Drawer Deferred & Cleaned**:
+   - Deleted `components/chat/memory-drawer.tsx`.
+   - Removed all memory drawer triggers, pills, and state from `components/chat/sidebar.tsx`, `components/chat/header.tsx`, and `app/page.tsx`.
+
+3. **Repository Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`).
+   - Verified 0 ESLint errors (`npm run lint`).
+
+### [2026-10-11] Design Guidelines Finalized & Foundation Reset
+
+1. **Design Guidelines & Global Enforcements**:
+   - Enforced **IBM Plex Sans** & **IBM Plex Sans Arabic** globally across all elements via CSS custom properties and `@layer base`.
+   - Added global `cursor: pointer` rules for all buttons, links, and interactive elements.
+   - Preserved approved preview prototypes in `preview/index.html`.
+
+2. **Clean Foundation Reset**:
+   - Removed temporary chat mockup directory `components/chat/` (sidebar, composer, empty-state, header, message-item).
+   - Reset `app/page.tsx` to a clean, minimal foundation shell with Clerk authentication controls and Shawky branding.
+   - Kept pure foundation: VTRON theme, Base UI primitives in `components/ui/`, AI SDK packages (`ai`, `@ai-sdk/react`, `@ai-sdk/google`), KaTeX, and Clerk auth.
+
+3. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`).
+   - Verified 0 ESLint errors (`npm run lint`).
+   - Verified clean production build with Turbopack in 3.5s (`npm run build`).
+
+### [2026-10-11] Application Metadata Configuration
+
+1. **Root Layout Metadata**:
+   - Added Next.js standard `Metadata` configuration in `app/layout.tsx`.
+   - Configured `title.default` ("Shawky | AI Socratic STEM & Math Companion") and `title.template` ("%s | Shawky") following App Router best practices.
+   - Added descriptive summary and `applicationName: "Shawky"`.
+
+2. **Route-Level Child Page Titles**:
+   - Added route metadata to `app/sign-in/[[...sign-in]]/page.tsx` and `app/sign-up/[[...sign-up]]/page.tsx` resolving via the root title template.
+   - Cleaned up hydration-safe theme mounting in `components/sidebar/sidebar-footer.tsx` using `useSyncExternalStore`.
+
+3. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`).
+   - Verified 0 ESLint errors (`npm run lint`).
+   - Verified clean production build with Turbopack (`npm run build`).
+
+### [2026-10-11] Sidebar Implementation & Rounded Minimal Styling
+
+1. **Architecture & Folder Structure**:
+   - `types/session.ts`: Defined `ChatSession`, `SessionCategory` (`today`, `yesterday`, `previous_7_days`, `older`), and subject taxonomy.
+   - `lib/mock-sessions.ts`: Structured initial STEM sessions with timestamps and subjects.
+   - `components/sidebar/app-sidebar.tsx`: Root sidebar component built using shadcn/Base UI `Sidebar` primitive with `collapsible="offcanvas"`.
+   - `components/sidebar/sidebar-header.tsx`: Minimal header featuring circular monogram badge (`rounded-full`), sidebar collapse trigger, rounded new chat button (`rounded-full`), and rounded search bar (`rounded-full`).
+   - `components/sidebar/sidebar-search.tsx`: Capsule search input (`rounded-full`) with live query filtering, Lucide search icon, clear button, and `/` shortcut key.
+   - `components/sidebar/session-list.tsx`: Chronologically grouped previous sessions (`Today`, `Yesterday`, `Previous 7 Days`, `Older`) with subtle hover transitions (`hover:bg-sidebar-accent/70`), active state indicators, and inline options menu (`Rename`, `Delete`).
+
+2. **Styling & User Customizations**:
+   - Removed title ("Shawky شوقي") and description ("AI STEM Tutor") from the sidebar header, keeping only the circular rounded monogram logo (`rounded-full`).
+   - Styled the "New Chat" button and search bar with `rounded-full` pills.
+   - Removed the footer from the sidebar per user request.
+   - Calibrated semantic theme tokens for `--sidebar-accent` and `--sidebar-border` across light and dark modes in `app/globals.css`.
+
+3. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`).
+   - Verified 0 ESLint errors (`npm run lint`).
+   - Verified clean production build with Turbopack (`npm run build`).
+
+### [2026-10-11] Clerk Skills Installation
+
+1. **Installed Specialized Clerk Skills**:
+   - Installed core and Next.js Clerk agent skills into `.agents/skills/` via `npx skills add clerk/skills`:
+     - `clerk`: Authentication router dispatching to specialized skills.
+     - `clerk-cli`: Terminal operations with the `clerk` binary.
+     - `clerk-setup`: Quickstarts and framework configuration.
+     - `clerk-custom-ui`: Custom sign-in/up flows, appearance, hooks (`useSignIn`, `useSignUp`).
+     - `clerk-backend-api`: Backend REST API explorer and executor.
+     - `clerk-nextjs-patterns`: Server Actions, middleware, route handlers, and caching.
+     - `clerk-webhooks`: Real-time events, Svix webhook signature verification, and data syncing.
+   - Updated and locked hashes in `skills-lock.json`.
+
+2. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`).
+   - Verified 0 ESLint errors (`npm run lint`).
+
+### [2026-10-11] Clerk UserAccount Button with Dark Mode & Language Modal Integration
+
+1. **Sidebar Footer Auth States**:
+   - `components/sidebar/sidebar-footer.tsx`: Integrated Clerk `<Show when="signed-in">` and `<Show when="signed-out">`.
+   - **Signed Out**: Renders a rounded capsule `SignInButton` (`rounded-full`) with a log-in icon.
+   - **Signed In**: Renders Clerk's `<UserButton showName>` with avatar on the left, user name on the right, full-width clickability, and subtle hover transition (`hover:bg-sidebar-accent/70`).
+
+2. **Custom Preferences Page in Clerk UserProfile Modal**:
+   - `components/sidebar/user-preferences-page.tsx`: Injected a custom page into the Clerk User Profile modal using `<UserButton.UserProfilePage label="Preferences" url="preferences">`.
+   - **Appearance & Dark Mode Trigger**: Interactive selection between **Light**, **Dark**, and **System** themes, updating `next-themes` with active indicators.
+   - **Language Selector**: Interactive toggle between **English (LTR)** and **العربية (Arabic RTL)** with immediate HTML document direction updates and localStorage persistence.
+   - **Quick Actions in Popover**: Added direct triggers in `<UserButton.MenuItems>` (`<UserButton.Action>`) for opening Preferences modal, quick toggling dark/light mode, and switching language.
+
+3. **React 19 & Next.js 16 Conformance**:
+   - `hooks/use-language.ts`: Implemented `useSyncExternalStore` for hydration-safe, cascade-free language state and cross-tab storage sync.
+   - Used `useSyncExternalStore` in `sidebar-footer.tsx` and `user-preferences-page.tsx` for client mounting without `set-state-in-effect` warnings.
+
+4. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`).
+   - Verified 0 ESLint errors (`npm run lint`).
+   - Verified clean production build with Turbopack (`npm run build`).

@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shawky (شوقي) &mdash; AI STEM Tutor</title>
+  
+  <!-- Strict IBM Plex Sans & IBM Plex Sans Arabic Fonts ONLY -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- KaTeX for STEM Math Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"IBM Plex Sans"', '"IBM Plex Sans Arabic"', 'sans-serif'],
+          },
+          colors: {
+            vtron: {
+              blue: '#2e67ff',
+              navy: '#0e142b',
+              obsidian: '#000000',
+              inputDark: '#212121',
+              inputBorderDark: '#303030',
+              inputLight: '#f4f4f4',
+              inputBorderLight: '#e5e7eb',
+              cardDark: '#11151f',
+              cardBorderDark: '#202637',
+              sidebarDark: '#0a0d14',
+              sidebarBorderDark: '#1b212f',
+              cardLight: '#ffffff',
+              cardBorderLight: '#e2e8f0',
+              sidebarLight: '#f8fafc',
+              sidebarBorderLight: '#e2e8f0',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Strict font enforcement: IBM Plex Sans & IBM Plex Sans Arabic ONLY */
+    *, html, body, button, input, textarea, select {
+      font-family: 'IBM Plex Sans', 'IBM Plex Sans Arabic', sans-serif !important;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(140, 150, 170, 0.2);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(140, 150, 170, 0.4);
+    }
+
+    /* Ensure LaTeX math stays strictly LTR inside Arabic RTL context */
+    [dir="rtl"] .katex-display,
+    [dir="rtl"] .katex {
+      direction: ltr !important;
+      unicode-bidi: isolate !important;
+      display: inline-block;
+    }
+    [dir="rtl"] .katex-display {
+      display: block;
+    }
+
+    /* Animations */
+    .fade-in {
+      animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-[#fcfcfd] dark:bg-vtron-obsidian text-vtron-navy dark:text-[#ececec] antialiased overflow-hidden select-none flex flex-col h-screen">
+
+  <!-- ========================================================================= -->
+  <!-- TOP CONTROLLER TOOLBAR (For Live Testing & Review)                        -->
+  <!-- ========================================================================= -->
+  <header class="h-12 bg-white/95 dark:bg-[#0c0f17]/95 border-b border-gray-200 dark:border-vtron-cardBorderDark px-4 flex items-center justify-between z-50 shrink-0 text-xs">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 font-semibold">
+        <span id="top-badge-logo" class="size-6 bg-vtron-blue text-white rounded flex items-center justify-center text-xs font-bold">SH</span>
+        <span class="tracking-tight text-sm font-bold"><span id="top-brand-title">Shawky</span> <span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-vtron-blue/10 text-vtron-blue border border-vtron-blue/20">Design Prototype</span></span>
+      </div>
+
+      <div class="h-4 w-px bg-gray-200 dark:bg-gray-800"></div>
+      <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Font: <strong class="text-vtron-blue">IBM Plex Sans</strong></span>
+    </div>
+
+    <!-- Quick interactive controls -->
+    <div class="flex items-center gap-2">
+      <!-- Toggle Chat Stream / Empty Hero State -->
+      <button onclick="toggleStreamState()" id="btn-stream-toggle" class="flex items-center gap-1.5 px-2.5 py-1 rounded border border-gray-200 dark:border-vtron-cardBorderDark bg-gray-50 dark:bg-vtron-cardDark hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-mono text-[11px]">
+        <i data-lucide="message-square" class="size-3.5 text-vtron-blue"></i>
+        <span id="label-stream-state">State: Empty (New Chat)</span>
+      </button>
+
+      <!-- Toggle Guest vs Signed In -->
+      <button onclick="toggleAuthState()" id="btn-auth-toggle" class="flex items-center gap-1.5 px-2.5 py-1 rounded border border-gray-200 dark:border-vtron-cardBorderDark bg-gray-50 dark:bg-vtron-cardDark hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-mono text-[11px]">
+        <i data-lucide="user-check" class="size-3.5 text-green-500" id="icon-auth"></i>
+        <span id="label-auth-state">Ahmed (Signed In)</span>
+      </button>
+
+      <!-- Toggle Arabic RTL / English LTR -->
+      <button onclick="toggleLanguage()" id="btn-lang-toggle" class="flex items-center gap-1.5 px-2.5 py-1 rounded border border-vtron-blue/30 bg-vtron-blue/5 text-vtron-blue font-semibold hover:bg-vtron-blue/10 text-xs">
+        <i data-lucide="globe" class="size-3.5"></i>
+        <span id="label-lang">العربية (RTL)</span>
+      </button>
+
+      <!-- Dark / Light Theme Switcher -->
+      <button onclick="toggleTheme()" class="size-7 rounded flex items-center justify-center border border-gray-200 dark:border-vtron-cardBorderDark bg-gray-50 dark:bg-vtron-cardDark hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300" title="Toggle Dark/Light Mode">
+        <i data-lucide="sun" class="size-4 hidden dark:block"></i>
+        <i data-lucide="moon" class="size-4 block dark:hidden"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN WORKSPACE                                                            -->
+  <!-- ========================================================================= -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- LEFT SIDEBAR (Collapsible)                                            -->
+    <!-- --------------------------------------------------------------------- -->
+    <aside id="main-sidebar" class="w-64 bg-vtron-sidebarLight dark:bg-vtron-sidebarDark border-r border-vtron-sidebarBorderLight dark:border-vtron-sidebarBorderDark flex flex-col shrink-0 transition-all duration-200 z-30">
+      
+      <!-- Top Action Bar -->
+      <div class="p-3 border-b border-vtron-sidebarBorderLight dark:border-vtron-sidebarBorderDark flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div id="sidebar-logo-badge" class="size-6 bg-vtron-blue text-white rounded flex items-center justify-center text-xs font-bold">SH</div>
+            <span id="sidebar-brand-title" class="font-bold text-sm tracking-tight">Shawky</span>
+          </div>
+          <button onclick="toggleSidebarCollapse()" class="p-1 rounded text-gray-500 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800">
+            <i data-lucide="panel-left-close" class="size-4"></i>
+          </button>
+        </div>
+
+        <button onclick="setStreamState(false)" class="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-white dark:bg-vtron-cardDark border border-gray-200 dark:border-vtron-cardBorderDark hover:border-vtron-blue/50 text-xs font-medium text-gray-800 dark:text-gray-200 shadow-2xs group">
+          <span class="flex items-center gap-2">
+            <i data-lucide="plus" class="size-4 text-vtron-blue group-hover:scale-110 transition-transform"></i>
+            <span data-i18n="newChat">New Chat</span>
+          </span>
+          <kbd class="text-[10px] font-mono text-gray-400 border border-gray-200 dark:border-gray-700 px-1.5 py-0.5 rounded">Ctrl+K</kbd>
+        </button>
+
+        <!-- Search Bar -->
+        <div class="relative">
+          <i data-lucide="search" class="size-3.5 absolute start-2.5 top-2.5 text-gray-400"></i>
+          <input type="text" placeholder="Search sessions..." data-i18n-placeholder="searchSessions" class="w-full ps-8 pe-3 py-1.5 text-xs rounded-lg bg-transparent border border-gray-200 dark:border-vtron-cardBorderDark text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none focus:border-vtron-blue">
+        </div>
+      </div>
+
+      <!-- Chronological History -->
+      <div class="flex-1 overflow-y-auto p-2 space-y-3 text-xs">
+        <div>
+          <div class="px-2 py-1 text-[11px] font-mono uppercase tracking-wider text-gray-400 font-semibold" data-i18n="today">Today</div>
+          <div class="space-y-0.5 mt-1">
+            <button onclick="setStreamState(true)" class="w-full text-start px-2.5 py-2 rounded-lg bg-vtron-blue/10 dark:bg-vtron-blue/15 text-vtron-blue font-medium flex items-center justify-between group">
+              <span class="truncate flex items-center gap-2">
+                <i data-lucide="message-square-text" class="size-3.5 shrink-0"></i>
+                <span data-i18n="session1Title">Quadratic Formula Breakdown</span>
+              </span>
+              <i data-lucide="more-horizontal" class="size-3.5 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white shrink-0"></i>
+            </button>
+            <button class="w-full text-start px-2.5 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-vtron-cardDark text-gray-700 dark:text-gray-300 flex items-center justify-between group">
+              <span class="truncate flex items-center gap-2">
+                <i data-lucide="message-square" class="size-3.5 shrink-0 text-gray-400"></i>
+                <span data-i18n="session2Title">Derivative Power Rule Drill</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div class="px-2 py-1 text-[11px] font-mono uppercase tracking-wider text-gray-400 font-semibold" data-i18n="prev7Days">Previous 7 Days</div>
+          <div class="space-y-0.5 mt-1">
+            <button class="w-full text-start px-2.5 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-vtron-cardDark text-gray-700 dark:text-gray-300 flex items-center gap-2 truncate">
+              <i data-lucide="message-square" class="size-3.5 shrink-0 text-gray-400"></i>
+              <span data-i18n="session3Title">Matrix Eigenvalues Concept</span>
+            </button>
+            <button class="w-full text-start px-2.5 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-vtron-cardDark text-gray-700 dark:text-gray-300 flex items-center gap-2 truncate">
+              <i data-lucide="message-square" class="size-3.5 shrink-0 text-gray-400"></i>
+              <span data-i18n="session4Title">Newton's 2nd Law Friction</span>
+            </button>
+            <button class="w-full text-start px-2.5 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-vtron-cardDark text-gray-700 dark:text-gray-300 flex items-center gap-2 truncate">
+              <i data-lucide="message-square" class="size-3.5 shrink-0 text-gray-400"></i>
+              <span data-i18n="session5Title">Trig Unit Circle Quiz</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer (Memory Trigger + Auth Card) -->
+      <div class="p-3 border-t border-vtron-sidebarBorderLight dark:border-vtron-sidebarBorderDark space-y-2 bg-white/40 dark:bg-transparent">
+        
+        <!-- Learner Memory Pill -->
+        <button onclick="toggleMemoryDrawer(true)" class="w-full flex items-center justify-between p-2 rounded-lg bg-vtron-blue/5 dark:bg-vtron-blue/10 border border-vtron-blue/20 hover:border-vtron-blue/50 text-xs font-medium text-vtron-blue group">
+          <div class="flex items-center gap-2">
+            <div class="size-6 rounded bg-vtron-blue/20 flex items-center justify-center text-vtron-blue">
+              <i data-lucide="brain" class="size-3.5"></i>
+            </div>
+            <div class="text-start">
+              <div class="font-semibold text-vtron-blue leading-tight" data-i18n="learnerMemory">Learner Profile</div>
+              <div class="text-[10px] text-gray-500 dark:text-gray-400 font-mono">Streak: 🔥 5 Days</div>
+            </div>
+          </div>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-vtron-blue text-white font-mono font-bold">88%</span>
+        </button>
+
+        <!-- Authenticated Profile Card -->
+        <div id="auth-signed-in-card" class="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-vtron-cardDark border border-gray-200 dark:border-vtron-cardBorderDark">
+          <div class="flex items-center gap-2 truncate">
+            <div class="size-7 rounded-full bg-vtron-blue text-white font-bold text-xs flex items-center justify-center shrink-0">
+              AH
+            </div>
+            <div class="truncate text-start">
+              <div class="font-semibold text-xs truncate">Ahmed Hashem</div>
+              <div class="text-[10px] text-gray-400 font-mono truncate">a.hashem@student.edu</div>
+            </div>
+          </div>
+          <i data-lucide="ellipsis-vertical" class="size-4 text-gray-400 hover:text-white cursor-pointer"></i>
+        </div>
+
+        <!-- Guest Card (Shown when unauthenticated) -->
+        <div id="auth-guest-card" class="hidden p-2.5 rounded-lg bg-gray-50 dark:bg-vtron-cardDark border border-gray-200 dark:border-vtron-cardBorderDark space-y-2">
+          <div class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight" data-i18n="guestNotice">
+            Sign in to track your mastery & save sessions.
+          </div>
+          <div class="grid grid-cols-2 gap-1.5">
+            <button onclick="triggerAuthModal('Sign In')" class="px-2 py-1.5 rounded-md text-xs font-semibold border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-center" data-i18n="signIn">
+              Sign In
+            </button>
+            <button onclick="triggerAuthModal('Sign Up')" class="px-2 py-1.5 rounded-md text-xs font-semibold bg-vtron-blue hover:bg-vtron-blue/90 text-white text-center shadow-xs" data-i18n="signUp">
+              Sign Up
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- MAIN CHAT STAGE                                                       -->
+    <!-- --------------------------------------------------------------------- -->
+    <main class="flex-1 flex flex-col h-full bg-[#fcfcfd] dark:bg-vtron-obsidian overflow-hidden relative">
+
+      <!-- Chat Top Navigation Bar -->
+      <header class="h-13 border-b border-gray-200 dark:border-vtron-cardBorderDark bg-white/80 dark:bg-vtron-obsidian/80 backdrop-blur px-4 flex items-center justify-between shrink-0 z-20">
+        <div class="flex items-center gap-3">
+          <button onclick="toggleSidebarCollapse()" id="btn-sidebar-expand" class="hidden p-1.5 rounded hover:bg-gray-100 dark:hover:bg-vtron-cardDark text-gray-600 dark:text-gray-300">
+            <i data-lucide="panel-left" class="size-4"></i>
+          </button>
+
+          <!-- Active Subject Indicator -->
+          <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-vtron-cardBorderDark bg-gray-50 dark:bg-vtron-cardDark text-xs font-semibold text-gray-800 dark:text-gray-200">
+            <span class="size-2 rounded-full bg-vtron-blue"></span>
+            <span data-i18n="activeSubject">Mathematics: Algebra & Calculus II</span>
+          </div>
+
+          <span class="text-xs text-gray-300 dark:text-gray-700 hidden sm:inline-block">|</span>
+          <span class="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline-block truncate max-w-xs font-medium" data-i18n="currentSessionHeading">
+            Session: Quadratic Formula Breakdown
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Guest Header Callout -->
+          <div id="header-guest-cta" class="hidden items-center gap-2">
+            <button onclick="triggerAuthModal('Sign In')" class="text-xs font-semibold text-gray-600 dark:text-gray-300 hover:text-vtron-blue" data-i18n="signIn">Sign In</button>
+            <button onclick="triggerAuthModal('Sign Up')" class="text-xs font-semibold bg-vtron-blue text-white px-2.5 py-1 rounded-md" data-i18n="signUp">Sign Up</button>
+            <div class="h-4 w-px bg-gray-200 dark:bg-gray-800"></div>
+          </div>
+
+          <button class="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-vtron-cardDark text-gray-500 hover:text-black dark:hover:text-white" title="Share Session">
+            <i data-lucide="share-2" class="size-4"></i>
+          </button>
+
+          <button onclick="toggleMemoryDrawer(true)" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-vtron-blue/10 text-vtron-blue border border-vtron-blue/20 hover:bg-vtron-blue/15 text-xs font-medium">
+            <i data-lucide="brain" class="size-3.5"></i>
+            <span class="hidden md:inline" data-i18n="memoryDrawer">Memory & Mastery</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- ------------------------------------------------------------------- -->
+      <!-- VIEW 1: ACTIVE CHAT STREAM (With Generous Bottom Padding so NOT Cut) -->
+      <!-- ------------------------------------------------------------------- -->
+      <div id="chat-stream-view" class="hidden flex-1 overflow-y-auto px-4 sm:px-6 pt-6 pb-40 space-y-6 max-w-3xl w-full mx-auto">
+
+        <!-- Message 1: User Prompt -->
+        <div class="flex justify-end fade-in">
+          <div class="bg-vtron-blue text-white rounded-2xl rounded-tr-xs px-5 py-3.5 max-w-xl text-sm leading-relaxed shadow-sm space-y-1">
+            <p data-i18n="msg1User">
+              I'm having trouble understanding how to find the roots of $2x^2 + 5x - 3 = 0$ using the quadratic formula. Can you explain step by step and give me a practice problem?
+            </p>
+            <div class="text-[10px] text-white/70 text-end font-mono">10:42 AM</div>
+          </div>
+        </div>
+
+        <!-- Message 2: Assistant Socratic Response -->
+        <div class="flex justify-start items-start gap-3.5 fade-in">
+          <div id="msg-tutor-avatar" class="size-8 rounded-full bg-vtron-blue text-white flex items-center justify-center text-xs font-bold shrink-0 mt-1 shadow-sm">
+            SH
+          </div>
+
+          <div class="flex-1 space-y-4 max-w-2xl text-sm text-gray-800 dark:text-gray-200">
+            <!-- Socratic Explanation Card -->
+            <div class="bg-white dark:bg-vtron-cardDark border border-gray-200 dark:border-vtron-cardBorderDark rounded-2xl rounded-tl-xs p-5 sm:p-6 shadow-2xs space-y-3.5">
+              <div class="flex items-center gap-2 text-xs font-semibold text-vtron-blue">
+                <i data-lucide="sparkles" class="size-3.5"></i>
+                <span data-i18n="socraticTutor">Shawky &mdash; Socratic Tutor</span>
+              </div>
+
+              <p class="leading-relaxed" data-i18n="msg2Explanation1">
+                Great question! The standard quadratic formula solves any equation in the standard form $ax^2 + bx + c = 0$:
+              </p>
+
+              <!-- KaTeX Formula Display Box -->
+              <div class="p-3.5 bg-gray-50 dark:bg-vtron-obsidian border border-gray-200 dark:border-gray-800 rounded-xl text-center overflow-x-auto text-base">
+                $$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$
+              </div>
+
+              <p class="leading-relaxed" data-i18n="msg2Explanation2">
+                For your equation $2x^2 + 5x - 3 = 0$, our coefficients are:
+                <br>
+                $\bullet\ a = 2$ &nbsp;|&nbsp; $\bullet\ b = 5$ &nbsp;|&nbsp; $\bullet\ c = -3$
+              </p>
+
+              <!-- Discriminant Insight Callout -->
+              <div class="p-3.5 rounded-xl bg-vtron-blue/5 border border-vtron-blue/20 text-xs text-vtron-blue space-y-1">
+                <div class="font-bold flex items-center gap-1.5">
+                  <i data-lucide="lightbulb" class="size-4"></i>
+                  <span data-i18n="discriminantNoteTitle">Discriminant Insight:</span>
+                </div>
+                <p data-i18n="discriminantNoteBody" class="leading-relaxed">
+                  $\Delta = b^2 - 4ac = (5)^2 - 4(2)(-3) = 25 + 24 = 49$. Since $49 > 0$, we know there are two distinct rational roots!
+                </p>
+              </div>
+            </div>
+
+            <!-- GENERATIVE UI WIDGET: Interactive Multiple-Choice Quiz -->
+            <div class="border border-gray-200 dark:border-vtron-cardBorderDark bg-white dark:bg-vtron-cardDark rounded-2xl p-5 sm:p-6 shadow-sm space-y-4">
+              <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full bg-vtron-blue/10 text-vtron-blue font-bold text-[11px] uppercase tracking-wide">
+                    Interactive Quiz
+                  </span>
+                  <span class="text-xs text-gray-500 font-medium" data-i18n="quizPromptSubject">Quadratic Verification</span>
+                </div>
+                <span class="text-xs text-gray-400 font-mono">Problem 1 of 1</span>
+              </div>
+
+              <div class="space-y-2.5">
+                <h4 class="font-semibold text-sm leading-snug" data-i18n="quizQuestion">
+                  What are the two final roots $x_1$ and $x_2$ of $2x^2 + 5x - 3 = 0$?
+                </h4>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs pt-1">
+                  <button onclick="handleQuizAnswer(this, false)" class="quiz-opt p-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-vtron-obsidian hover:border-vtron-blue text-start flex items-center justify-between transition-all">
+                    <span>A) $x = 1,\ x = -3$</span>
+                    <i data-lucide="circle" class="size-4 text-gray-400"></i>
+                  </button>
+                  <button onclick="handleQuizAnswer(this, true)" class="quiz-opt p-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-vtron-obsidian hover:border-vtron-blue text-start flex items-center justify-between transition-all">
+                    <span>B) $x = \frac{1}{2},\ x = -3$</span>
+                    <i data-lucide="circle" class="size-4 text-gray-400"></i>
+                  </button>
+                  <button onclick="handleQuizAnswer(this, false)" class="quiz-opt p-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-vtron-obsidian hover:border-vtron-blue text-start flex items-center justify-between transition-all">
+                    <span>C) $x = -\frac{1}{2},\ x = 3$</span>
+                    <i data-lucide="circle" class="size-4 text-gray-400"></i>
+                  </button>
+                  <button onclick="handleQuizAnswer(this, false)" class="quiz-opt p-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-vtron-obsidian hover:border-vtron-blue text-start flex items-center justify-between transition-all">
+                    <span>D) $x = 2,\ x = -1.5$</span>
+                    <i data-lucide="circle" class="size-4 text-gray-400"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Instant Feedback Container -->
+              <div id="quiz-feedback" class="hidden p-3.5 rounded-xl bg-green-500/10 border border-green-500/30 text-xs text-green-600 dark:text-green-400">
+                <div class="font-bold flex items-center gap-2">
+                  <i data-lucide="check-circle-2" class="size-4 shrink-0"></i>
+                  <span data-i18n="quizCorrect">Correct! $x = \frac{-5 \pm 7}{4}$, so $x = \frac{2}{4} = \frac{1}{2}$ and $x = \frac{-12}{4} = -3$.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Response Icons -->
+            <div class="flex items-center gap-1.5 text-gray-400 text-xs pt-1">
+              <button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-black dark:hover:text-white" title="Copy response">
+                <i data-lucide="copy" class="size-3.5"></i>
+              </button>
+              <button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-black dark:hover:text-white" title="Helpful response">
+                <i data-lucide="thumbs-up" class="size-3.5"></i>
+              </button>
+              <button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-black dark:hover:text-white" title="Not helpful">
+                <i data-lucide="thumbs-down" class="size-3.5"></i>
+              </button>
+              <button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-black dark:hover:text-white" title="Read aloud">
+                <i data-lucide="volume-2" class="size-3.5"></i>
+              </button>
+              <button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-black dark:hover:text-white" title="Regenerate">
+                <i data-lucide="rotate-cw" class="size-3.5"></i>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ------------------------------------------------------------------- -->
+      <!-- VIEW 2: REFINED SHAWKY EMPTY STATE (Clean, Minimalist Triad: Learn, Quiz, Flashcards) -->
+      <!-- ------------------------------------------------------------------- -->
+      <div id="chat-empty-hero-view" class="flex-1 overflow-y-auto flex flex-col items-center justify-center px-4 py-8 pb-32 max-w-xl w-full mx-auto text-center space-y-6">
+        
+        <!-- Distinct Shawky Monogram Emblem -->
+        <div class="relative group">
+          <div class="size-13 rounded-2xl bg-[#f8faff] dark:bg-[#151922] border border-vtron-blue/30 text-vtron-blue flex items-center justify-center text-lg font-bold shadow-xs">
+            <span id="hero-emblem-text">SH</span>
+          </div>
+        </div>
+
+        <!-- Personal, Warm Heading -->
+        <div class="space-y-1.5">
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white" data-i18n="heroGreeting">
+            Hey Ahmed, what are we solving today?
+          </h1>
+          <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto leading-relaxed" data-i18n="heroSubtext">
+            Your personal Socratic tutor. Choose an action or ask directly.
+          </p>
+        </div>
+
+        <!-- Sleek Horizontal Triad Action Pills: Learn | Quiz | Flashcards (No Chunky Cards!) -->
+        <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+          
+          <!-- Pill 1: Learn -->
+          <button onclick="insertPromptAndSend('Explain a math concept to me step-by-step with intuitive examples.')" class="px-4 py-2 rounded-full border border-gray-300/80 dark:border-[#333333] bg-[#f4f4f4] dark:bg-[#1a1a1a] hover:bg-gray-200 dark:hover:bg-[#262626] text-gray-700 dark:text-gray-200 text-xs font-medium flex items-center gap-2 transition-all shadow-2xs hover:border-vtron-blue/60 group">
+            <i data-lucide="book-open" class="size-3.5 text-vtron-blue group-hover:scale-110 transition-transform"></i>
+            <span data-i18n="pillLearn">Learn</span>
+          </button>
+
+          <!-- Pill 2: Quiz -->
+          <button onclick="insertPromptAndSend('Quiz me on a topic: give me 3 multiple-choice questions with hints.')" class="px-4 py-2 rounded-full border border-gray-300/80 dark:border-[#333333] bg-[#f4f4f4] dark:bg-[#1a1a1a] hover:bg-gray-200 dark:hover:bg-[#262626] text-gray-700 dark:text-gray-200 text-xs font-medium flex items-center gap-2 transition-all shadow-2xs hover:border-green-500/60 group">
+            <i data-lucide="check-circle-2" class="size-3.5 text-green-500 group-hover:scale-110 transition-transform"></i>
+            <span data-i18n="pillQuiz">Quiz</span>
+          </button>
+
+          <!-- Pill 3: Flashcards -->
+          <button onclick="insertPromptAndSend('Create an interactive flashcard deck of 5 key formulas with spaced repetition.')" class="px-4 py-2 rounded-full border border-gray-300/80 dark:border-[#333333] bg-[#f4f4f4] dark:bg-[#1a1a1a] hover:bg-gray-200 dark:hover:bg-[#262626] text-gray-700 dark:text-gray-200 text-xs font-medium flex items-center gap-2 transition-all shadow-2xs hover:border-purple-500/60 group">
+            <i data-lucide="layers" class="size-3.5 text-purple-500 group-hover:scale-110 transition-transform"></i>
+            <span data-i18n="pillFlashcards">Flashcards</span>
+          </button>
+
+        </div>
+
+      </div>
+
+      <!-- ------------------------------------------------------------------- -->
+      <!-- FLOATING CAPSULE CHAT INPUT (EXACTLY LIKE IMAGE 2 & 3)               -->
+      <!-- ------------------------------------------------------------------- -->
+      <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#fcfcfd] dark:from-vtron-obsidian via-[#fcfcfd]/90 dark:via-vtron-obsidian/90 to-transparent pt-8 pb-4 px-4 z-20 pointer-events-none">
+        <div class="max-w-3xl mx-auto space-y-2 pointer-events-auto">
+
+          <!-- Exact ChatGPT-Style Input Capsule Pill (Image 3) -->
+          <div class="w-full bg-[#f4f4f4] dark:bg-[#212121] border border-gray-300/70 dark:border-[#303030] rounded-full px-3.5 py-2 flex items-center gap-3 shadow-lg transition-all focus-within:border-vtron-blue/80 focus-within:ring-1 focus-within:ring-vtron-blue/50">
+            
+            <!-- Left Action Button (+) -->
+            <button class="p-1 rounded-full text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors shrink-0" title="Attach file or formula">
+              <i data-lucide="plus" class="size-5"></i>
+            </button>
+
+            <!-- Raw Text Input (No chips underneath) -->
+            <input 
+              id="main-chat-input" 
+              type="text" 
+              placeholder="Ask Shawky..." 
+              data-i18n-placeholder="composerPlaceholder" 
+              class="flex-1 bg-transparent border-0 outline-none text-sm text-gray-800 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 leading-normal"
+              onkeydown="if(event.key === 'Enter') submitPrompt();"
+            >
+
+            <!-- Right Action Cluster -->
+            <div class="flex items-center gap-2 shrink-0">
+              <!-- "Think" Reasoning Badge Button -->
+              <button class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors" title="Toggle Deep Mathematical Reasoning">
+                <i data-lucide="brain" class="size-4 text-vtron-blue"></i>
+                <span class="text-xs">Think</span>
+              </button>
+
+              <!-- Voice / Microphone Icon -->
+              <button class="p-1.5 rounded-full text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors" title="Voice Input">
+                <i data-lucide="mic" class="size-4"></i>
+              </button>
+
+              <!-- High-Contrast Blue Send Button Circle (Image 3) -->
+              <button onclick="submitPrompt()" class="size-8 rounded-full bg-vtron-blue hover:bg-blue-600 active:scale-95 text-white flex items-center justify-center transition-all shadow-md shrink-0" title="Send">
+                <i data-lucide="arrow-up" class="size-4 font-bold"></i>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Bottom Disclaimer Notice -->
+          <div class="text-[11px] text-center text-gray-400 dark:text-gray-500 font-normal" data-i18n="disclaimer">
+            Shawky can make mistakes. Check important mathematical info.
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- SLIDE-OVER RIGHT DRAWER: LEARNER PROFILE & MEMORY                     -->
+    <!-- --------------------------------------------------------------------- -->
+    <aside id="memory-drawer" class="fixed inset-y-0 end-0 w-80 sm:w-96 bg-white dark:bg-vtron-cardDark border-s border-gray-200 dark:border-vtron-cardBorderDark shadow-2xl z-50 transform translate-x-full rtl:-translate-x-full transition-transform duration-300 flex flex-col">
+      
+      <div class="p-4 border-b border-gray-200 dark:border-vtron-cardBorderDark flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="size-7 rounded bg-vtron-blue/15 text-vtron-blue flex items-center justify-center">
+            <i data-lucide="brain" class="size-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm leading-tight" data-i18n="drawerTitle">Learner Profile & Memory</h3>
+            <p class="text-[10px] text-gray-400 font-mono">Dual-Engine Continuous Adaptive Memory</p>
+          </div>
+        </div>
+        <button onclick="toggleMemoryDrawer(false)" class="p-1 rounded text-gray-400 hover:text-black dark:hover:text-white">
+          <i data-lucide="x" class="size-5"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 space-y-6 text-xs">
+        
+        <div class="grid grid-cols-2 gap-2">
+          <div class="p-3 rounded-xl border border-gray-200 dark:border-vtron-cardBorderDark bg-gray-50 dark:bg-vtron-obsidian space-y-1">
+            <div class="text-gray-400 text-[10px] font-mono uppercase">Practice Streak</div>
+            <div class="text-lg font-bold text-vtron-blue flex items-center gap-1">
+              <span>🔥 5</span> <span class="text-xs font-normal text-gray-400">Days</span>
+            </div>
+          </div>
+          <div class="p-3 rounded-xl border border-gray-200 dark:border-vtron-cardBorderDark bg-gray-50 dark:bg-vtron-obsidian space-y-1">
+            <div class="text-gray-400 text-[10px] font-mono uppercase">Overall Accuracy</div>
+            <div class="text-lg font-bold text-green-500">88%</div>
+          </div>
+        </div>
+
+        <div class="space-y-2.5">
+          <h4 class="font-bold text-xs uppercase tracking-wider text-gray-400 font-mono" data-i18n="masteryBreakdownTitle">
+            Topic Mastery Matrix
+          </h4>
+
+          <div class="space-y-3">
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-medium">Quadratic Equations & Roots</span>
+                <span class="font-mono text-vtron-blue font-bold">94%</span>
+              </div>
+              <div class="h-2 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden">
+                <div class="h-full bg-vtron-blue rounded-full" style="width: 94%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-medium">Calculus: Power & Product Rules</span>
+                <span class="font-mono text-vtron-blue font-bold">82%</span>
+              </div>
+              <div class="h-2 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden">
+                <div class="h-full bg-vtron-blue rounded-full" style="width: 82%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-medium">Trigonometric Identities</span>
+                <span class="font-mono text-amber-500 font-bold">58%</span>
+              </div>
+              <div class="h-2 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden">
+                <div class="h-full bg-amber-500 rounded-full" style="width: 58%"></div>
+              </div>
+              <p class="text-[10px] text-gray-400 mt-0.5">⚠️ Practice recommended: Unit Circle</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-xs uppercase tracking-wider text-gray-400 font-mono" data-i18n="aiNotesTitle">
+              Autonomous AI Pedagogical Notes
+            </h4>
+            <span class="text-[10px] font-mono text-vtron-blue">3 Active</span>
+          </div>
+
+          <div class="space-y-2">
+            <div class="p-3 rounded-xl border border-vtron-blue/20 bg-vtron-blue/5 space-y-1">
+              <div class="flex items-center justify-between text-[10px] text-vtron-blue font-mono">
+                <span>Learning Preference</span>
+                <span>Confidence 95%</span>
+              </div>
+              <p class="text-xs text-gray-700 dark:text-gray-300 leading-snug" data-i18n="aiNote1">
+                Responds best to visual/geometric representations of algebraic terms before deriving formulas.
+              </p>
+            </div>
+
+            <div class="p-3 rounded-xl border border-gray-200 dark:border-vtron-cardBorderDark bg-gray-50 dark:bg-vtron-obsidian space-y-1">
+              <div class="flex items-center justify-between text-[10px] text-gray-400 font-mono">
+                <span>Identified Misconception</span>
+                <span>Confidence 89%</span>
+              </div>
+              <p class="text-xs text-gray-700 dark:text-gray-300 leading-snug" data-i18n="aiNote2">
+                Frequently forgets negative sign propagation when expanding terms like $-(b^2 - 4ac)$.
+              </p>
+            </div>
+
+            <div class="p-3 rounded-xl border border-gray-200 dark:border-vtron-cardBorderDark bg-gray-50 dark:bg-vtron-obsidian space-y-1">
+              <div class="flex items-center justify-between text-[10px] text-gray-400 font-mono">
+                <span>Goal Progression</span>
+                <span>Confidence 92%</span>
+              </div>
+              <p class="text-xs text-gray-700 dark:text-gray-300 leading-snug" data-i18n="aiNote3">
+                Preparing for College Calculus AB exam; pace adjusted for fast step-by-step verification.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="p-3 border-t border-gray-200 dark:border-vtron-cardBorderDark bg-gray-50 dark:bg-vtron-obsidian flex justify-between items-center text-xs">
+        <span class="text-gray-400 font-mono text-[10px]">Auto-synced with PostgreSQL</span>
+        <button onclick="toggleMemoryDrawer(false)" class="px-3 py-1 bg-vtron-blue text-white rounded-md font-medium">Done</button>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- CLERK AUTH DEMO MODAL                                                     -->
+  <!-- ========================================================================= -->
+  <div id="clerk-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-white dark:bg-vtron-cardDark border border-gray-200 dark:border-vtron-cardBorderDark rounded-2xl shadow-2xl p-6 space-y-4">
+      <div class="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-3">
+        <div class="flex items-center gap-2">
+          <div id="modal-logo-badge" class="size-6 bg-vtron-blue text-white rounded flex items-center justify-center text-xs font-bold">SH</div>
+          <h3 id="clerk-modal-title" class="font-bold text-sm">Sign in to Shawky</h3>
+        </div>
+        <button onclick="closeAuthModal()" class="text-gray-400 hover:text-black dark:hover:text-white">
+          <i data-lucide="x" class="size-4"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+        Sign in to save your active prompt, track your mathematical mastery score, and retain your learning streak!
+      </p>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-medium mb-1">Email address</label>
+          <input type="email" value="alex.student@gmail.com" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent text-gray-800 dark:text-gray-200">
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Password</label>
+          <input type="password" value="••••••••••••" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent text-gray-800 dark:text-gray-200">
+        </div>
+
+        <button onclick="simulateAuthSuccess()" class="w-full py-2 bg-vtron-blue text-white rounded-lg font-semibold hover:bg-vtron-blue/90 shadow-sm mt-2">
+          Continue with Clerk
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT: CONTROLLER & ARABIC I18N                                      -->
+  <!-- ========================================================================= -->
+  <script>
+    let isStreamActive = false; // Start on the fresh Empty state by default
+    let isAuthenticated = true;
+    let isArabic = false;
+    let isSidebarCollapsed = false;
+
+    const translations = {
+      en: {
+        brandName: "Shawky",
+        brandBadge: "SH",
+        newChat: "New Chat",
+        searchSessions: "Search sessions...",
+        today: "Today",
+        prev7Days: "Previous 7 Days",
+        session1Title: "Quadratic Formula Breakdown",
+        session2Title: "Derivative Power Rule Drill",
+        session3Title: "Matrix Eigenvalues Concept",
+        session4Title: "Newton's 2nd Law Friction",
+        session5Title: "Trig Unit Circle Quiz",
+        learnerMemory: "Learner Profile",
+        guestNotice: "Sign in to track your mastery & save sessions.",
+        signIn: "Sign In",
+        signUp: "Sign Up",
+        activeSubject: "Mathematics: Algebra & Calculus II",
+        currentSessionHeading: "Session: Quadratic Formula Breakdown",
+        memoryDrawer: "Memory & Mastery",
+        msg1User: "I'm having trouble understanding how to find the roots of $2x^2 + 5x - 3 = 0$ using the quadratic formula. Can you explain step by step and give me a practice problem?",
+        socraticTutor: "Shawky — Socratic Tutor",
+        msg2Explanation1: "Great question! The standard quadratic formula solves any equation in the standard form $ax^2 + bx + c = 0$:",
+        msg2Explanation2: "For your equation $2x^2 + 5x - 3 = 0$, our coefficients are:<br>$\bullet\\ a = 2$ &nbsp;|&nbsp; $\bullet\\ b = 5$ &nbsp;|&nbsp; $\bullet\\ c = -3$",
+        discriminantNoteTitle: "Discriminant Insight:",
+        discriminantNoteBody: "$\\Delta = b^2 - 4ac = (5)^2 - 4(2)(-3) = 25 + 24 = 49$. Since $49 > 0$, we know there are two distinct rational roots!",
+        quizPromptSubject: "Quadratic Verification",
+        quizQuestion: "What are the two final roots $x_1$ and $x_2$ of $2x^2 + 5x - 3 = 0$?",
+        quizCorrect: "Correct! $x = \\frac{-5 \\pm 7}{4}$, so $x = \\frac{2}{4} = \\frac{1}{2}$ and $x = \\frac{-12}{4} = -3$.",
+        heroGreeting: "Hey Ahmed, what are we solving today?",
+        heroSubtext: "Your personal Socratic tutor. Choose an action or ask directly.",
+        pillLearn: "Learn",
+        pillQuiz: "Quiz",
+        pillFlashcards: "Flashcards",
+        composerPlaceholder: "Ask Shawky...",
+        disclaimer: "Shawky can make mistakes. Check important mathematical info.",
+        drawerTitle: "Learner Profile & Memory",
+        masteryBreakdownTitle: "Topic Mastery Matrix",
+        aiNotesTitle: "Autonomous AI Pedagogical Notes",
+        aiNote1: "Responds best to visual/geometric representations of algebraic terms before deriving formulas.",
+        aiNote2: "Frequently forgets negative sign propagation when expanding terms like $-(b^2 - 4ac)$.",
+        aiNote3: "Preparing for College Calculus AB exam; pace adjusted for fast step-by-step verification."
+      },
+      ar: {
+        brandName: "شوقي",
+        brandBadge: "ش",
+        newChat: "محادثة جديدة",
+        searchSessions: "البحث في الجلسات...",
+        today: "اليوم",
+        prev7Days: "الأيام السابقة",
+        session1Title: "شرح القانون العام للمعادلة التربيعية",
+        session2Title: "تمارين على قاعدة القوى في التفاضل",
+        session3Title: "مفهوم القيم الذاتية للمصفوفات",
+        session4Title: "قانون نيوتن الثاني وقوة الاحتكاك",
+        session5Title: "اختبار دائرة الوحدة المثلثية",
+        learnerMemory: "ملف المتعلم والذاكرة",
+        guestNotice: "سجّل الدخول لتتبع مستوى إتقانك وحفظ محادثاتك.",
+        signIn: "تسجيل الدخول",
+        signUp: "إنشاء حساب",
+        activeSubject: "الرياضيات: الجبر والتفاضل والتكامل ٢",
+        currentSessionHeading: "الجلسة: القانون العام للمعادلة التربيعية",
+        memoryDrawer: "الذاكرة ومستوى الإتقان",
+        msg1User: "أواجه صعوبة في إيجاد جذور المعادلة $2x^2 + 5x - 3 = 0$ باستخدام القانون العام. هل يمكنك شرحها خطوة بخطوة وإعطائي مسألة تدريبية؟",
+        socraticTutor: "شوقي — المعلم السقراطي",
+        msg2Explanation1: "سؤال ممتاز! القانون العام يحل أي معادلة تربيعية على صورتها القياسية $ax^2 + bx + c = 0$:",
+        msg2Explanation2: "بالنسبة للمعادلة $2x^2 + 5x - 3 = 0$، المعاملات هي:<br>$\bullet\\ a = 2$ &nbsp;|&nbsp; $\bullet\\ b = 5$ &nbsp;|&nbsp; $\bullet\\ c = -3$",
+        discriminantNoteTitle: "إضاءة المميز (المميز $\\Delta$):",
+        discriminantNoteBody: "$\\Delta = b^2 - 4ac = (5)^2 - 4(2)(-3) = 25 + 24 = 49$. وبما أن $49 > 0$، فهناك جذران نسبيان حقيقيان!",
+        quizPromptSubject: "التحقق من الحل",
+        quizQuestion: "ما هما الجذزان النهائيان $x_1$ و $x_2$ للمعادلة $2x^2 + 5x - 3 = 0$؟",
+        quizCorrect: "إجابة صحيحة وممتازة! $x = \\frac{-5 \\pm 7}{4}$، إذن $x = \\frac{2}{4} = \\frac{1}{2}$ و $x = \\frac{-12}{4} = -3$.",
+        heroGreeting: "أهلاً يا أحمد، ما الذي تودّ حلّه اليوم؟",
+        heroSubtext: "معلمك السقراطي. اختر ما يناسبك أو ابدأ بالسؤال مباشرة.",
+        pillLearn: "تعلّم",
+        pillQuiz: "اختبار",
+        pillFlashcards: "بطاقات",
+        composerPlaceholder: "اسأل شوقي...",
+        disclaimer: "قد يرتكب شوقي أخطاء أحياناً. يُرجى التحقق من المعلومات الرياضية الهامة.",
+        drawerTitle: "ملف المتعلم وسجل الذاكرة",
+        masteryBreakdownTitle: "مصفوفة إتقان الموضوعات",
+        aiNotesTitle: "ملاحظات الذكاء الاصطناعي التربوية",
+        aiNote1: "يستوعب بشكل أفضل عبر التوضيحات الهندسية والبصرية قبل القوانين الجبرية المجردة.",
+        aiNote2: "يقع في خطأ توزيع الإشارة السالبة عند فك المقادير مثل $-(b^2 - 4ac)$.",
+        aiNote3: "يستعد لاختبار التفاضل والتكامل المتقدم؛ ويفضل الوتيرة السريعة مع التحقق المنهجي."
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      renderAllMath();
+    });
+
+    function renderAllMath() {
+      if (window.renderMathInElement) {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    function toggleStreamState() {
+      setStreamState(!isStreamActive);
+    }
+
+    function setStreamState(active) {
+      isStreamActive = active;
+      const streamView = document.getElementById('chat-stream-view');
+      const heroView = document.getElementById('chat-empty-hero-view');
+      const label = document.getElementById('label-stream-state');
+
+      if (isStreamActive) {
+        streamView.classList.remove('hidden');
+        heroView.classList.add('hidden');
+        label.textContent = "State: Active Chat";
+        setTimeout(() => {
+          streamView.scrollTop = streamView.scrollHeight;
+        }, 50);
+      } else {
+        streamView.classList.add('hidden');
+        heroView.classList.remove('hidden');
+        label.textContent = "State: Empty (New Chat)";
+      }
+      renderAllMath();
+    }
+
+    function toggleAuthState() {
+      isAuthenticated = !isAuthenticated;
+      const signedInCard = document.getElementById('auth-signed-in-card');
+      const guestCard = document.getElementById('auth-guest-card');
+      const headerGuestCta = document.getElementById('header-guest-cta');
+      const label = document.getElementById('label-auth-state');
+      const icon = document.getElementById('icon-auth');
+
+      if (isAuthenticated) {
+        signedInCard.classList.remove('hidden');
+        guestCard.classList.add('hidden');
+        headerGuestCta.classList.add('hidden');
+        headerGuestCta.classList.remove('flex');
+        label.textContent = "Ahmed (Signed In)";
+        icon.className = "size-3.5 text-green-500";
+      } else {
+        signedInCard.classList.add('hidden');
+        guestCard.classList.remove('hidden');
+        headerGuestCta.classList.remove('hidden');
+        headerGuestCta.classList.add('flex');
+        label.textContent = "Guest (Signed Out)";
+        icon.className = "size-3.5 text-amber-500";
+      }
+    }
+
+    function toggleLanguage() {
+      isArabic = !isArabic;
+      const html = document.documentElement;
+      const labelLang = document.getElementById('label-lang');
+      const currentLang = isArabic ? 'ar' : 'en';
+
+      if (isArabic) {
+        html.setAttribute('dir', 'rtl');
+        labelLang.textContent = "English (LTR)";
+      } else {
+        html.removeAttribute('dir');
+        labelLang.textContent = "العربية (RTL)";
+      }
+
+      // Brand name & badges
+      document.getElementById('top-brand-title').textContent = translations[currentLang].brandName;
+      document.getElementById('sidebar-brand-title').textContent = translations[currentLang].brandName;
+      document.getElementById('top-badge-logo').textContent = translations[currentLang].brandBadge;
+      document.getElementById('sidebar-logo-badge').textContent = translations[currentLang].brandBadge;
+      document.getElementById('hero-emblem-text').textContent = translations[currentLang].brandBadge;
+      document.getElementById('msg-tutor-avatar').textContent = translations[currentLang].brandBadge;
+      document.getElementById('modal-logo-badge').textContent = translations[currentLang].brandBadge;
+
+      // i18n text replacement
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[currentLang][key]) {
+          el.innerHTML = translations[currentLang][key];
+        }
+      });
+
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (translations[currentLang][key]) {
+          el.setAttribute('placeholder', translations[currentLang][key]);
+        }
+      });
+
+      lucide.createIcons();
+      renderAllMath();
+    }
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      renderAllMath();
+    }
+
+    function toggleSidebarCollapse() {
+      isSidebarCollapsed = !isSidebarCollapsed;
+      const sidebar = document.getElementById('main-sidebar');
+      const expandBtn = document.getElementById('btn-sidebar-expand');
+
+      if (isSidebarCollapsed) {
+        sidebar.classList.add('-ms-64');
+        expandBtn.classList.remove('hidden');
+      } else {
+        sidebar.classList.remove('-ms-64');
+        expandBtn.classList.add('hidden');
+      }
+    }
+
+    function toggleMemoryDrawer(open) {
+      const drawer = document.getElementById('memory-drawer');
+      if (open) {
+        drawer.classList.remove('translate-x-full', 'rtl:-translate-x-full');
+      } else {
+        drawer.classList.add(isArabic ? 'rtl:-translate-x-full' : 'translate-x-full');
+      }
+    }
+
+    function submitPrompt() {
+      const input = document.getElementById('main-chat-input');
+      const val = input.value.trim();
+      if (!val && !isStreamActive) return;
+
+      if (!isAuthenticated) {
+        triggerAuthModal('Sign In');
+        return;
+      }
+
+      setStreamState(true);
+      input.value = "";
+    }
+
+    function insertPromptAndSend(text) {
+      if (!isAuthenticated) {
+        triggerAuthModal('Sign Up');
+        return;
+      }
+      setStreamState(true);
+      const input = document.getElementById('main-chat-input');
+      input.value = text;
+      input.focus();
+    }
+
+    function handleQuizAnswer(btn, isCorrect) {
+      const parent = btn.parentElement;
+      parent.querySelectorAll('.quiz-opt').forEach(opt => {
+        opt.classList.remove('border-green-500', 'bg-green-500/10', 'border-red-500', 'bg-red-500/10');
+      });
+
+      if (isCorrect) {
+        btn.classList.add('border-green-500', 'bg-green-500/10');
+        document.getElementById('quiz-feedback').classList.remove('hidden');
+      } else {
+        btn.classList.add('border-red-500', 'bg-red-500/10');
+      }
+      renderAllMath();
+    }
+
+    function triggerAuthModal(title) {
+      const brand = isArabic ? "شوقي" : "Shawky";
+      document.getElementById('clerk-modal-title').textContent = title + " to " + brand;
+      document.getElementById('clerk-modal').classList.remove('hidden');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('clerk-modal').classList.add('hidden');
+    }
+
+    function simulateAuthSuccess() {
+      closeAuthModal();
+      isAuthenticated = true;
+      toggleAuthState();
+      setStreamState(true);
+    }
+  </script>
+</body>
+</html>

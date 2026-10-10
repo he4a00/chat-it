@@ -1,7 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@clerk/ui/themes/shadcn.css";
+@import "katex/dist/katex.min.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -33,12 +35,12 @@
     --sidebar-foreground: oklch(0.1994 0.0470 270.6494);
     --sidebar-primary: oklch(0.5729 0.2337 264.3664);
     --sidebar-primary-foreground: oklch(1.0000 0 0);
-    --sidebar-accent: oklch(1.0000 0 0);
-    --sidebar-accent-foreground: oklch(0.5729 0.2337 264.3664);
-    --sidebar-border: oklch(1.0000 0 0);
+    --sidebar-accent: oklch(0.935 0 0);
+    --sidebar-accent-foreground: oklch(0.1994 0.0470 270.6494);
+    --sidebar-border: oklch(0.90 0 0);
     --sidebar-ring: oklch(0.5784 0.2303 263.8862);
     --destructive-foreground: oklch(1.0000 0 0);
-    --font-sans: Open Sans, sans-serif;
+    --font-sans: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif;
     --font-serif: Georgia, serif;
     --font-mono: Menlo, monospace;
     --shadow-color: #2e6aff;
@@ -83,17 +85,17 @@
     --chart-3: oklch(0.9649 0.1962 111.4216);
     --chart-4: oklch(0.8439 0.1679 169.5646);
     --chart-5: oklch(0.6411 0.2446 28.5713);
-    --sidebar: oklch(0.1684 0 0);
+    --sidebar: oklch(0.13 0 0);
     --sidebar-foreground: oklch(0.8853 0 0);
     --sidebar-primary: oklch(0.5784 0.2303 263.8862);
     --sidebar-primary-foreground: oklch(1.0000 0 0);
-    --sidebar-accent: oklch(0.1880 0.0868 261.9799);
-    --sidebar-accent-foreground: oklch(0.5683 0.2366 264.2478);
-    --sidebar-border: oklch(0.3706 0.0642 269.1117);
+    --sidebar-accent: oklch(0.20 0 0);
+    --sidebar-accent-foreground: oklch(0.98 0 0);
+    --sidebar-border: oklch(0.24 0 0);
     --sidebar-ring: oklch(0.5784 0.2303 263.8862);
     --destructive-foreground: oklch(1.0000 0 0);
     --radius: 0.5rem;
-    --font-sans: Open Sans, sans-serif;
+    --font-sans: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif;
     --font-serif: Georgia, serif;
     --font-mono: Menlo, monospace;
     --shadow-color: #2e6aff;
@@ -157,7 +159,7 @@
     --radius-4xl: calc(var(--radius) * 2.6);
     --font-mono: Menlo, monospace;
     --font-serif: Georgia, serif;
-    --radius: 1.3rem;
+    --radius: 0.5rem;
     --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
     --tracking-tight: calc(var(--tracking-normal) - 0.025em);
     --tracking-wide: calc(var(--tracking-normal) + 0.025em);
@@ -193,5 +195,99 @@
     }
   html {
     @apply font-sans;
-    }
+    font-family: var(--font-ibm-plex-sans), 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+  }
+
+  button, [role="button"], a, select, summary, [type="button"], [type="submit"], [type="reset"] {
+    cursor: pointer;
+  }
+
+  button:disabled, [role="button"]:disabled, [type="button"]:disabled, [type="submit"]:disabled {
+    cursor: not-allowed;
+  }
 }
+
+/* RTL Arabic typography & KaTeX math isolation */
+[dir="rtl"], [dir="rtl"] * {
+  font-family: var(--font-ibm-plex-sans), 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+}
+
+[dir="rtl"] .katex-display,
+[dir="rtl"] .katex {
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
+  display: inline-block;
+}
+
+[dir="rtl"] .katex-display {
+  display: block;
+}
+
+/* Strict IBM Plex Sans enforcement for all Clerk elements, popovers, and modals */
+[class^="cl-"],
+[class*=" cl-"],
+.cl-modalBackdrop,
+.cl-userProfile-root,
+.cl-userButtonPopoverCard,
+.cl-userButtonPopoverRootBox,
+.cl-card,
+.cl-headerTitle,
+.cl-headerSubtitle,
+.cl-profileSectionTitle,
+.cl-navbarButton {
+  font-family: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif !important;
+}
+
+/* Strict IBM Plex Sans enforcement for sidebar elements */
+[data-slot="sidebar"],
+[data-slot="sidebar"] * {
+  font-family: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif !important;
+}
+
+/* Clerk UserButton inside Sidebar Footer */
+[data-slot="sidebar-footer"] .cl-rootBox,
+[data-slot="sidebar-footer"] .cl-userButton-root,
+[data-slot="sidebar-footer"] .cl-userButtonTrigger {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+[data-slot="sidebar-footer"] .cl-userButtonTrigger {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 0.375rem 0.5rem !important;
+  border-radius: 0.5rem !important;
+  cursor: pointer !important;
+  gap: 0.5rem !important;
+  transition: background-color 150ms ease, color 150ms ease !important;
+}
+
+[data-slot="sidebar-footer"] .cl-userButtonTrigger:hover {
+  background-color: color-mix(in oklch, var(--sidebar-accent) 70%, transparent) !important;
+}
+
+[data-slot="sidebar-footer"] .cl-userButtonBox {
+  order: 1 !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+[data-slot="sidebar-footer"] .cl-userButtonOuterIdentifier {
+  order: 2 !important;
+  text-align: left !important;
+  flex: 1 1 auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 0.8125rem !important;
+  font-weight: 400 !important;
+  font-family: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif !important;
+  color: var(--sidebar-foreground) !important;
+}
+
+[dir="rtl"] [data-slot="sidebar-footer"] .cl-userButtonOuterIdentifier {
+  text-align: right !important;
+  margin: 0 !important;
+}
