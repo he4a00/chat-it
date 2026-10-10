@@ -260,3 +260,37 @@ This file records architecture decisions, agent conventions, and a running log o
    - Verified 0 TypeScript errors (`npm run typecheck`).
    - Verified 0 ESLint errors (`npm run lint`).
    - Verified clean production build with Turbopack (`npm run build`).
+
+### [2026-10-11] Phase 1: Neon Serverless PostgreSQL & Drizzle ORM Foundation
+
+1. **Neon Project & CLI Configuration**:
+   - Installed `@neondatabase/serverless` and `drizzle-orm` dependencies.
+   - Installed `drizzle-kit` and `dotenv` dev dependencies.
+   - Linked Neon project `shawky` (`project-id: lively-hill-96074400`, `branch: production`).
+   - Configured `DATABASE_URL` (pooled) for runtime queries and `DATABASE_URL_UNPOOLED` (direct) for migration safety.
+   - Deployed initial Neon preview function (`api`).
+
+2. **Drizzle ORM Relational Schema (`lib/db/schema.ts`)**:
+   - Defined all 7 core platform tables:
+     - `users`: Clerk authenticated user identities.
+     - `learner_profiles`: Subject, skill level, learning goals, and preferences.
+     - `chats`: Conversation session metadata.
+     - `messages`: Chat message stream, roles, KaTeX text content, and AI SDK tool invocations.
+     - `widget_states`: Interactive Generative UI widgets (Quiz, Flashcard, Math Problem, QuickCheck) with payloads and submissions.
+     - `topic_mastery`: Quantitative topic accuracy metrics (mastery score, total/correct counts).
+     - `learner_memory_notes`: Autonomous qualitative pedagogical observations recorded by AI.
+   - Exported relational models (`relations`) and TypeScript type inferences (`$inferSelect`, `$inferInsert`).
+
+3. **Drizzle Configuration & Connection Singleton**:
+   - `drizzle.config.ts`: Configured targeting `lib/db/schema.ts`, dialect `'postgresql'`, using `DATABASE_URL_UNPOOLED`.
+   - `lib/db/index.ts`: Configured singleton client utilizing `@neondatabase/serverless` HTTP driver (`drizzle-orm/neon-http`).
+   - Added npm scripts: `db:generate`, `db:push`, and `db:studio`.
+
+4. **Database Migration & Verification**:
+   - Pushed schema to Neon production database via `npm run db:push`.
+   - Verified live table sizes and relations via `neon inspect db table-sizes`.
+   - Verified end-to-end query execution with `@neondatabase/serverless`.
+   - Verified 0 TypeScript errors (`npm run typecheck`).
+   - Verified 0 ESLint errors and warnings (`npm run lint`).
+   - Verified clean production build with Turbopack in 2.7s (`npm run build`).
+
