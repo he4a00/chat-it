@@ -294,3 +294,42 @@ This file records architecture decisions, agent conventions, and a running log o
    - Verified 0 ESLint errors and warnings (`npm run lint`).
    - Verified clean production build with Turbopack in 2.7s (`npm run build`).
 
+### [2026-10-11] Phase 2: AI SDK Socratic Agent Engine, Tools & Dynamic Memory
+
+1. **Socratic Pedagogical System Instructions (`lib/ai/prompts.ts`)**:
+   - Authored Shawky's foundational pedagogical prompt:
+     - Socratic scaffolding: guiding inquiry rather than giving direct solutions.
+     - Strict KaTeX LaTeX formatting: `$formula$` for inline and `$$formula$$` on dedicated lines for block display.
+     - Bilingual English & Arabic adaptability with scientific LTR math preservation.
+     - Explicit instructions for triggering Generative UI widgets and recording qualitative student observations.
+
+2. **Generative UI & Memory Agent Tools (`lib/ai/tools.ts`)**:
+   - Implemented 5 typed agent tools using Zod and AI SDK 7 `tool()`:
+     - `createQuiz`: Multiple-choice quiz with diagnostic options, hints, and pedagogical explanations.
+     - `createFlashcardDeck`: Interactive flashcard drills for formulas, definitions, and theorems.
+     - `createMathProblem`: Sequential multi-step problem solving with step hints and final validation.
+     - `createQuickCheck`: True/False checks diagnosing common STEM misconceptions.
+     - `updateLearnerNotes`: Autonomous recording of qualitative cognitive patterns and recommendations.
+
+3. **Dynamic Memory & Context Injection Engine (`lib/ai/context.ts`)**:
+   - Implemented `buildLearnerContext(userId)`:
+     - Retrieves student's `learner_profiles` (subject, skill level, goal).
+     - Computes quantitative weak areas and mastered concepts from `topic_mastery`.
+     - Injects latest qualitative observations from `learner_memory_notes`.
+   - Implemented `saveLearnerNote()` and `updateTopicMastery()` helper functions.
+
+4. **Streaming Route Handler (`app/api/chat/route.ts`)**:
+   - Integrated Clerk server `auth()` for user identification.
+   - Wired `streamText` using Google Gemini 2.0 Flash (`google('gemini-2.0-flash')`), dynamic instructions, model message conversion (`convertToModelMessages`), and `tutoringTools`.
+   - Configured `toUIMessageStream` with `onEnd` callback to persist messages in `messages`, widgets in `widget_states`, and qualitative AI observations in `learner_memory_notes`.
+   - Wrapped in `createUIMessageStreamResponse` compliant with AI SDK 7.
+
+5. **Universal Schema Key Refinement**:
+   - Refined table primary keys to `text` with `crypto.randomUUID()` default to guarantee compatibility with AI SDK message IDs, Clerk IDs, and custom session tokens.
+
+6. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`).
+   - Verified 0 ESLint errors and warnings (`npm run lint`).
+   - Verified clean production build with Turbopack (`npm run build`), registering `ƒ /api/chat`.
+
+

@@ -1,4 +1,4 @@
-import { pgTable, text, uuid, timestamp, jsonb, boolean, integer, real } from "drizzle-orm/pg-core"
+import { pgTable, text, timestamp, jsonb, boolean, integer, real } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm"
 
 /**
@@ -28,13 +28,15 @@ export const usersRelations = relations(users, ({ one, many }) => ({
  * Stores pedagogical onboarding state, active subject, skill level, and goals.
  */
 export const learnerProfiles = pgTable("learner_profiles", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id")
     .references(() => users.id, { onDelete: "cascade" })
     .notNull()
     .unique(),
   subject: text("subject").default("Mathematics").notNull(),
-  skillLevel: text("skill_level").default("intermediate").notNull(), // beginner, intermediate, advanced, etc.
+  skillLevel: text("skill_level").default("intermediate").notNull(),
   learningGoal: text("learning_goal"),
   preferences: jsonb("preferences").$type<Record<string, unknown>>().default({}),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
@@ -52,7 +54,9 @@ export const learnerProfilesRelations = relations(learnerProfiles, ({ one }) => 
  * Organizes message conversations per user.
  */
 export const chats = pgTable("chats", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id")
     .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
@@ -75,8 +79,10 @@ export const chatsRelations = relations(chats, ({ one, many }) => ({
  * Persists the chat stream, roles, KaTeX text content, and AI SDK tool invocations.
  */
 export const messages = pgTable("messages", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  chatId: uuid("chat_id")
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  chatId: text("chat_id")
     .references(() => chats.id, { onDelete: "cascade" })
     .notNull(),
   role: text("role").notNull(), // 'user' | 'assistant' | 'system' | 'data'
@@ -98,12 +104,14 @@ export const messagesRelations = relations(messages, ({ one, many }) => ({
  * Persists interactive Generative UI widgets (Quiz, Flashcard, Math Problem, QuickCheck).
  */
 export const widgetStates = pgTable("widget_states", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  messageId: uuid("message_id")
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  messageId: text("message_id")
     .references(() => messages.id, { onDelete: "cascade" })
     .notNull(),
   widgetType: text("widget_type").notNull(), // 'quiz' | 'flashcard' | 'math_problem' | 'quick_check'
-  payload: jsonb("payload").notNull(), // Widget question, options, cards, steps
+  payload: jsonb("payload").notNull(),
   userSubmission: jsonb("user_submission").$type<Record<string, unknown>>(),
   isCompleted: boolean("is_completed").default(false).notNull(),
   score: integer("score"),
@@ -122,7 +130,9 @@ export const widgetStatesRelations = relations(widgetStates, ({ one }) => ({
  * Deterministic quantitative memory tracking problem accuracy and practice counts.
  */
 export const topicMastery = pgTable("topic_mastery", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id")
     .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
@@ -145,7 +155,9 @@ export const topicMasteryRelations = relations(topicMastery, ({ one }) => ({
  * Qualitative pedagogical notes recorded autonomously by Shawky's AI agent.
  */
 export const learnerMemoryNotes = pgTable("learner_memory_notes", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id")
     .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
