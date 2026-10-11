@@ -19,6 +19,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onDuplicateSession?: (id: string) => void
   onNewChat: () => void
   onClearSearch: () => void
+  onOpenProgress?: () => void
 }
 
 export function AppSidebar({
@@ -33,6 +34,7 @@ export function AppSidebar({
   onDuplicateSession,
   onNewChat,
   onClearSearch,
+  onOpenProgress,
   ...props
 }: AppSidebarProps) {
   return (
@@ -59,7 +61,7 @@ export function AppSidebar({
         onClearSearch={onClearSearch}
       />
 
-      <AppSidebarFooter />
+      <AppSidebarFooter onOpenProgress={onOpenProgress} />
 
       <SidebarRail />
     </Sidebar>

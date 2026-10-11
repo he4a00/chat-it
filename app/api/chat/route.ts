@@ -13,8 +13,9 @@ import {
 import { google } from "@ai-sdk/google"
 import { auth } from "@clerk/nextjs/server"
 import { and, eq } from "drizzle-orm"
-import { db, chats, messages as dbMessages, widgetStates, learnerMemoryNotes } from "@/lib/db"
+import { db, chats, messages as dbMessages, widgetStates, learnerMemoryNotes, learnerProfiles } from "@/lib/db"
 import { SHAWKY_BASE_SYSTEM_PROMPT } from "@/lib/ai/prompts"
+import { buildLearnerContext } from "@/lib/ai/context"
 import { tutoringTools } from "@/lib/ai/tools"
 import { loadUIMessages } from "@/lib/ai/load-messages"
 import { resolveTopic } from "@/lib/learner/resolve-topic"
@@ -81,13 +82,20 @@ export async function POST(req: Request) {
     .limit(1)
 
   if (!existingChat) {
+    // Default a new chat's subject from the learner's profile.
+    const [profile] = await db
+      .select({ subject: learnerProfiles.subject })
+      .from(learnerProfiles)
+      .where(eq(learnerProfiles.userId, userId))
+      .limit(1)
+
     await db
       .insert(chats)
       .values({
         id: chatId,
         userId,
         title: deriveSessionTitle(extractText(message)) || "New STEM Practice",
-        subject: "Math",
+        subject: profile?.subject ?? "Math",
       })
       .onConflictDoNothing()
   } else {
@@ -106,9 +114,14 @@ export async function POST(req: Request) {
     validatedMessages = inputMessages
   }
 
+  // Inject what Shawky remembers about this learner (empty for a new learner).
+  const learnerContext = await buildLearnerContext(userId)
+
   const result = streamText({
     model: google(MODEL_ID),
-    instructions: SHAWKY_BASE_SYSTEM_PROMPT,
+    instructions: learnerContext
+      ? `${SHAWKY_BASE_SYSTEM_PROMPT}\n\n${learnerContext}`
+      : SHAWKY_BASE_SYSTEM_PROMPT,
     messages: await convertToModelMessages(validatedMessages),
     tools: tutoringTools,
     stopWhen: isStepCount(5),

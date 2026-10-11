@@ -25,5 +25,5 @@ export default async function MainPage() {
     redirect("/welcome")
   }
 
-  return <ChatShell initialSessions={sessions} />
+  return <ChatShell initialSessions={sessions} initialOverview={overview} />
 }

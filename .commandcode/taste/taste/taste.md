@@ -1,4 +1,5 @@
 # Taste
+
 - Before changing code, expects a thorough upfront exploration of the codebase to understand it (structure, data flow, conventions). Confidence: 0.7
 - Wants the agent to proactively fix everything it finds broken or poorly done — not just the specific issues the user enumerated. Confidence: 0.7
 - Points the agent at architecture/agent docs (e.g. `arch.md`, `AGENTS.md`) as the source of context and expects them to be consulted. Confidence: 0.6

@@ -26,6 +26,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Marker, MarkerIcon, MarkerContent } from "@/components/ui/marker"
 import { cn } from "cn"
+import { SHAWKY_AVATAR } from "@/lib/brand"
 import { Copy, Check, RotateCcw, ThumbsUp, ThumbsDown, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { QuizWidget, type QuizQuestionItem, type QuizOption } from "@/components/widgets/quiz-widget"
@@ -114,7 +115,7 @@ export function ChatMessages({
                 >
                   <Message align={isUser ? "end" : "start"} className="gap-3">
                   {/* Avatar */}
-                  <MessageAvatar className="size-8 rounded-full border border-border/60 shrink-0 mt-0.5">
+                  <MessageAvatar className="size-8 rounded-none border border-border/60 shrink-0 mt-0.5">
                     {isUser ? (
                       user?.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -131,9 +132,9 @@ export function ChatMessages({
                     ) : (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src="/images/shawky-headshot.png"
+                        src={SHAWKY_AVATAR}
                         alt="Shawky (شوقي)"
-                        className="size-full object-cover rounded-full"
+                        className=""
                         width={32}
                         height={32}
                       />

@@ -12,9 +12,47 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { TrendingUp } from "lucide-react"
 import { useLanguage } from "@/hooks/use-language"
 import { deriveSessionTitle } from "@/lib/session-utils"
 import type { UIMessage } from "ai"
+
+function describeChatError(
+  error: Error | undefined,
+  isAr: boolean,
+): { title: string; detail: string } {
+  const raw = `${error?.message ?? ""}`.toLowerCase()
+
+  if (raw.includes("quota") || raw.includes("rate limit") || raw.includes("429")) {
+    return {
+      title: isAr ? "تم استهلاك حصة الذكاء الاصطناعي" : "AI quota reached",
+      detail: isAr
+        ? "لقد استُهلكت الحصة المجانية لليوم. ستتجدد تلقائياً بعد قليل، فحاول مرة أخرى لاحقاً."
+        : "Today's free AI quota is used up. It resets automatically, so try again a little later.",
+    }
+  }
+  if (raw.includes("unauthor")) {
+    return {
+      title: isAr ? "انتهت الجلسة" : "Session expired",
+      detail: isAr ? "يرجى تسجيل الدخول مرة أخرى." : "Please sign in again.",
+    }
+  }
+  if (raw.includes("api key") || raw.includes("api_key")) {
+    return {
+      title: isAr ? "مفتاح الذكاء الاصطناعي غير مُهيّأ" : "AI key not configured",
+      detail: isAr
+        ? "لم يتم إعداد مفتاح Gemini. تحقّق من ملف .env.local."
+        : "The Gemini API key is missing. Check .env.local.",
+    }
+  }
+
+  return {
+    title: isAr ? "تعذّر إكمال الرد" : "The response failed",
+    detail: isAr
+      ? "حدث خطأ أثناء توليد الرد. يمكنك المحاولة مرة أخرى."
+      : "Something went wrong while generating the reply.",
+  }
+}
 
 interface ChatWorkspaceProps {
   chatId: string
@@ -25,6 +63,7 @@ interface ChatWorkspaceProps {
   onFirstMessage?: (chatId: string, title: string) => void
   onFinishResponse?: () => void
   onOpenSession?: (id: string) => void
+  onOpenProgress?: () => void
 }
 
 export function ChatWorkspace({
@@ -36,6 +75,7 @@ export function ChatWorkspace({
   onFirstMessage,
   onFinishResponse,
   onOpenSession,
+  onOpenProgress,
 }: ChatWorkspaceProps) {
   const [input, setInput] = React.useState("")
   const hasTriggeredFirstMessageRef = React.useRef(!isNewChat)
@@ -63,6 +103,18 @@ export function ChatWorkspace({
     },
   })
 
+  // Auto-send a review prompt stashed by the progress panel's one-tap review.
+  const reviewPromptSentRef = React.useRef(false)
+  React.useEffect(() => {
+    if (reviewPromptSentRef.current || initialMessages.length > 0) return
+    const key = `shawky:review:${chatId}`
+    const prompt = sessionStorage.getItem(key)
+    if (!prompt) return
+    reviewPromptSentRef.current = true
+    sessionStorage.removeItem(key)
+    sendMessage({ text: prompt })
+  }, [chatId, initialMessages.length, sendMessage])
+
   const isLoading = status === "streaming" || status === "submitted"
 
   const handleSendMessage = (textToSend?: string) => {
@@ -85,6 +137,8 @@ export function ChatWorkspace({
     handleSendMessage()
   }
 
+  const errorCopy = describeChatError(error, isAr)
+
   return (
     <div className="relative flex flex-col flex-1 h-screen overflow-hidden bg-background">
       {/* Top Header Bar */}
@@ -98,8 +152,20 @@ export function ChatWorkspace({
           </h1>
         </div>
 
-        {/* Header controls: language + theme, grouped into one pill */}
+        {/* Header controls: progress + language + theme, grouped into one pill */}
         <div className="flex items-center gap-1 rounded-full bg-muted/50 p-1">
+          {onOpenProgress ? (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={onOpenProgress}
+              aria-label={isAr ? "عرض تقدّمك" : "View your progress"}
+              title={isAr ? "تقدّمك" : "Your progress"}
+              className="size-6 rounded-full text-muted-foreground hover:bg-background/70 hover:text-foreground"
+            >
+              <TrendingUp className="size-3.5" />
+            </Button>
+          ) : null}
           <LanguageMenu />
           <ThemeSwitch className="px-1" />
         </div>
@@ -131,13 +197,9 @@ export function ChatWorkspace({
           <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 px-4">
             <div className="pointer-events-auto mx-auto max-w-3xl">
               <Alert variant="destructive">
-                <AlertTitle>{isAr ? "تعذّر إكمال الرد" : "The response failed"}</AlertTitle>
+                <AlertTitle>{errorCopy.title}</AlertTitle>
                 <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
-                  <span>
-                    {isAr
-                      ? "حدث خطأ أثناء توليد الرد. يمكنك المحاولة مرة أخرى."
-                      : "Something went wrong while generating the reply."}
-                  </span>
+                  <span>{errorCopy.detail}</span>
                   <Button
                     variant="outline"
                     size="sm"

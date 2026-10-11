@@ -1114,3 +1114,40 @@ This file records architecture decisions, agent conventions, and a running log o
 
 5. **Verification** — 0 type/lint/build errors; `/welcome` registered. Rendered-page checks via headless Edge against the running dev server: dark + light + Arabic RTL desktop compositions verified. Note: Windows clamps headless window width (~496px), so a narrow "390px" viewport must be emulated with `--force-device-scale-factor=2 --window-size=780,1688` — with that, `win=390`, `html=390/390`, no overflow (an earlier apparent mobile overflow was purely this screenshot artifact, not a CSS bug).
 
+### [2026-10-11] Phase C6: Progress Panel + One-Tap Review
+
+> Plan: `~/.commandcode/plans/shawky-learner-memory-phase-c.md`. A calm, bilingual right-side Sheet summarizing what Shawky tracks and remembers.
+
+1. **`components/learner/progress-panel.tsx`** (new) — right-side `Sheet` (`w-full sm:max-w-md`), all copy bilingual:
+   - **Stat cards**: practice streak (`Flame`) with "practiced today", and overall accuracy (`Target`) with correct/total.
+   - **Topic mastery**: one bar per topic, coloured by `masteryBand` from `lib/learner/config` (strong → emerald, developing → amber, weak → rose), with a "Practice recommended" line on due topics.
+   - **Due for review**: list of due topics + **"Start a review session"**, wired to `learner.startReview`.
+   - **Shawky's notes**: typed cards (`strength` / `misconception` / `preference` / `goal` / `observation`) with an icon + confidence %, rendering the observation (and recommendation) through `Markdown` so KaTeX survives.
+   - Skeleton while loading and a friendly empty state for a learner with no attempts.
+
+2. **Two entry points → one Sheet**: a `TrendingUp` button in the chat header (`chat-workspace.tsx`, `onOpenProgress`) and a compact streak/accuracy card in the sidebar footer (`sidebar-footer.tsx`), both opening the same panel owned by `ChatShell`. The footer reads the shared query cache (`learner.getOverview.queryOptions()`), so it adds no extra request.
+
+3. **`components/chat/chat-shell.tsx`** — gained `initialOverview` + a `learner.getOverview` query seeded from RSC (no flash), `progressOpen` state, the `<ProgressPanel />` render, and `handleStartReview`: calls `learner.startReview({ lang })`, stashes the returned prompt in `sessionStorage["shawky:review:<chatId>"]`, invalidates the session list, and `router.push`es to the new chat.
+
+4. **One-tap review auto-send (`chat-workspace.tsx`)** — on mount, an empty chat reads + clears the stashed prompt for its `chatId` and sends it, so the learner lands directly in a targeted review session.
+
+5. **RSC seeds** — `app/page.tsx` and `app/c/[chatId]/page.tsx` pass `initialOverview={overview}` (already fetched for the onboarding redirect gate).
+
+6. **Verification** — 0 type/lint/build errors. Panel render-checked with mock data via a temporary `app/progress-preview` route + headless Edge (dark): stats, mastery bars, due-review, and typed coach notes (incl. KaTeX) all render correctly; temp route + screenshot deleted.
+
+### [2026-10-11] Phase C7: Learner Context Injection (memory → prompt)
+
+> Plan: `~/.commandcode/plans/shawky-learner-memory-phase-c.md`. Closes Phase C: what Shawky remembers now shapes his instructions.
+
+1. **`lib/ai/context.ts`** (new) — `buildLearnerContext(userId)` returns a bounded private block for the system prompt:
+   - Profile line (`subject · skillLevel · goal`), practice totals + streak, **weak areas** (below the due threshold), **strengths** (≥ `STRONG_MASTERY`), **due for review**, and the latest `MAX_CONTEXT_NOTES` typed observations (with their recommendation tips).
+   - Capped by `MAX_CONTEXT_TOPICS` / `MAX_CONTEXT_NOTES`; returns **`""`** for a brand-new learner so nothing spurious is injected.
+
+2. **`app/api/chat/route.ts`** — `instructions` is now `SHAWKY_BASE_SYSTEM_PROMPT` + the learner-context block when present. A new chat's `subject` now defaults to the learner's profile subject (fallback `"Math"`) instead of a hardcoded value.
+
+3. **`lib/ai/prompts.ts`** — added rule **7. Adapting to the Learner Context**: use the block silently to calibrate difficulty and revisit weak topics; never quote it or reveal that notes are kept; treat an absent block as a new learner.
+
+4. **Verification** — runtime smoke test (temporary `_c7_smoke.ts` + `_preload.cjs`, deleted after): `buildLearnerContext` returned an **empty string** for a fresh user, and for a seeded learner a correct block (Profile / Practice / Weak areas / Due for review / typed note with tip); temp data cleaned up. 0 type/lint/build errors.
+
+> **Phase C complete (C1–C7).** Remaining known follow-ups: `startReview`/widget `timeSpentMs` are best-effort, the animated avatar is the local 2.5 MB asset (Cloudinary stripped animation without `fl_animated`), and the global i18next instance is still inert (new UI uses the `useLanguage()` + inline bilingual pattern).
+

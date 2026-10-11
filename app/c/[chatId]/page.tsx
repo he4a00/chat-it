@@ -32,6 +32,7 @@ export default async function ChatPage(props: { params: Promise<{ chatId: string
       initialSessions={sessions}
       initialSessionId={chatId}
       initialMessages={messages}
+      initialOverview={overview}
     />
   )
 }

@@ -7,20 +7,26 @@ import { useTRPC } from "@/trpc/react"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/sidebar/app-sidebar"
 import { ChatWorkspace } from "@/components/chat/chat-workspace"
+import { ProgressPanel } from "@/components/learner/progress-panel"
 import { ChatSession } from "@/types/session"
 import { formatSessionTimestamp } from "@/lib/session-utils"
+import { useLanguage } from "@/hooks/use-language"
+import { notify } from "@/lib/toast"
+import type { LearnerOverview } from "@/types/learner"
 import type { UIMessage } from "ai"
 
 interface ChatShellProps {
   initialSessions?: ChatSession[]
   initialSessionId?: string | null
   initialMessages?: UIMessage[]
+  initialOverview?: LearnerOverview
 }
 
 export function ChatShell({
   initialSessions = [],
   initialSessionId = null,
   initialMessages = [],
+  initialOverview,
 }: ChatShellProps) {
   const router = useRouter()
   const trpc = useTRPC()
@@ -49,6 +55,15 @@ export function ChatShell({
   })
 
   const sessions = sessionsData ?? initialSessions
+
+  // Learner progress — seeded from RSC; consumed by the progress panel + sidebar card.
+  const overviewQuery = trpc.learner.getOverview.queryOptions()
+  const { data: overview, isPending: isOverviewPending } = useQuery({
+    ...overviewQuery,
+    ...(initialOverview ? { initialData: initialOverview } : {}),
+  })
+  const [progressOpen, setProgressOpen] = React.useState(false)
+  const { language } = useLanguage()
 
   const createMutation = useMutation(trpc.session.create.mutationOptions())
   const renameMutation = useMutation(trpc.session.rename.mutationOptions())
@@ -164,6 +179,25 @@ export function ChatShell({
     queryClient.invalidateQueries({ queryKey: listKey })
   }, [queryClient, listKey])
 
+  // One-tap review: create a targeted review session, stash the seed prompt, and open it.
+  const startReviewMutation = useMutation(trpc.learner.startReview.mutationOptions())
+
+  const handleStartReview = React.useCallback(async () => {
+    try {
+      const review = await startReviewMutation.mutateAsync({ lang: language })
+      sessionStorage.setItem(`shawky:review:${review.chatId}`, review.prompt)
+      setProgressOpen(false)
+      queryClient.invalidateQueries({ queryKey: listKey })
+      router.push(`/c/${review.chatId}`)
+    } catch (err) {
+      console.error("Failed to start review:", err)
+      notify.error(
+        language === "ar" ? "تعذّر بدء جلسة المراجعة" : "Couldn't start the review",
+        language === "ar" ? "حاول مرة أخرى بعد قليل." : "Please try again in a moment.",
+      )
+    }
+  }, [startReviewMutation, language, queryClient, listKey, router])
+
   const currentChatId = activeSessionId || newChatId
 
   return (
@@ -180,6 +214,7 @@ export function ChatShell({
         onDuplicateSession={handleDuplicateSession}
         onNewChat={handleNewChat}
         onClearSearch={() => setSearchQuery("")}
+        onOpenProgress={() => setProgressOpen(true)}
       />
 
       <SidebarInset className="flex flex-col flex-1 h-screen overflow-hidden bg-background">
@@ -193,8 +228,18 @@ export function ChatShell({
           onFirstMessage={handleFirstMessage}
           onFinishResponse={refreshSessions}
           onOpenSession={handleSelectSession}
+          onOpenProgress={() => setProgressOpen(true)}
         />
       </SidebarInset>
+
+      <ProgressPanel
+        open={progressOpen}
+        onOpenChange={setProgressOpen}
+        overview={overview}
+        isPending={isOverviewPending}
+        onStartReview={handleStartReview}
+        isStartingReview={startReviewMutation.isPending}
+      />
     </SidebarProvider>
   )
 }

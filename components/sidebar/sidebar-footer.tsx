@@ -1,20 +1,60 @@
 "use client"
 
 import { Show, SignInButton, UserButton } from "@clerk/nextjs"
-import { LogInIcon, Settings2Icon } from "lucide-react"
+import { Flame, LogInIcon, Settings2Icon } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
 
 import { SidebarFooter } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { UserPreferencesPage } from "./user-preferences-page"
+import { useTRPC } from "@/trpc/react"
+import { useLanguage } from "@/hooks/use-language"
 import { useTranslation } from "react-i18next"
 
-export function AppSidebarFooter() {
+interface AppSidebarFooterProps {
+  onOpenProgress?: () => void
+}
+
+export function AppSidebarFooter({ onOpenProgress }: AppSidebarFooterProps) {
   const { t } = useTranslation()
+  const trpc = useTRPC()
+  const { language } = useLanguage()
+  const isAr = language === "ar"
+
+  // Shares the cache entry seeded by ChatShell — no extra request.
+  const { data: overview } = useQuery(trpc.learner.getOverview.queryOptions())
+  const streak = overview?.streak.current ?? 0
+  const accuracy = Math.round((overview?.stats.accuracy ?? 0) * 100)
 
   return (
     <SidebarFooter className="border-t border-sidebar-border/70 p-2.5">
-      {/* Signed In: UserAccount Button with Modal Trigger for Preferences */}
+      {/* Signed In: Progress card + UserAccount Button */}
       <Show when="signed-in">
+        {onOpenProgress ? (
+          <button
+            type="button"
+            onClick={onOpenProgress}
+            className="mb-2 flex w-full items-center justify-between gap-2 rounded-lg border border-sidebar-border/70 bg-sidebar-accent/40 p-2 text-start transition-colors hover:bg-sidebar-accent/70"
+          >
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Flame className="size-3.5" />
+              </span>
+              <span className="flex min-w-0 flex-col leading-tight">
+                <span className="truncate text-[11px] font-semibold text-sidebar-foreground">
+                  {isAr ? "تقدّمك" : "Your progress"}
+                </span>
+                <span className="truncate text-[10px] text-muted-foreground">
+                  {isAr ? `${streak} يوم متتالي` : `${streak}-day streak`}
+                </span>
+              </span>
+            </span>
+            <span className="shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-primary-foreground">
+              {accuracy}%
+            </span>
+          </button>
+        ) : null}
+
         <div className="flex w-full items-center">
           <UserButton
             showName

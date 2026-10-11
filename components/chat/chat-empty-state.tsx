@@ -4,6 +4,7 @@ import * as React from "react"
 import { useUser } from "@clerk/nextjs"
 import { HistoryIcon } from "lucide-react"
 import { useLanguage } from "@/hooks/use-language"
+import { SHAWKY_AVATAR } from "@/lib/brand"
 import { LearnModeIcon, FlashcardsModeIcon, QuizModeIcon } from "@/components/chat/mode-icons"
 
 interface ChatEmptyStateProps {
@@ -69,12 +70,12 @@ export function ChatEmptyState({
     <div className="flex flex-col items-center justify-center px-4 max-w-xl w-full mx-auto my-auto text-center select-none font-sans space-y-6">
       {/* Shawky Sa'idi Avatar Emblem */}
       <div className="relative group">
-        <div className="size-20 rounded-full overflow-hidden border-2 border-primary/40 shadow-[0_0_35px_-5px_rgba(46,103,255,0.3)] bg-card ring-4 ring-primary/10 transition-transform group-hover:scale-105 duration-200">
+        <div className="overflow-hidden transition-transform group-hover:scale-105 duration-200">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/images/shawky-avatar.png"
+            src={SHAWKY_AVATAR}
             alt="Shawky (شوقي)"
-            className="size-full object-cover"
+            className=" rounded-4xl"
             width={80}
             height={80}
           />
