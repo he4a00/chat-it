@@ -5,6 +5,11 @@ import { Markdown } from "@/components/chat/markdown"
 import { Layers, ChevronLeft, ChevronRight, RotateCw, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "cn"
+import { useMutation } from "@tanstack/react-query"
+import { useTRPC } from "@/trpc/react"
+
+/** Module-scope timestamp helper (keeps render pure). */
+const nowMs = () => Date.now()
 
 export interface FlashcardItem {
   id: string
@@ -13,28 +18,99 @@ export interface FlashcardItem {
   conceptTag?: string
 }
 
+export type FlashcardGrade = "mastered" | "review"
+
 export interface FlashcardDeckWidgetProps {
   messageId?: string
   topic: string
+  subject?: string
   cards: FlashcardItem[]
   isAr?: boolean
+  initialMasteredIds?: string[]
+  initialGraded?: Record<string, FlashcardGrade>
   onDeckCompleted?: (feedbackPrompt: string) => void
 }
 
 export function FlashcardDeckWidget({
+  messageId,
   topic,
+  subject,
   cards = [],
   isAr = false,
+  initialMasteredIds,
+  initialGraded,
   onDeckCompleted,
 }: FlashcardDeckWidgetProps) {
   const [currentIndex, setCurrentIndex] = React.useState(0)
   const [isFlipped, setIsFlipped] = React.useState(false)
-  const [masteredIds, setMasteredIds] = React.useState<Set<string>>(new Set())
+  const [masteredIds, setMasteredIds] = React.useState<Set<string>>(
+    () => new Set(initialMasteredIds ?? []),
+  )
+  const [graded, setGraded] = React.useState<Record<string, FlashcardGrade>>(
+    () => initialGraded ?? {},
+  )
+  const [hasSaved, setHasSaved] = React.useState(
+    () =>
+      Boolean(initialGraded && Object.keys(initialGraded).length > 0) ||
+      Boolean(initialMasteredIds && initialMasteredIds.length > 0),
+  )
+
+  const trpc = useTRPC()
+  const submitWidgetMutation = useMutation(trpc.widget.submitState.mutationOptions())
+
+  // Best-effort time-on-task, measured from mount to submission.
+  const startedAtRef = React.useRef<number>(0)
+  React.useEffect(() => {
+    startedAtRef.current = nowMs()
+  }, [])
 
   if (cards.length === 0) return null
 
   const currentCard = cards[currentIndex] || cards[0]
   const isMastered = masteredIds.has(currentCard.id)
+
+  // Persist once, when every card has been graded (mirrors the quiz's
+  // "save on completion") so repeated grading toggles never double-record.
+  const persistIfComplete = (nextGraded: Record<string, FlashcardGrade>, nextMastered: Set<string>) => {
+    if (hasSaved || !messageId) return
+    if (Object.keys(nextGraded).length < cards.length) return
+
+    setHasSaved(true)
+
+    const items = cards.map((card) => ({
+      itemId: card.id,
+      outcome: (nextMastered.has(card.id) ? "mastered" : "review") as FlashcardGrade,
+    }))
+
+    try {
+      submitWidgetMutation.mutate({
+        messageId,
+        widgetType: "flashcard",
+        topic,
+        subject,
+        payload: { topic, cards },
+        userSubmission: { graded: nextGraded, masteredIds: Array.from(nextMastered) },
+        items,
+        timeSpentMs: startedAtRef.current ? nowMs() - startedAtRef.current : null,
+        isCompleted: true,
+        score: Math.round((nextMastered.size / cards.length) * 100),
+      })
+    } catch {
+      // Non-blocking background persistence
+    }
+  }
+
+  const handleFlip = () => {
+    const nextFlipped = !isFlipped
+    setIsFlipped(nextFlipped)
+
+    // Flipping a card counts as studying it (graded "review" until mastered).
+    if (nextFlipped && !graded[currentCard.id]) {
+      const nextGraded = { ...graded, [currentCard.id]: "review" as FlashcardGrade }
+      setGraded(nextGraded)
+      persistIfComplete(nextGraded, masteredIds)
+    }
+  }
 
   const handleNext = () => {
     setIsFlipped(false)
@@ -47,24 +123,29 @@ export function FlashcardDeckWidget({
   }
 
   const handleToggleMastered = (cardId: string) => {
-    setMasteredIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(cardId)) {
-        next.delete(cardId)
-      } else {
-        next.add(cardId)
-      }
+    const nextMastered = new Set(masteredIds)
+    if (nextMastered.has(cardId)) {
+      nextMastered.delete(cardId)
+    } else {
+      nextMastered.add(cardId)
+    }
+    setMasteredIds(nextMastered)
 
-      // Check if all cards mastered
-      if (next.size === cards.length && onDeckCompleted) {
-        const feedback = isAr
-          ? `[إتمام البطاقات التعليمية]: راجعت جميع بطاقات "${topic}" (${cards.length} بطاقات) وأتقنتها كاملة! ما هو التطبيق العملي أو المسألة التي نختبر بها هذه القوانين؟`
-          : `[Flashcard Deck Completed]: I reviewed and mastered all ${cards.length} flashcards on "${topic}"! Could you give me an applied problem to test these formulas?`
-        onDeckCompleted(feedback)
-      }
+    const nextGraded = {
+      ...graded,
+      [cardId]: (nextMastered.has(cardId) ? "mastered" : "review") as FlashcardGrade,
+    }
+    setGraded(nextGraded)
 
-      return next
-    })
+    // Check if all cards mastered
+    if (nextMastered.size === cards.length && onDeckCompleted) {
+      const feedback = isAr
+        ? `[إتمام البطاقات التعليمية]: راجعت جميع بطاقات "${topic}" (${cards.length} بطاقات) وأتقنتها كاملة! ما هو التطبيق العملي أو المسألة التي نختبر بها هذه القوانين؟`
+        : `[Flashcard Deck Completed]: I reviewed and mastered all ${cards.length} flashcards on "${topic}"! Could you give me an applied problem to test these formulas?`
+      onDeckCompleted(feedback)
+    }
+
+    persistIfComplete(nextGraded, nextMastered)
   }
 
   return (
@@ -91,11 +172,11 @@ export function FlashcardDeckWidget({
         <div
           role="button"
           tabIndex={0}
-          onClick={() => setIsFlipped(!isFlipped)}
+          onClick={handleFlip}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault()
-              setIsFlipped(!isFlipped)
+              handleFlip()
             }
           }}
           className={cn(

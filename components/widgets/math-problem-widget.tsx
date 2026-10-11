@@ -9,6 +9,9 @@ import { cn } from "cn"
 import { useMutation } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/react"
 
+/** Module-scope timestamp helper (keeps render pure). */
+const nowMs = () => Date.now()
+
 export interface MathProblemStep {
   stepNumber: number
   instruction: string
@@ -18,6 +21,7 @@ export interface MathProblemStep {
 export interface MathProblemWidgetProps {
   messageId?: string
   topic: string
+  subject?: string
   problemStatement: string
   steps: MathProblemStep[]
   finalAnswer: string
@@ -36,6 +40,7 @@ export interface MathProblemWidgetProps {
 export function MathProblemWidget({
   messageId,
   topic,
+  subject,
   problemStatement,
   steps = [],
   finalAnswer,
@@ -53,6 +58,12 @@ export function MathProblemWidget({
 
   const trpc = useTRPC()
   const submitWidgetMutation = useMutation(trpc.widget.submitState.mutationOptions())
+
+  // Best-effort time-on-task, measured from mount to submission.
+  const startedAtRef = React.useRef<number>(0)
+  React.useEffect(() => {
+    startedAtRef.current = nowMs()
+  }, [])
 
   const normalize = (str: string) => str.toLowerCase().replace(/[\s\$,\\{}()]/g, "")
 
@@ -82,8 +93,17 @@ export function MathProblemWidget({
         messageId,
         widgetType: "math_problem",
         topic,
+        subject,
         payload: { problemStatement, steps, finalAnswer, explanation },
         userSubmission: { userAnswer, isCorrect: match },
+        items: [
+          {
+            itemId: "final_answer",
+            outcome: match ? "correct" : "incorrect",
+            hintUsed: Object.values(revealedHints).some(Boolean),
+          },
+        ],
+        timeSpentMs: startedAtRef.current ? nowMs() - startedAtRef.current : null,
         isCompleted: true,
         score: match ? 100 : 0,
       })

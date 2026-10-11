@@ -8,6 +8,36 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
+## Frontend Design Standards
+
+Whenever you create, redesign, or significantly modify a frontend interface, use the `frontend-design` skill before implementing the UI.
+
+**Design process**
+
+1. Understand the product, target audience, primary user task, and existing project conventions.
+2. Establish a deliberate visual direction before writing components. Define the typography, color palette, spacing, layout, visual hierarchy, and interaction style.
+3. Make design decisions that are specific to this product. Do not reuse the same page structure, card layouts, or visual identity across unrelated projects.
+4. Inspect the existing codebase and reuse its design system where appropriate. Do not introduce a new UI library or replace established patterns without a reason.
+5. Implement the complete, responsive interface with real interactions, meaningful states, and accessible components.
+6. Review the finished UI critically. Identify generic-looking sections, weak hierarchy, excessive cards, inconsistent spacing, and unnecessary decoration. Improve them before finishing.
+
+**Avoid**
+
+- Generic AI-generated layouts and cookie-cutter templates.
+- Unnecessary gradients, glassmorphism, glowing backgrounds, and decorative blobs.
+- Repeated grids of identical cards when another layout would communicate better.
+- Emoji used as a substitute for a proper visual identity.
+- Excessive rounded corners, shadows, animations, and meaningless icons.
+- Placeholder content that makes the product feel like a demo.
+
+**Quality bar**
+
+The result should feel like a thoughtfully designed, real product—not a template generated from a prompt. Prioritize intentional composition, excellent typography, precise spacing, meaningful details, usability, responsiveness, and maintainable code.
+
+Do not sacrifice usability or consistency just to make a design look unusual. Distinctive design must serve the product.
+
+For existing projects, preserve working functionality and established conventions while improving the visual quality.
+
 # Chat-It: Agent Guide & Activity Log
 
 This file records architecture decisions, agent conventions, and a running log of changes made to the project. Every AI agent working on this codebase MUST review this file and update the **Activity Log** when making changes.
@@ -348,7 +378,7 @@ This file records architecture decisions, agent conventions, and a running log o
 3. **Expandable Composer & Math Symbol Toolbar (`components/chat/chat-composer.tsx`)**:
    - Auto-resizing textarea with Enter-to-send and Shift+Enter for newlines.
    - Math Quick-Symbol Toolbar: 1-click insertion for fractions (`\frac{a}{b}`), exponents (`^{2}`), square roots (`\sqrt{x}`), integrals ($\int$), and Greek letters ($\pi, \theta, \Delta, \infty, \approx, \sum$).
-   - Quick action prompt chips (*"Explain simply"*, *"Quiz me"*, *"Flashcards"*, *"Practice problem"*).
+   - Quick action prompt chips (_"Explain simply"_, _"Quiz me"_, _"Flashcards"_, _"Practice problem"_).
    - Dynamic Send / Stop streaming button toggle.
 
 4. **shadcn Chat Primitives Integration (`components/chat/chat-messages.tsx`)**:
@@ -440,7 +470,7 @@ This file records architecture decisions, agent conventions, and a running log o
    - Verified model streaming, multi-step tool execution, and pedagogical system prompt injection.
 
 2. **Live SSE Message Streaming Test (`/api/chat`)**:
-   - Executed live test query (*"Hi Shawky, what is calculus?"*) against `http://localhost:3000/api/chat`.
+   - Executed live test query (_"Hi Shawky, what is calculus?"_) against `http://localhost:3000/api/chat`.
    - Verified `200 OK` response with `text/event-stream` and `x-vercel-ai-ui-message-stream: v1`.
    - Successfully streamed 32 SSE chunks:
      - Socratic introductory scaffolding with LaTeX math (`$$\int_a^b f'(x)\,dx = f(b) - f(a)$$`).
@@ -591,7 +621,7 @@ This file records architecture decisions, agent conventions, and a running log o
 2. **Polished Experience**:
    - **No Chat History (Default New User)**:
      - Understated, quiet circular history emblem (`size-8 bg-sidebar-accent/30 text-muted-foreground/40`).
-     - Minimal, warm message: *"Your chat history with Shawky will appear here"* (or in Arabic: *"ستظهر محادثاتك السابقة مع شوقي هنا"*).
+     - Minimal, warm message: _"Your chat history with Shawky will appear here"_ (or in Arabic: _"ستظهر محادثاتك السابقة مع شوقي هنا"_).
      - Removed all loud buttons and error banners.
    - **Active Search with 0 Matches**:
      - Dedicated `SearchXIcon` indicator.
@@ -902,7 +932,7 @@ This file records architecture decisions, agent conventions, and a running log o
 
 1. **Sign-in redirect loop — root cause: system clock skew (not code)**:
    - Symptom: after signing in, `/` ⇄ `/sign-in` flashed continuously.
-   - Diagnosis (via a temporary `/api/auth-debug` route): all Clerk cookies were present (`__session`, `__client_uat`, `__clerk_db_jwt`), but Clerk reported `x-clerk-auth-reason: session-token-nbf` — *"JWT cannot be used prior to not before date claim (nbf) … (reason=token-not-active-yet)"*. The machine clock was running ~20–30s behind Clerk's servers, so the middleware rejected every still-valid session as "not active yet": the server saw `signed-out` while the client saw `signed-in` → infinite bounce.
+   - Diagnosis (via a temporary `/api/auth-debug` route): all Clerk cookies were present (`__session`, `__client_uat`, `__clerk_db_jwt`), but Clerk reported `x-clerk-auth-reason: session-token-nbf` — _"JWT cannot be used prior to not before date claim (nbf) … (reason=token-not-active-yet)"_. The machine clock was running ~20–30s behind Clerk's servers, so the middleware rejected every still-valid session as "not active yet": the server saw `signed-out` while the client saw `signed-in` → infinite bounce.
    - Fix: **sync the system clock** (Windows: Date & time → Sync now / `w32tm /resync /force`).
 
 2. **User present in Clerk but never written to Neon**:
@@ -957,7 +987,7 @@ This file records architecture decisions, agent conventions, and a running log o
 
 5. **Backend**: new `session.duplicate` procedure — copies a chat's messages into a new session.
 
-6. **Composer**: added a **"Code" insert** button (```` ``` ```` fence with caret placed inside) via a new `caretOffset` option on the symbol inserter.
+6. **Composer**: added a **"Code" insert** button (` ``` ` fence with caret placed inside) via a new `caretOffset` option on the symbol inserter.
 
 7. **Empty state**: added example-prompt chips and a "Continue: <recent chat>" shortcut (plumbed workspace → shell; `recentSession` / `onOpenSession`).
 
@@ -984,4 +1014,46 @@ This file records architecture decisions, agent conventions, and a running log o
 7. **Self-inflicted bug, caught and fixed**: the bulk PowerShell sweep initially read files as ANSI and rewrote them as UTF-8, mojibake-ing the Arabic in **6 files** (`session-list`, `user-preferences-page`, and the 4 widgets). Recovered losslessly via a cp1252→UTF-8 round-trip (verified codepoint-exact: `حذف`/`إعادة` restored, 0 files remaining with mojibake).
 
 8. **Verification**: 0 TypeScript errors / 0 ESLint warnings / clean Turbopack build.
+
+### [2026-10-11] Phase C1: Learner Memory Schema & Domain Core
+
+> Plan: `~/.commandcode/plans/shawky-learner-memory-phase-c.md`. Phase C turns Shawky into a tutor that remembers. C1 ships the data layer only — no UI, no wiring yet.
+
+1. **Schema (`lib/db/schema.ts`)**:
+   - **NEW `topics`** — canonical, AI-grown registry of `subject`/`topic` with normalized `subject_key`/`topic_key` and an `aliases` jsonb; unique `(subject_key, topic_key)`. Keeps mastery aggregation clean while staying open to any subject.
+   - **NEW `practice_attempts`** — immutable per-item event log (quiz question / flashcard / math answer / quick check): `outcome`, `isCorrect`, `hintUsed`, `difficulty`, `attemptNo`, `timeSpentMs`, `metadata`; indexes `(user_id, created_at)` and `(user_id, topic_id)`. Retakes are kept, never overwritten.
+   - **NEW `learner_stats`** — per-user `current_streak`/`longest_streak`/`last_practice_day` (UTC `YYYY-MM-DD`) + `total_attempts`/`total_correct`.
+   - **Extended `learner_profiles`** — `subjects`, `onboarding_answers` (jsonb), `onboarding_completed_at`, `timezone` (config-driven onboarding stays migration-free).
+   - **Restructured `topic_mastery`** — now keyed by `topic_id` (FK) with `subject`/`subject_key`/`topic_label`, `mastery_score` (recency-weighted), `total_attempts`/`correct_attempts`, `next_review_at`; unique `(user_id, topic_id)`.
+   - **Extended `learner_memory_notes`** — `type`, `confidence`, `topic_id`, `source_message_id`, `status`.
+
+2. **Domain core (`lib/learner/`)** — pure, testable helpers:
+   - `config.ts` (thresholds/bands, half-life, hint penalty, review-interval mapping, context caps), `normalize.ts` (Unicode + Arabic-aware match keys), `scoring.ts` (`computeMastery` = recency-weighted accuracy with hint penalty), `streak.ts` (`advanceStreak`, UTC-day granularity), `resolve-topic.ts` (lazy find-or-create canonical topic), `record.ts` (`recordPractice`: append attempts → recompute mastery + next review → upsert `topic_mastery` → advance `learner_stats`).
+   - `types/learner.ts` — shared `LearnerOverview` + union types (client-safe).
+
+3. **Migrations** (`drizzle/`): because `drizzle-kit generate` requires a TTY to resolve rename prompts, the schema change was sequenced into three non-ambiguous migrations — `0001_slow_miek` (additive: new tables + column additions), `0002_cultured_nehzno` (drop the empty, unused legacy `topic_mastery`), `0003_chunky_ikaris` (create the rebuilt `topic_mastery`). Applied cleanly with `drizzle-kit migrate`; verified 10 public tables and the new `topic_mastery` columns via live Neon introspection.
+
+4. **Verification**: 0 TypeScript errors (`npm run typecheck`), 0 ESLint errors/warnings (`npm run lint`), clean Turbopack build (`npm run build`), migrations applied.
+
+### [2026-10-11] Phase C2: Attempt Capture (widgets → immutable attempt log)
+
+> Plan: `~/.commandcode/plans/shawky-learner-memory-phase-c.md`. Every interactive widget now reports precise, per-item results into `practice_attempts` (and recomputes mastery/streak via `recordPractice`).
+
+1. **`server/trpc/routers/widget.ts`** — `submitState` accepts `subject`, `items[]` (`itemId`/`outcome`/`hintUsed`/`difficulty`) and `timeSpentMs`; the parent-message lookup now also fetches `chatId`. After persisting the `widget_states` row it calls `recordPractice(...)` inside a try/catch, so a recording failure can never fail the widget-state write. `topic` (previously accepted but discarded) is now used.
+
+2. **Tool schemas (`lib/ai/tools.ts`)** — added a required `subject` to `createQuiz`, `createFlashcardDeck`, `createMathProblem`, `createQuickCheck`; added a required `topic` to `createQuickCheck` (it had none). `lib/ai/prompts.ts` gained a "Tagging (every widget tool)" rule: always set `subject` + a consistent `topic` so progress rolls up cleanly.
+
+3. **Widgets — emit per-item results + best-effort `timeSpentMs`:**
+   - `quiz-widget.tsx`: emits one item per question with `correct`/`incorrect`/`skipped` and per-question `hintUsed`.
+   - `math-problem-widget.tsx`: emits a single `final_answer` item + `hintUsed` if any step hint was revealed.
+   - `quick-check-widget.tsx`: now receives `topic`/`subject` and emits a single `quick_check` item.
+   - `flashcard-deck-widget.tsx`: **previously persisted nothing**. Now tracks a `graded` map (`mastered` on "Mark as Mastered", `review` on flip/un-master), persists once when every card is graded (mirrors the quiz's save-on-completion, so grading toggles never double-record), and restores from `initialMasteredIds`/`initialGraded`.
+
+4. **`components/chat/chat-messages.tsx`** — passes `subject` (and `topic` for quick-check) into each widget, plus the flashcard restore props from the persisted `userSubmission`.
+
+5. **React Compiler purity** — the first cut used `React.useRef(Date.now())`, which the `react-hooks/purity` rule rejects. Replaced with an effect-set ref plus a module-scope `nowMs()` helper in each widget.
+
+6. **Runtime smoke test** (temporary `_c2_smoke.ts`, run via `node --conditions=react-server --import tsx`, then deleted): recorded a 4-item quiz → 4 attempts, `masteryScore` 0.556 (hint penalty verified); a retake of `q1` → `attemptNo` 2 and mastery 0.652; a quick-check on a second topic → separate `topic_mastery` row with `nextReviewAt`; `learner_stats` → streak 1, 6 attempts / 3 correct; registry row created and merged correctly; temp user + topics cleaned up (0 leftovers).
+
+7. **Verification**: 0 TypeScript errors (`npm run typecheck`), 0 ESLint errors/warnings (`npm run lint`), clean Turbopack build (`npm run build`).
 

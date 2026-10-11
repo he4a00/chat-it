@@ -19,6 +19,9 @@ import { cn } from "cn"
 import { useMutation } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/react"
 
+/** Module-scope timestamp helper (keeps render pure). */
+const nowMs = () => Date.now()
+
 export interface QuizOption {
   id: string
   label: string
@@ -37,6 +40,7 @@ export interface QuizQuestionItem {
 export interface QuizWidgetProps {
   messageId?: string
   topic: string
+  subject?: string
   title?: string
   // Primary multi-question payload
   questions?: QuizQuestionItem[]
@@ -59,6 +63,7 @@ export interface QuizWidgetProps {
 export function QuizWidget({
   messageId,
   topic,
+  subject,
   title,
   questions,
   question,
@@ -93,6 +98,12 @@ export function QuizWidget({
 
   const trpc = useTRPC()
   const submitWidgetMutation = useMutation(trpc.widget.submitState.mutationOptions())
+
+  // Best-effort time-on-task, measured from mount to submission.
+  const startedAtRef = React.useRef<number>(0)
+  React.useEffect(() => {
+    startedAtRef.current = nowMs()
+  }, [])
 
   // Navigation and answers state
   const [currentIndex, setCurrentIndex] = React.useState(0)
@@ -167,11 +178,26 @@ export function QuizWidget({
     })
     const finalScore = Math.round((finalCorrect / totalQuestions) * 100)
 
+    // Per-question results for the immutable attempt log.
+    const items = normalizedQuestions.map((q, idx) => {
+      const ansId = finalAnswers[idx]
+      if (ansId === undefined) {
+        return { itemId: q.id, outcome: "skipped" as const, hintUsed: Boolean(revealedHints[idx]) }
+      }
+      const opt = q.options.find((o) => o.id === ansId)
+      return {
+        itemId: q.id,
+        outcome: opt?.isCorrect ? ("correct" as const) : ("incorrect" as const),
+        hintUsed: Boolean(revealedHints[idx]),
+      }
+    })
+
     try {
       submitWidgetMutation.mutate({
         messageId,
         widgetType: "quiz",
         topic,
+        subject,
         payload: { title, questions: normalizedQuestions },
         userSubmission: {
           totalQuestions,
@@ -179,6 +205,8 @@ export function QuizWidget({
           scorePercentage: finalScore,
           answers: finalAnswers,
         },
+        items,
+        timeSpentMs: startedAtRef.current ? nowMs() - startedAtRef.current : null,
         isCompleted: true,
         score: finalScore,
       })

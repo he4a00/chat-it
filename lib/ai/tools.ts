@@ -10,6 +10,7 @@ export const createQuizTool = tool({
     "Generate an interactive multi-question quiz challenge (default: 4 questions) with question numbering, sequential next/previous navigation, instant correctness checking, hints, and explanations.",
   inputSchema: z.object({
     topic: z.string().describe("STEM topic e.g. React Fundamentals, Quadratic Equations, Newton's Laws"),
+    subject: z.string().describe("Broad subject/discipline, e.g. Mathematics, Physics, Computer Science, Chemistry"),
     title: z.string().optional().describe("Catchy title for the quiz challenge"),
     questions: z
       .array(
@@ -87,6 +88,7 @@ export const createFlashcardDeckTool = tool({
     "Generate an interactive deck of flashcards for memorizing and drilling STEM formulas, theorems, and definitions.",
   inputSchema: z.object({
     topic: z.string().describe("STEM topic title"),
+    subject: z.string().describe("Broad subject/discipline, e.g. Mathematics, Physics, Computer Science, Chemistry"),
     cards: z
       .array(
         z.object({
@@ -118,6 +120,7 @@ export const createMathProblemTool = tool({
     "Generate a step-by-step guided math problem with sequential instruction steps, hints, and final answer validation.",
   inputSchema: z.object({
     topic: z.string().describe("Math topic"),
+    subject: z.string().describe("Broad subject/discipline, e.g. Mathematics, Physics, Computer Science, Chemistry"),
     problemStatement: z.string().describe("Problem statement with KaTeX math"),
     steps: z
       .array(
@@ -150,6 +153,8 @@ export const createMathProblemTool = tool({
 export const createQuickCheckTool = tool({
   description: "Generate a quick True/False conceptual check to diagnose common misconceptions.",
   inputSchema: z.object({
+    topic: z.string().describe("Concise topic the statement probes, e.g. Limits, Newton's Third Law"),
+    subject: z.string().describe("Broad subject/discipline, e.g. Mathematics, Physics, Computer Science, Chemistry"),
     statement: z.string().describe("Concept assertion or equation with KaTeX math"),
     isTrue: z.boolean().describe("Whether the statement is True or False"),
     explanation: z.string().describe("Conceptual clarification explaining why it is True or False"),

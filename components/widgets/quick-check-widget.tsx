@@ -7,8 +7,13 @@ import { cn } from "cn"
 import { useMutation } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/react"
 
+/** Module-scope timestamp helper (keeps render pure). */
+const nowMs = () => Date.now()
+
 export interface QuickCheckWidgetProps {
   messageId?: string
+  topic?: string
+  subject?: string
   statement: string
   isTrue: boolean
   explanation: string
@@ -23,6 +28,8 @@ export interface QuickCheckWidgetProps {
 
 export function QuickCheckWidget({
   messageId,
+  topic,
+  subject,
   statement,
   isTrue,
   explanation,
@@ -38,6 +45,12 @@ export function QuickCheckWidget({
 
   const trpc = useTRPC()
   const submitWidgetMutation = useMutation(trpc.widget.submitState.mutationOptions())
+
+  // Best-effort time-on-task, measured from mount to submission.
+  const startedAtRef = React.useRef<number>(0)
+  React.useEffect(() => {
+    startedAtRef.current = nowMs()
+  }, [])
 
   const handleChoose = async (choice: boolean) => {
     if (isAnswered) return
@@ -57,8 +70,17 @@ export function QuickCheckWidget({
       submitWidgetMutation.mutate({
         messageId,
         widgetType: "quick_check",
+        topic,
+        subject,
         payload: { statement, isTrue, explanation },
         userSubmission: { userChoice: choice, isCorrect: correct },
+        items: [
+          {
+            itemId: "quick_check",
+            outcome: correct ? "correct" : "incorrect",
+          },
+        ],
+        timeSpentMs: startedAtRef.current ? nowMs() - startedAtRef.current : null,
         isCompleted: true,
         score: correct ? 100 : 0,
       })

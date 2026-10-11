@@ -366,6 +366,7 @@ function ToolCallWidgetCard({
       <QuizWidget
         messageId={messageId}
         topic={topic}
+        subject={input.subject ? String(input.subject) : undefined}
         title={title}
         questions={questionsList}
         isAr={isAr}
@@ -393,8 +394,17 @@ function ToolCallWidgetCard({
       <FlashcardDeckWidget
         messageId={messageId}
         topic={topic}
+        subject={input.subject ? String(input.subject) : undefined}
         cards={cards}
         isAr={isAr}
+        initialMasteredIds={
+          Array.isArray(submission.masteredIds) ? (submission.masteredIds as string[]) : undefined
+        }
+        initialGraded={
+          submission.graded && typeof submission.graded === "object"
+            ? (submission.graded as Record<string, "mastered" | "review">)
+            : undefined
+        }
         onDeckCompleted={(prompt) => {
           onSendFeedback?.(prompt)
         }}
@@ -422,6 +432,7 @@ function ToolCallWidgetCard({
       <MathProblemWidget
         messageId={messageId}
         topic={topic}
+        subject={input.subject ? String(input.subject) : undefined}
         problemStatement={problemStatement}
         steps={steps}
         finalAnswer={finalAnswer}
@@ -453,6 +464,8 @@ function ToolCallWidgetCard({
     return (
       <QuickCheckWidget
         messageId={messageId}
+        topic={input.topic ? String(input.topic) : undefined}
+        subject={input.subject ? String(input.subject) : undefined}
         statement={statement}
         isTrue={isTrue}
         explanation={explanation}
