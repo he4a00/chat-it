@@ -1069,3 +1069,21 @@ This file records architecture decisions, agent conventions, and a running log o
 
 4. **Verification** — runtime smoke test (temporary `_c3_smoke.ts`, run via `node --conditions=react-server --import tsx`, then deleted): inserting the same note twice yielded exactly 1 row (idempotent), with `type`/`confidence`/`topicId`/`sourceMessageId` all persisted; temp user + topic cleaned up (0 leftovers). 0 TypeScript errors (`npm run typecheck`), 0 ESLint errors/warnings (`npm run lint`), clean Turbopack build (`npm run build`).
 
+### [2026-10-11] Phase C4: Learner tRPC Router
+
+> Plan: `~/.commandcode/plans/shawky-learner-memory-phase-c.md`. The empty `learner: router({})` shell is now a full, typed API.
+
+1. **`server/trpc/routers/learner.ts`** — implemented (all `protectedProcedure`):
+   - `getProfile` → `LearnerProfileSummary | null`.
+   - `completeOnboarding({ answers })` → upserts `learner_profiles` (maps `subject`/`skillLevel`/`learningGoal`/`subjects` to typed columns, keeps the raw `answers` blob in `onboardingAnswers`, sets `onboardingCompletedAt`).
+   - `updateProfile({ skillLevel?, learningGoal?, subjects? })` → later edits.
+   - `getOverview` → one payload for the Progress panel: profile, streak (`practicedToday`), totals/accuracy, per-topic mastery with an `isDue` flag, and the latest 8 coach notes.
+   - `getMemoryNotes({ limit? })` → active notes newest-first.
+   - `getDueReviews` → topics where `masteryScore < threshold` OR `nextReviewAt <= now`, weakest first.
+   - `startReview({ lang, topicIds? })` → resolves due/weak topics, creates a chat titled `Review: <topics>`, returns `{ chatId, prompt }` with a bilingual seed prompt for a targeted quiz/flashcards set.
+   - Helpers: `toProfileSummary`, `toNoteView`, `dueCondition()`, `buildReviewPrompt()`.
+
+2. **Verification** — runtime smoke test (temporary `_c4_smoke.ts` + `_preload.cjs`, run via `node --import ./_preload.cjs --import tsx`, then deleted): drove a tRPC caller with a fabricated context end-to-end — onboarding persisted (Physics/advanced), `getOverview` returned streak 1 + 50% accuracy + a due topic + a typed note, `getDueReviews` listed it, and `startReview` created a `Review: …` chat with the profile's subject and returned an English prompt; temp user/topic/chat cleaned up (0 leftovers). 0 TypeScript errors (`npm run typecheck`), 0 ESLint errors/warnings (`npm run lint`), clean Turbopack build (`npm run build`).
+
+> Note for future agents: smoke-testing modules that import `server-only` needs a shim. `node --conditions=react-server` neutralizes `server-only` but makes `react` load its server build (breaks `next/navigation` pulled in via Clerk). The reliable combo for scripts that transitively import Clerk/Next is a CJS preload hooking `Module._load` to return `{}` for `server-only` (see the C4 test recipe above).
+
