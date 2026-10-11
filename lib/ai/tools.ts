@@ -166,6 +166,7 @@ export const createQuickCheckTool = tool({
 /**
  * 5. Update Learner Notes Tool
  * Autonomous qualitative memory recording pedagogical insights about the student.
+ * (Persistence to `learner_memory_notes` lands in Phase 8.)
  */
 export const updateLearnerNotesTool = tool({
   description:

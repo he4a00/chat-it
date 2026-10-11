@@ -8,33 +8,48 @@ import { ChatMessages } from "@/components/chat/chat-messages"
 import { ChatComposer } from "@/components/chat/chat-composer"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
+import { deriveSessionTitle } from "@/lib/session-utils"
+import type { UIMessage } from "ai"
 
 interface ChatWorkspaceProps {
-  activeSessionId: string | null
+  chatId: string
+  initialMessages?: UIMessage[]
   activeSessionTitle?: string
-  onNewChat?: () => void
+  isNewChat?: boolean
+  onFirstMessage?: (chatId: string, title: string) => void
+  onFinishResponse?: () => void
 }
 
 export function ChatWorkspace({
-  activeSessionId,
+  chatId,
+  initialMessages = [],
   activeSessionTitle,
+  isNewChat = false,
+  onFirstMessage,
+  onFinishResponse,
 }: ChatWorkspaceProps) {
   const [input, setInput] = React.useState("")
+  const hasTriggeredFirstMessageRef = React.useRef(!isNewChat)
 
-  // Configure AI SDK Transport with dynamic activeSessionId
-  const transport = React.useMemo(() => {
-    return new DefaultChatTransport({
-      api: "/api/chat",
-      body: () => ({
-        chatId: activeSessionId || undefined,
+  // Send only the newest message; the server loads the rest of the history from Neon.
+  const transport = React.useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: "/api/chat",
+        prepareSendMessagesRequest: ({ messages, id }) => ({
+          body: { message: messages[messages.length - 1], id },
+        }),
       }),
-    })
-  }, [activeSessionId])
+    []
+  )
 
-  // Initialize AI SDK useChat
   const { messages, sendMessage, status, stop, regenerate } = useChat({
-    id: activeSessionId || undefined,
+    id: chatId,
+    messages: initialMessages,
     transport,
+    onFinish: () => {
+      onFinishResponse?.()
+    },
   })
 
   const isLoading = status === "streaming" || status === "submitted"
@@ -44,6 +59,13 @@ export function ChatWorkspace({
     if (!text || isLoading) return
 
     setInput("")
+
+    // Brand-new session: record it in the sidebar + URL on the first send.
+    if (!hasTriggeredFirstMessageRef.current) {
+      hasTriggeredFirstMessageRef.current = true
+      onFirstMessage?.(chatId, deriveSessionTitle(text))
+    }
+
     sendMessage({ text })
   }
 
@@ -60,7 +82,7 @@ export function ChatWorkspace({
           <SidebarTrigger />
 
           {/* Active Session Title (Shown only when in an existing session) */}
-          {activeSessionId && activeSessionTitle && (
+          {activeSessionTitle && (
             <>
               <Separator orientation="vertical" className="h-4" />
               <h1 className="text-xs sm:text-sm font-semibold text-foreground/90 truncate max-w-[200px] sm:max-w-md font-sans">

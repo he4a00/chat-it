@@ -1,9 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { MathRenderer } from "@/components/chat/math-renderer"
+import { Markdown } from "@/components/chat/markdown"
 import { CheckCircle2, XCircle, Check, X } from "lucide-react"
 import { cn } from "cn"
+import { useMutation } from "@tanstack/react-query"
+import { useTRPC } from "@/trpc/react"
 
 export interface QuickCheckWidgetProps {
   messageId?: string
@@ -34,6 +36,9 @@ export function QuickCheckWidget({
   const isAnswered = userChoice !== null
   const isCorrect = userChoice === isTrue
 
+  const trpc = useTRPC()
+  const submitWidgetMutation = useMutation(trpc.widget.submitState.mutationOptions())
+
   const handleChoose = async (choice: boolean) => {
     if (isAnswered) return
     setUserChoice(choice)
@@ -47,20 +52,16 @@ export function QuickCheckWidget({
           correct ? "Correct ✓" : "Incorrect ✗"
         }. ${correct ? "What is a deeper edge-case or generalization of this?" : "Could you break down why this is a common misconception?"}`
 
-    // Persist to Neon DB asynchronously
+    // Persist to Neon via tRPC.
     try {
-      fetch("/api/widgets/state", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messageId,
-          widgetType: "quick_check",
-          payload: { statement, isTrue, explanation },
-          userSubmission: { userChoice: choice, isCorrect: correct },
-          isCompleted: true,
-          score: correct ? 100 : 0,
-        }),
-      }).catch(() => {})
+      submitWidgetMutation.mutate({
+        messageId,
+        widgetType: "quick_check",
+        payload: { statement, isTrue, explanation },
+        userSubmission: { userChoice: choice, isCorrect: correct },
+        isCompleted: true,
+        score: correct ? 100 : 0,
+      })
     } catch {
       // Non-blocking
     }
@@ -90,7 +91,7 @@ export function QuickCheckWidget({
       {/* Statement Body */}
       <div className="p-4 sm:p-5 space-y-4">
         <div className="text-sm font-medium leading-relaxed text-foreground">
-          <MathRenderer content={statement} />
+          <Markdown content={statement} />
         </div>
 
         {/* Binary True / False Buttons */}
@@ -155,7 +156,7 @@ export function QuickCheckWidget({
             </div>
 
             <div className="text-xs leading-relaxed opacity-90 font-sans">
-              <MathRenderer content={explanation} />
+              <Markdown content={explanation} />
             </div>
           </div>
         )}

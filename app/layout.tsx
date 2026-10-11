@@ -5,6 +5,7 @@ import localFont from "next/font/local"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { TRPCReactProvider } from "@/trpc/react"
 import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = {
@@ -53,9 +54,11 @@ export default function RootLayout({
             },
           }}
         >
-          <ThemeProvider>
-            <TooltipProvider>{children}</TooltipProvider>
-          </ThemeProvider>
+          <TRPCReactProvider>
+            <ThemeProvider>
+              <TooltipProvider>{children}</TooltipProvider>
+            </ThemeProvider>
+          </TRPCReactProvider>
         </ClerkProvider>
       </body>
     </html>

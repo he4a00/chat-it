@@ -19,7 +19,7 @@ import {
   MessageFooter,
 } from "@/components/ui/message"
 import { Bubble, BubbleContent } from "@/components/ui/bubble"
-import { MathRenderer } from "@/components/chat/math-renderer"
+import { Markdown } from "@/components/chat/markdown"
 import {
   Copy,
   Check,
@@ -65,6 +65,20 @@ export function ChatMessages({
 
   const isGenerating = status === "streaming" || status === "submitted"
 
+  const hasRenderableContent = (message: UIMessage) =>
+    message.parts?.some(
+      (part) =>
+        (part.type === "text" && Boolean((part as { text?: string }).text?.trim())) ||
+        isToolUIPart(part),
+    ) ?? false
+
+  const lastMessage = messages[messages.length - 1]
+  // The model can take a few seconds before its first token, so show the
+  // indicator until the pending assistant message actually has content.
+  const showThinkingIndicator =
+    isGenerating &&
+    (!lastMessage || lastMessage.role === "user" || !hasRenderableContent(lastMessage))
+
   return (
     <MessageScrollerProvider autoScroll>
       <MessageScroller className="size-full">
@@ -74,6 +88,10 @@ export function ChatMessages({
               const isUser = message.role === "user"
               const isLast = index === messages.length - 1
               const messageId = message.id || `msg-${index}`
+
+              // Skip the empty assistant placeholder that exists before the first
+              // token arrives — the thinking indicator below covers that state.
+              if (!isUser && !hasRenderableContent(message)) return null
 
               // Extract plain text for copying
               const fullText =
@@ -143,7 +161,7 @@ export function ChatMessages({
                               message.parts.map((part, pIdx) => {
                                 if (part.type === "text") {
                                   return (
-                                    <MathRenderer
+                                    <Markdown
                                       key={`p-${pIdx}`}
                                       content={part.text}
                                       className="leading-relaxed"
@@ -166,7 +184,7 @@ export function ChatMessages({
                                 return null
                               })
                             ) : (
-                              <MathRenderer content={fullText} className="leading-relaxed" />
+                              <Markdown content={fullText} className="leading-relaxed" />
                             )}
                           </BubbleContent>
                         </Bubble>
@@ -225,8 +243,8 @@ export function ChatMessages({
             )
           })}
 
-          {/* Typing Indicator when generating */}
-          {isGenerating && (
+          {/* Typing Indicator while waiting for the first token */}
+          {showThinkingIndicator && (
             <MessageScrollerItem messageId="typing-indicator" scrollAnchor>
               <div className="flex items-center gap-2 text-muted-foreground text-xs py-2 px-1 animate-pulse font-sans">
                 <div className="size-2 rounded-full bg-primary" />
@@ -262,6 +280,8 @@ function ToolCallWidgetCard({
 }) {
   const toolName = (getToolName as (p: unknown) => string)(part) || part.type.replace(/^tool-/, "")
   const input = ((part.input || part.output || {}) as Record<string, unknown>)
+  const output = (part.output ?? {}) as Record<string, unknown>
+  const submission = (output.userSubmission ?? {}) as Record<string, unknown>
 
   if (toolName === "updateLearnerNotes") {
     const topic = String(input.topic || "")
@@ -314,6 +334,7 @@ function ToolCallWidgetCard({
         title={title}
         questions={questionsList}
         isAr={isAr}
+        initialAnswers={submission.answers as Record<number, string> | undefined}
         onAnswerSubmitted={(data) => {
           onSendFeedback?.(data.feedbackPrompt)
         }}
@@ -374,6 +395,8 @@ function ToolCallWidgetCard({
         acceptedFormats={acceptedFormats}
         explanation={explanation}
         isAr={isAr}
+        initialUserAnswer={typeof submission.userAnswer === "string" ? submission.userAnswer : undefined}
+        initialCorrect={typeof submission.isCorrect === "boolean" ? submission.isCorrect : undefined}
         onAnswerSubmitted={(data) => {
           onSendFeedback?.(data.feedbackPrompt)
         }}
@@ -402,6 +425,7 @@ function ToolCallWidgetCard({
         isTrue={isTrue}
         explanation={explanation}
         isAr={isAr}
+        initialUserChoice={typeof submission.userChoice === "boolean" ? submission.userChoice : undefined}
         onAnswerSubmitted={(data) => {
           onSendFeedback?.(data.feedbackPrompt)
         }}

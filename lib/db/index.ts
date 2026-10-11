@@ -4,13 +4,13 @@ import * as schema from "./schema"
 
 /**
  * Neon Serverless Database Client
- * Uses HTTP transport via @neondatabase/serverless driver for fast, connectionless
+ * Uses HTTP transport via @neondatabase/serverless for fast, connectionless
  * serverless queries with automatic scaling and zero connection leaks.
  */
-const connectionString = process.env.DATABASE_URL || ""
+const connectionString = process.env.DATABASE_URL ?? ""
 
-if (!connectionString && process.env.NODE_ENV !== "production") {
-  // Graceful warning for development/build stages
+if (!connectionString) {
+  console.warn("[db] DATABASE_URL is not set — database queries will fail.")
 }
 
 const sql = neon(connectionString)

@@ -5,11 +5,12 @@ import {
   AtomIcon,
   CalculatorIcon,
   CheckIcon,
+  ClockIcon,
   FlaskConicalIcon,
-  MessageSquareDashedIcon,
   MessageSquareTextIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  SearchXIcon,
   SigmaIcon,
   Trash2Icon,
   XIcon,
@@ -36,7 +37,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ChatSession, SessionCategory } from "@/types/session"
 import { cn } from "@/lib/utils"
-import { useTranslation } from 'react-i18next'
+import { useLanguage } from "@/hooks/use-language"
 
 interface SessionListProps {
   sessions: ChatSession[]
@@ -86,7 +87,8 @@ export function SessionList({
   onRenameSession,
   onClearSearch,
 }: SessionListProps) {
-  const { t } = useTranslation()
+  const { language } = useLanguage()
+  const isAr = language === "ar"
   const [editingSessionId, setEditingSessionId] = React.useState<string | null>(null)
   const [editTitle, setEditTitle] = React.useState("")
 
@@ -137,21 +139,44 @@ export function SessionList({
   return (
     <SidebarContent className="px-2 py-1 select-none">
       {filteredSessions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-xs text-muted-foreground animate-in fade-in-50 duration-200">
-          <div className="flex size-9 items-center justify-center rounded-full bg-sidebar-accent/60 text-muted-foreground">
-            <MessageSquareDashedIcon className="size-4" />
+        searchQuery.trim().length > 0 ? (
+          /* Case 1: Search returned no matching sessions */
+          <div className="flex flex-col items-center justify-center gap-2.5 px-3 py-10 text-center animate-in fade-in-50 duration-200">
+            <div className="flex size-8 items-center justify-center rounded-full bg-sidebar-accent/50 text-muted-foreground/70">
+              <SearchXIcon className="size-4" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-sidebar-foreground">
+                {isAr ? "لا توجد نتائج" : "No chats found"}
+              </p>
+              <p className="text-[11px] text-muted-foreground max-w-[180px] truncate font-sans">
+                {isAr
+                  ? `لا توجد محادثات تطابق "${searchQuery.trim()}"`
+                  : `No chats matching "${searchQuery.trim()}"`}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={onClearSearch}
+              className="mt-1 h-7 text-xs text-primary hover:text-primary hover:bg-primary/10 rounded-full font-medium"
+            >
+              {isAr ? "مسح البحث" : "Clear search"}
+            </Button>
           </div>
-          <p className="font-medium text-sidebar-foreground">{t('noSessionsFound', 'No sessions found')}</p>
-          <p className="text-[11px] text-muted-foreground">{t('noChatsMatchingLdquosearchqueryrdquo', 'No chats matching &ldquo;{{searchQuery}}&rdquo;', { searchQuery })}</p>
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={onClearSearch}
-            className="mt-1 h-7 text-xs text-primary hover:text-primary hover:bg-primary/10"
-          >
-            {t('clearSearch', 'Clear search')}
-          </Button>
-        </div>
+        ) : (
+          /* Case 2: Clean, minimal empty state when user has no chats yet */
+          <div className="flex flex-col items-center justify-center gap-2 px-4 py-12 text-center animate-in fade-in-50 duration-200">
+            <div className="flex size-8 items-center justify-center rounded-full bg-sidebar-accent/30 text-muted-foreground/40">
+              <ClockIcon className="size-4" />
+            </div>
+            <p className="text-[11px] text-muted-foreground/70 leading-relaxed font-sans max-w-[170px]">
+              {isAr
+                ? "ستظهر محادثاتك السابقة مع شوقي هنا"
+                : "Your chat history with Shawky will appear here"}
+            </p>
+          </div>
+        )
       ) : (
         CATEGORY_ORDER.map((category) => {
           const list = groupedSessions.get(category)
@@ -188,7 +213,7 @@ export function SessionList({
                               variant="ghost"
                               size="icon-xs"
                               onClick={() => handleSaveRename(session.id)}
-                              aria-label={t('saveTitle', 'Save title')}
+                              aria-label={isAr ? "حفظ العنوان" : "Save title"}
                               className="size-6 text-primary hover:bg-primary/10"
                             >
                               <CheckIcon className="size-3" />
@@ -197,7 +222,7 @@ export function SessionList({
                               variant="ghost"
                               size="icon-xs"
                               onClick={handleCancelRename}
-                              aria-label={t('cancelRename', 'Cancel rename')}
+                              aria-label={isAr ? "إلغاء التعديل" : "Cancel rename"}
                               className="size-6 text-muted-foreground hover:bg-sidebar-accent"
                             >
                               <XIcon className="size-3" />
@@ -237,7 +262,7 @@ export function SessionList({
                                 render={
                                   <SidebarMenuAction
                                     showOnHover
-                                    aria-label={t('sessionOptions', 'Session options')}
+                                    aria-label={isAr ? "خيارات المحادثة" : "Session options"}
                                     className="text-muted-foreground/60 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/80 transition-colors size-6"
                                   >
                                     <MoreHorizontalIcon className="size-3.5" />
@@ -253,7 +278,7 @@ export function SessionList({
                                     }}
                                   >
                                     <PencilIcon className="size-3.5 mr-2" />
-                                    <span>{t('rename', 'Rename')}</span>
+                                    <span>{isAr ? "إعادة تسمية" : "Rename"}</span>
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     variant="destructive"
@@ -263,7 +288,7 @@ export function SessionList({
                                     }}
                                   >
                                     <Trash2Icon className="size-3.5 mr-2" />
-                                    <span>{t('delete', 'Delete')}</span>
+                                    <span>{isAr ? "حذف" : "Delete"}</span>
                                   </DropdownMenuItem>
                                 </DropdownMenuGroup>
                               </DropdownMenuContent>

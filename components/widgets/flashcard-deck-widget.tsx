@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { MathRenderer } from "@/components/chat/math-renderer"
-import { Layers, ChevronLeft, ChevronRight, RotateCw, CheckCircle2, Bookmark } from "lucide-react"
+import { Markdown } from "@/components/chat/markdown"
+import { Layers, ChevronLeft, ChevronRight, RotateCw, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "cn"
 
@@ -22,7 +22,6 @@ export interface FlashcardDeckWidgetProps {
 }
 
 export function FlashcardDeckWidget({
-  messageId,
   topic,
   cards = [],
   isAr = false,
@@ -119,7 +118,7 @@ export function FlashcardDeckWidget({
 
           {/* Central Math Content */}
           <div className="my-auto py-3 text-center text-sm sm:text-base font-medium leading-relaxed">
-            <MathRenderer content={isFlipped ? currentCard.back : currentCard.front} />
+            <Markdown content={isFlipped ? currentCard.back : currentCard.front} />
           </div>
 
           {/* Flip Prompt Subtext */}

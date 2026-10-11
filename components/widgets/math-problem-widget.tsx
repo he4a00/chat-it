@@ -1,11 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { MathRenderer } from "@/components/chat/math-renderer"
-import { Calculator, CheckCircle2, Lightbulb, ChevronDown, ChevronUp, Send } from "lucide-react"
+import { Markdown } from "@/components/chat/markdown"
+import { Calculator, CheckCircle2, Lightbulb, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "cn"
+import { useMutation } from "@tanstack/react-query"
+import { useTRPC } from "@/trpc/react"
 
 export interface MathProblemStep {
   stepNumber: number
@@ -22,6 +24,8 @@ export interface MathProblemWidgetProps {
   acceptedFormats?: string[]
   explanation: string
   isAr?: boolean
+  initialUserAnswer?: string
+  initialCorrect?: boolean
   onAnswerSubmitted?: (data: {
     userAnswer: string
     isCorrect: boolean
@@ -38,13 +42,17 @@ export function MathProblemWidget({
   acceptedFormats = [],
   explanation,
   isAr = false,
+  initialUserAnswer,
+  initialCorrect,
   onAnswerSubmitted,
 }: MathProblemWidgetProps) {
-  const [userAnswer, setUserAnswer] = React.useState("")
-  const [activeStep, setActiveStep] = React.useState(1)
+  const [userAnswer, setUserAnswer] = React.useState(initialUserAnswer ?? "")
   const [revealedHints, setRevealedHints] = React.useState<Record<number, boolean>>({})
-  const [isAnswered, setIsAnswered] = React.useState(false)
-  const [isCorrect, setIsCorrect] = React.useState(false)
+  const [isAnswered, setIsAnswered] = React.useState(initialUserAnswer !== undefined)
+  const [isCorrect, setIsCorrect] = React.useState(initialCorrect ?? false)
+
+  const trpc = useTRPC()
+  const submitWidgetMutation = useMutation(trpc.widget.submitState.mutationOptions())
 
   const normalize = (str: string) => str.toLowerCase().replace(/[\s\$,\\{}()]/g, "")
 
@@ -68,21 +76,17 @@ export function MathProblemWidget({
           match ? "Correct ✓" : "Incorrect ✗"
         }. ${match ? "Is there an alternative or more elegant way to solve this?" : "Could you guide me through where my derivation went off track?"}`
 
-    // Persist to Neon DB asynchronously
+    // Persist to Neon via tRPC.
     try {
-      fetch("/api/widgets/state", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messageId,
-          widgetType: "math_problem",
-          topic,
-          payload: { problemStatement, steps, finalAnswer, explanation },
-          userSubmission: { userAnswer, isCorrect: match },
-          isCompleted: true,
-          score: match ? 100 : 0,
-        }),
-      }).catch(() => {})
+      submitWidgetMutation.mutate({
+        messageId,
+        widgetType: "math_problem",
+        topic,
+        payload: { problemStatement, steps, finalAnswer, explanation },
+        userSubmission: { userAnswer, isCorrect: match },
+        isCompleted: true,
+        score: match ? 100 : 0,
+      })
     } catch {
       // Non-blocking
     }
@@ -116,7 +120,7 @@ export function MathProblemWidget({
       <div className="p-4 sm:p-5 space-y-4">
         {/* Problem Statement */}
         <div className="text-sm font-medium leading-relaxed text-foreground">
-          <MathRenderer content={problemStatement} />
+          <Markdown content={problemStatement} />
         </div>
 
         {/* Guided Steps List */}
@@ -140,7 +144,7 @@ export function MathProblemWidget({
                           {s.stepNumber}
                         </span>
                         <div className="leading-relaxed text-foreground/90">
-                          <MathRenderer content={s.instruction} />
+                          <Markdown content={s.instruction} />
                         </div>
                       </div>
 
@@ -159,7 +163,7 @@ export function MathProblemWidget({
                     {/* Step Hint Reveal */}
                     {isHintOpen && s.hint && (
                       <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 text-[11px] leading-relaxed">
-                        <MathRenderer content={s.hint} />
+                        <Markdown content={s.hint} />
                       </div>
                     )}
                   </div>
@@ -211,7 +215,7 @@ export function MathProblemWidget({
             </div>
 
             <div className="text-xs leading-relaxed opacity-90 font-sans border-t border-border/30 pt-2">
-              <MathRenderer content={explanation} />
+              <Markdown content={explanation} />
             </div>
           </div>
         )}

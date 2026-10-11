@@ -560,3 +560,382 @@ This file records architecture decisions, agent conventions, and a running log o
 4. **Verification**:
    - Verified 0 TypeScript errors with `npm run typecheck`.
    - Verified end-to-end multi-question quiz stream generation with Node test script.
+
+### [2026-10-11] Phase 5: Real Session Sync & Sidebar Integration
+
+1. **Server Actions & Database Persistence (`lib/actions/sessions.ts`)**:
+   - `getUserSessions()`: Fetches chat sessions from Neon PostgreSQL `chats` table ordered by `updatedAt DESC` and chronologically categorized into `today`, `yesterday`, `previous_7_days`, and `older`.
+   - `createSession(initialTitle, subject)`: Creates new chat records in Neon and returns typed `ChatSession`.
+   - `renameSession(chatId, newTitle)`: Authenticated title update in Neon.
+   - `deleteSession(chatId)`: Authenticated cascade deletion removing chat, messages, and associated widget states.
+   - `getSessionMessages(chatId)`: Restores complete conversation stream from `messages` and associates historical `widget_states` payloads into active AI SDK `UIMessage[]` objects.
+
+2. **Session API Routes & Date Utilities**:
+   - Built `app/api/sessions/route.ts` (`GET`, `POST`), `app/api/sessions/[id]/route.ts` (`PATCH`, `DELETE`), and `app/api/sessions/[id]/messages/route.ts` (`GET`).
+   - Built `lib/session-utils.ts` providing `computeSessionCategory()` and `formatSessionTimestamp()`.
+
+3. **Client Session State Hook (`hooks/use-sessions.ts`)**:
+   - Replaced mock session arrays with live data hook synchronizing with Clerk authentication, optimistic UI updates, search filtering, and guest `localStorage` fallback.
+   - Automatically navigates between `/` (New Chat) and dynamic `/c/[chatId]` routes.
+
+4. **Dynamic Route & Chat Workspace Assembly**:
+   - Created `app/c/[chatId]/page.tsx` for direct deep-linking and bookmarking of chat sessions.
+   - Updated `components/chat/chat-workspace.tsx` to automatically load conversation history and restore saved widget states when opening any previous chat.
+   - Automatically records dynamically created chats into the sidebar on the first user message exchange.
+
+### [2026-10-11] UI Polish: Sidebar Empty State Redesign
+
+1. **Root Cause Analysis**:
+   - In `components/sidebar/session-list.tsx`, empty session lists triggered a broken search-failure block rendering raw escaped HTML entities (`&ldquo;{{searchQuery}}&rdquo;`), a noisy dotted icon, and an out-of-place all-caps "CLEAR SEARCH" button even when no query was active.
+
+2. **Polished Experience**:
+   - **No Chat History (Default New User)**:
+     - Understated, quiet circular history emblem (`size-8 bg-sidebar-accent/30 text-muted-foreground/40`).
+     - Minimal, warm message: *"Your chat history with Shawky will appear here"* (or in Arabic: *"ستظهر محادثاتك السابقة مع شوقي هنا"*).
+     - Removed all loud buttons and error banners.
+   - **Active Search with 0 Matches**:
+     - Dedicated `SearchXIcon` indicator.
+     - Clean interpolated search string: `No chats matching "{searchQuery}"`.
+     - Compact rounded pill button: `Clear search`.
+
+3. **Verification**:
+   - Verified 0 TypeScript errors with `npm run typecheck`.
+
+### [2026-10-11] Fix: Session History Loading, force-dynamic Route Handlers & useChat Streaming Stabilization
+
+1. **Root Cause Analysis**:
+   - **Route Handler Caching**: `app/api/sessions/route.ts` and `app/api/sessions/[id]/messages/route.ts` were missing `export const dynamic = "force-dynamic"`, which caused Next.js to treat `GET` route handlers as static evaluations. During server evaluation, Clerk's `auth()` could not read dynamic request cookies and returned `userId: null`, resulting in empty session responses (`{"sessions": []}`).
+   - **`useChat` Lifecycle Race Condition**: In `components/chat/chat-workspace.tsx`, `useChat({ id: activeSessionId || "new-chat" })` was flipping `id` from `"new-chat"` to a newly generated UUID inside `handleSendMessage`. In `@ai-sdk/react`, changing the `id` prop tears down the current stream and resets internal messages. Simultaneously, a `useEffect` loaded `/api/sessions/[id]/messages` before the turn finished, which returned `[]` and called `setMessages([])`, wiping out active streams.
+
+2. **Resolution & Architectural Stabilization**:
+   - **`force-dynamic` Enforcement**: Added `export const dynamic = "force-dynamic"` to `app/api/sessions/route.ts`, `app/api/sessions/[id]/route.ts`, and `app/api/sessions/[id]/messages/route.ts`.
+   - **Server Component Initial Hydration**: Converted `app/page.tsx` and `app/c/[chatId]/page.tsx` into dynamic Server Components calling `getUserSessions()` and `getSessionMessages(chatId)` directly on the server. Initial HTML delivers the user's historical sessions and conversation history with zero client-side fetch latency.
+   - **Unified `ChatShell` Client Architecture (`components/chat/chat-shell.tsx`)**: Extracted sidebar and workspace orchestration into a clean client component that maintains optimistic session state, handles guest `localStorage` fallback, and supplies a constant `chatId` to `ChatWorkspace`.
+   - **Stable `ChatWorkspace` Stream Lifecycle (`components/chat/chat-workspace.tsx`)**:
+     - Keyed by `chatId` (`key={currentChatId}`) to guarantee clean mounts between sessions.
+     - Removed the problematic `useEffect` message wiping.
+     - First turn updates browser address bar smoothly via `window.history.replaceState` without unmounting the React tree or restarting `useChat`.
+     - Automatically refreshes the sidebar upon generation completion (`onFinish`).
+   - **Type Safety & Lint Cleanup**: Typed restored message parts to `UIMessage["parts"]` and removed all unused imports/variables across widget components.
+
+3. **Verification**:
+   - Verified 0 TypeScript errors with `npm run typecheck`.
+   - Verified 0 ESLint errors and warnings with `npm run lint`.
+   - Verified live server responses: `http://localhost:3000/` and `http://localhost:3000/c/3YCVhAUp4GBxZl0k` return `200 OK`.
+
+### [2026-10-11] Fix: Direct Neon DB Route Queries, Message Persistence & Language Locking
+
+1. **Direct Neon Query in `/api/sessions` (`app/api/sessions/route.ts`)**:
+   - Replaced indirect Server Action call with direct Drizzle Neon query inside the Route Handler context.
+   - Eliminates `"use server"` RPC proxy overhead during client-side hydration fetch, resolving empty session history on initial page render.
+
+2. **Client Post-Hydration Session Sync (`components/chat/chat-shell.tsx`)**:
+   - Added automatic client-side session sync triggered as soon as Clerk auth state finishes hydrating (`isAuthLoaded && isSignedIn`).
+   - Implemented render-phase prop synchronization conforming to React 19 rules without cascading `set-state-in-effect` violations.
+   - Preserved optimistic first-turn additions and seamless `window.history.replaceState` deep linking.
+
+3. **Message & Session Persistence Hardening (`app/api/chat/route.ts`)**:
+   - Guarded against empty string (`""`) message IDs causing PostgreSQL primary key collisions by adding `crypto.randomUUID()` fallbacks.
+   - Enhanced user prompt title extraction to support both `firstUserMsg.parts` and direct `firstUserMsg.content`.
+
+4. **Strict Language Detection & Locking (`lib/ai/prompts.ts`)**:
+   - Enforced non-negotiable language locking rule in `SHAWKY_BASE_SYSTEM_PROMPT`.
+   - Prohibits mixing Arabic and English sentences within a single response.
+   - All prose strictly matches the student's message language (scientific LaTeX math formulas remain isolated in standard LTR).
+
+### [2026-10-11] tRPC v11 Migration: Phase 1 & Phase 2 Complete
+
+1. **Dependency Installation (Phase 1)**:
+   - Installed `@trpc/server@11.19.0`, `@trpc/client@11.19.0`, `@trpc/tanstack-react-query@11.19.0`, `@tanstack/react-query@5.104.1`, `superjson`, and `server-only`.
+   - Verified clean compatibility with Next.js 16 (App Router) and React 19.
+
+2. **Core tRPC Foundation (`server/trpc/`)**:
+   - `server/trpc/context.ts`: Context creation with React `cache()` deduplication per request pass, integrating Clerk user resolution (`resolveUserId`) and Neon PostgreSQL Drizzle singleton client.
+   - `server/trpc/trpc.ts`: Initialized tRPC instance with SuperJSON transformer, Zod error formatter, `publicProcedure`, `protectedProcedure` (enforcing Clerk authentication with `UNAUTHORIZED` TRPCError), and `createCallerFactory`.
+   - `app/api/trpc/[trpc]/route.ts`: Built Next.js App Router HTTP handler utilizing `fetchRequestHandler` with `export const dynamic = "force-dynamic"`.
+
+3. **Domain Sub-Routers & Root AppRouter (Phase 2)**:
+   - `server/trpc/routers/session.ts`: Migrated all session logic:
+     - `session.list`: Public query retrieving user sessions ordered by `updatedAt DESC` with category and timestamp computation.
+     - `session.get`: Protected query for single session.
+     - `session.getMessages`: Public query restoring full `UIMessage[]` conversation stream and reconstructed widget payloads.
+     - `session.create`: Protected mutation creating a new session in Neon.
+     - `session.rename`: Protected mutation updating session title.
+     - `session.delete`: Protected mutation cascade deleting session, messages, and widget states.
+   - `server/trpc/routers/widget.ts`: Migrated widget state submissions:
+     - `widget.submitState`: Persists widget completion to `widget_states` and updates quantitative `topic_mastery`.
+     - `widget.getState`: Retrieves persisted widget record by messageId.
+   - `server/trpc/routers/learner.ts`: Added dedicated learner memory queries & mutations:
+     - `learner.getProfile` & `learner.updateProfile`: Student preferences, subject, skill level, and goals.
+     - `learner.getMastery`: Quantitative topic accuracy matrix.
+     - `learner.getMemoryNotes`: Qualitative Socratic AI pedagogical observations.
+   - `server/trpc/routers/_app.ts`: Root `AppRouter` combining `sessionRouter`, `widgetRouter`, and `learnerRouter`.
+   - `trpc/server.ts`: In-process RSC caller using `createCallerFactory(appRouter)` for zero-latency direct server component queries.
+
+4. **Verification**:
+   - Verified 0 TypeScript errors with `npm run typecheck`.
+   - Verified 0 ESLint errors with `npm run lint`.
+   - Verified clean production build with Turbopack (`npm run build`), registering `ƒ /api/trpc/[trpc]`.
+
+### [2026-10-11] tRPC v11 Migration: Phase 3 (Client & RSC Integration) Complete
+
+1. **Client Infrastructure & Provider (`trpc/`)**:
+   - `trpc/query-client.ts`: Created browser-singleton and server-fresh `QueryClient` factory configuring SuperJSON dehydration/hydration and 30s staleTime.
+   - `trpc/react.tsx`: Configured `@trpc/tanstack-react-query` context (`createTRPCContext<AppRouter>()`), exporting `TRPCProvider`, `useTRPC`, `useTRPCClient`, and `TRPCReactProvider` with dynamic Clerk Bearer token injection.
+   - `app/layout.tsx`: Wrapped the root component tree with `<TRPCReactProvider>` inside `<ClerkProvider>`.
+
+2. **Server Component Entrypoints Converted (`app/page.tsx`, `app/c/[chatId]/page.tsx`)**:
+   - Converted `app/page.tsx` and `app/c/[chatId]/page.tsx` to query Neon DB directly via `const api = await getTRPCApi(); const sessions = await api.session.list()`, delivering pre-rendered session history and messages with zero HTTP round-trips.
+
+3. **Client Session State & TanStack Query Synchronization (`components/chat/chat-shell.tsx`)**:
+   - Replaced ad-hoc `fetch("/api/sessions")` with `trpc.session.list.queryOptions()` and TanStack Query v5 cache.
+   - Wired `trpc.session.rename.mutationOptions()` and `trpc.session.delete.mutationOptions()` with automatic cache invalidation (`queryClient.invalidateQueries`).
+   - Implemented React 19 render-phase synchronization for `serverSessions` without cascading `useEffect` set-state warnings.
+
+4. **Generative UI Widgets Ported to tRPC**:
+   - `components/widgets/quiz-widget.tsx`: Replaced raw `fetch("/api/widgets/state")` with `submitWidgetMutation.mutate({ widgetType: "quiz", ... })`.
+   - `components/widgets/math-problem-widget.tsx`: Replaced raw `fetch` with `submitWidgetMutation.mutate({ widgetType: "math_problem", ... })`.
+   - `components/widgets/quick-check-widget.tsx`: Replaced raw `fetch` with `submitWidgetMutation.mutate({ widgetType: "quick_check", ... })`.
+
+5. **Verification**:
+   - Verified 0 ESLint errors with `npm run lint`.
+   - Verified full type compliance across client hooks, mutations, and server callers.
+
+### [2026-10-11] tRPC v11 Migration: Phase 4 & Phase 5 Complete (Final Cutover & Verification)
+
+1. **Legacy Route & Action Deprecation & Deletion (Phase 4)**:
+   - Permanently deleted obsolete Route Handlers:
+     - `app/api/sessions/route.ts`
+     - `app/api/sessions/[id]/route.ts`
+     - `app/api/sessions/[id]/messages/route.ts`
+     - `app/api/widgets/state/route.ts`
+   - Deleted obsolete directory `app/api/widgets/` and `app/api/sessions/`.
+   - Deleted redundant Server Actions in `lib/actions/sessions.ts` and directory `lib/actions/`.
+
+2. **Clean Route Footprint**:
+   - Application now exclusively exposes:
+     - `ƒ /api/chat`: High-throughput SSE token stream for AI responses.
+     - `ƒ /api/trpc/[trpc]`: Complete, end-to-end type-safe RPC API for session management, message history, widget state persistence, and learner memory.
+
+3. **End-to-End Build & Static Verification (Phase 5)**:
+   - Verified 0 ESLint errors and 0 warnings with `npm run lint`.
+   - Verified clean production build with Next.js Turbopack (`npm run build`) in 9.6s.
+   - Verified route generation: only dynamic `/api/chat` and `/api/trpc/[trpc]` are registered as API routes.
+
+### [2026-10-11] Fix: Assistant Message Persistence & Client Session Disappearance
+
+1. **Root Cause Analysis (Bug 1 - Only user messages appeared)**:
+   - In `app/api/chat/route.ts`, `lastAssistant.id` was an empty string `""`.
+   - In previous database writes, an assistant message with `id: ""` was inserted. Because `id` is the primary key, subsequent assistant messages attempting to insert with `id: ""` hit `onConflictDoNothing()` and were completely dropped.
+   - Furthermore, `widgetStates` insertion was using `messageId: lastAssistant.id` instead of the generated `assistantMsgId`, causing foreign key mismatches.
+
+2. **Root Cause Analysis (Bug 2 - Sidebar sessions disappeared on click / refresh)**:
+   - In `lib/auth/resolve-user.ts`, `createClerkClient` was instantiated without `publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, causing `clerk.authenticateRequest(req)` to throw an unhandled `Publishable key is missing` error.
+   - As a result, client calls to `/api/trpc/session.list` resolved `userId: null` and returned `[]`.
+   - `ChatShell`'s `useQuery` received `[]` and overwrote the pre-rendered `initialSessions` state, wiping out the sidebar.
+
+3. **Resolution**:
+   - **Database Repair**: Migrated legacy empty ID (`id: ''`) in Neon PostgreSQL `messages` and `widget_states` to a valid UUID (`2a539936-27c8-4ec1-9675-61123f4552e6`).
+   - **Assistant Persistence Hardening**: Fixed `app/api/chat/route.ts` to always use `assistantMsgId` for both `messages` and `widgetStates.messageId`.
+   - **Clerk Auth Fix**: Added `publishableKey` to `createClerkClient` in `lib/auth/resolve-user.ts` and enabled credentials in `trpc/react.tsx`.
+   - **ChatShell State Resilience**: Protected `sessions` in `ChatShell` from being overwritten by empty query responses when server sessions already exist, and synchronized route changes to `activeSessionId`.
+
+4. **Verification**:
+   - Verified 0 ESLint errors (`npm run lint`).
+   - Verified clean production build with Turbopack in 6.3s (`npm run build`).
+
+### [2026-10-11] Fix: Sidebar Sessions, Chat History Navigation & Full Conversation Persistence
+
+1. **Root Cause Analysis (Sidebar sessions vanish + clicking a chat shows no messages)**:
+   - `ChatShell` maintained its own `sessions` state that was force-synchronized from the `session.list` query via render-phase `setState`. The guard `serverSessions.length > 0 || initialSessions.length === 0` still let an empty/transient query response wipe the list, and the dual source of truth was inherently racy.
+   - `handleSelectSession` optimistically called `setActiveSessionId(id)` **before** navigation. Because the workspace was keyed by the immediately-updated `currentChatId`, `ChatWorkspace` remounted with `initialMessages = []`. When the RSC payload arrived, `chatId` was unchanged, so `useChat`'s `useMemo([chatId])` never rebuilt the `Chat` and the real messages were discarded. This only failed when navigating between two existing chats (same page component, no remount) — explaining the "sometimes it works" behavior.
+
+2. **Resolution**:
+   - **Single Source of Truth (`components/chat/chat-shell.tsx` rewritten)**: Signed-in sessions now come exclusively from the TanStack Query cache (`session.list`), seeded with `initialData` from the server. Optimistic create/rename/delete go through `queryClient.setQueryData`. Guests use a new hydration-safe hook. No more render-phase session clobbering.
+   - **Route-Driven Active Session**: `handleSelectSession` now only calls `router.push`. The workspace remounts with the correct messages once the RSC payload lands (`/c/a -> /c/b` now works). `handleNewChat` regenerates `newChatId` so "New Chat" always starts a clean conversation.
+   - **`hooks/use-guest-sessions.ts` (new)**: localStorage-backed session store built on `useSyncExternalStore`, eliminating the previous first-render hydration mismatch for signed-out users.
+   - **Full Conversation Persistence (`app/api/chat/route.ts`)**: `onEnd` now persists **every** user/assistant message in the turn (idempotent via `onConflictDoNothing`), backfilling any previously-missed messages instead of only saving the last user/assistant pair. Widget states and learner notes are attached to the correct message id.
+   - **Robust Request Auth**: `/api/chat` now resolves the user via `resolveUserId(req)` (Clerk `auth()` + `authenticateRequest` + Bearer fallback) instead of bare `auth()`, and `ChatWorkspace`'s `DefaultChatTransport` now sends a Clerk bearer token so the stream can authenticate even without cookie/proxy auth.
+   - **Shared Title Derivation**: New `deriveSessionTitle()` in `lib/session-utils.ts` is used by both client (optimistic entry) and server, fixing the 36 vs 40 char mismatch.
+
+3. **Security & Correctness Hardening (`server/trpc/routers/session.ts`)**:
+   - `getMessages` no longer leaks conversations: it returns `[]` for unauthenticated callers and always enforces chat ownership.
+   - `rename` and `delete` now `.returning()` and throw `NOT_FOUND` when no owned row was affected.
+
+4. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`).
+   - Verified 0 ESLint errors and warnings (`npm run lint`).
+   - Verified clean production build with Turbopack (`npm run build`), with `ƒ Proxy (Middleware)` active and `/`, `/c/[chatId]`, `/api/chat`, `/api/trpc/[trpc]` all rendering `200`.
+
+### [2026-10-11] Feat: Clerk → Neon User Synchronization (Webhook + On-Demand)
+
+1. **Root Cause (signed-up user missing from Neon `users`)**:
+   - The app had **no code that writes the `users` table on signup**. The only insert lived inside `app/api/chat/route.ts` and ran lazily on the first chat message — and it stored placeholder data (`${userId}@shawky.learner`, `"Student"`). A freshly signed-up user therefore never appeared in Neon until (and unless) they sent a message.
+   - This was an app-side gap, not a Clerk problem — Clerk correctly held the account.
+
+2. **Resolution**:
+   - **`lib/auth/ensure-user.ts` (new)**: `ensureUserRow(userId)` idempotently guarantees a `users` row. It checks by primary key, and only when missing reads the real profile (`emailAddresses`, `firstName`/`lastName`, `imageUrl`) from the Clerk Backend API (`clerkClient()`), then inserts with `onConflictDoNothing`. It never throws, so a sync failure can't break a request.
+   - **`app/api/webhooks/clerk/route.ts` (new)**: Svix-verified Clerk webhook (`verifyWebhook` from `@clerk/nextjs/webhooks`) handling `user.created` / `user.updated` (upsert) and `user.deleted` (delete). The route is intentionally public (no `auth.protect()`); verification is the only guard. Requires `CLERK_WEBHOOK_SIGNING_SECRET`.
+   - **On-demand sync wired into `server/trpc/context.ts`**: every authenticated request (RSC render or tRPC route handler) calls `ensureUserRow(userId)` from the deduplicated context, so a returning user is synced on first activity even when webhooks aren't configured locally.
+   - **`app/api/chat/route.ts`**: replaced the placeholder user insert with `ensureUserRow(userId)`.
+   - Documented `CLERK_WEBHOOK_SIGNING_SECRET` in `.env.local` and the local tunnel command in the webhook route.
+
+3. **Verification**:
+   - Verified the Clerk Backend API → Drizzle upsert path against the live instance: the real profile (`a.hashem.shokry123@gmail.com`, `Ahmed Hashem`) is now present in Neon `users`.
+   - Verified `POST /api/webhooks/clerk` is reachable and returns `400` on an unverified body (signature check), `405` on `GET`.
+   - Verified 0 TypeScript errors (`npm run typecheck`), 0 ESLint errors (`npm run lint`), and a clean production build (`npm run build`) registering `ƒ /api/webhooks/clerk`.
+
+### [2026-10-11] Backend Reset (Phase 0): Full Teardown to a Clean Slate
+
+> Plan: `~/.commandcode/plans/shawky-backend-reset-and-rebuild.md`. Goal: remove the entire existing backend and rebuild it cleanly (tRPC + Neon/Drizzle + Clerk + AI SDK v7). No design changes made — markup/styles untouched.
+
+1. **Deleted backend code (entirely)**:
+   - `app/api/` (`chat/route.ts`, `trpc/[trpc]/route.ts`, `webhooks/clerk/route.ts`)
+   - `app/c/` (`[chatId]/page.tsx`)
+   - `server/` (tRPC context, `trpc.ts`, routers `_app`/`session`/`widget`/`learner`)
+   - `trpc/` (`react.tsx`, `server.ts`, `query-client.ts`)
+   - `lib/ai/` (`prompts.ts`, `tools.ts`, `context.ts`)
+   - `lib/auth/` (`ensure-user.ts`, `resolve-user.ts`)
+   - `lib/db/` (`schema.ts`, `index.ts`)
+   - `lib/mock-sessions.ts`, `hooks/use-guest-sessions.ts`
+   - `drizzle.config.ts`, `neon.ts`, `hello.ts`
+
+2. **Database reset**:
+   - Dropped all 7 tables against `DATABASE_URL_UNPOOLED` (`widget_states`, `messages`, `chats`, `topic_mastery`, `learner_memory_notes`, `learner_profiles`, `users`). Verified 0 remaining public tables.
+
+3. **Client un-wiring (no visual changes — data wiring only; `// TODO(rebuild)` markers added)**:
+   - `app/layout.tsx`: removed `TRPCReactProvider` wrapper.
+   - `app/page.tsx`: replaced `getTRPCApi()` usage with an authenticated placeholder (`await auth.protect()` → `<ChatShell />`).
+   - `components/chat/chat-shell.tsx`: removed tRPC queries/mutations + guest branch; renders inert data.
+   - `components/chat/chat-workspace.tsx`: removed `useChat`/`DefaultChatTransport`/`useAuth`; send is a local no-op.
+   - `components/widgets/{quiz,quick-check,math-problem}-widget.tsx`: removed `useTRPC`/`useMutation` persistence calls (flashcard widget was already local-only).
+
+4. **Kept (design/shared, reused by rebuild)**: all of `components/`, `lib/session-utils.ts`, `types/session.ts`, `proxy.ts`, `app/sign-in`, `app/sign-up`.
+
+5. **Config**: removed `db:generate` / `db:push` / `db:studio` scripts from `package.json` (re-added with `drizzle-kit migrate` in Phase 1).
+
+6. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`) — after clearing the stale `.next` cache.
+   - Verified 0 ESLint errors and warnings (`npm run lint`).
+   - Verified clean Turbopack build (`npm run build`); routes now only `/`, `/sign-in`, `/sign-up`, plus `ƒ Proxy (Middleware)`.
+
+### [2026-10-11] Backend Rebuild (Phase 1 & 2): Drizzle/Neon Foundation + Clerk Auth
+
+> Plan: `~/.commandcode/plans/shawky-backend-reset-and-rebuild.md`.
+
+1. **Database foundation (Phase 1)**:
+   - `lib/db/schema.ts`: recreated the 7 tables (`users`, `learner_profiles`, `chats`, `messages`, `widget_states`, `topic_mastery`, `learner_memory_notes`) with relations and inferred types.
+   - `lib/db/index.ts`: Neon HTTP singleton (`drizzle-orm/neon-http`).
+   - `drizzle.config.ts`: schema `./lib/db/schema.ts`, `out: "./drizzle"`, `url: DATABASE_URL_UNPOOLED || DATABASE_URL`, loads `.env.local` via `dotenv`.
+   - `package.json` scripts: `db:generate`, `db:migrate` (replaces the old `db:push`), `db:studio`.
+   - Generated versioned migration `drizzle/0000_lonely_betty_brant.sql` and applied it with `drizzle-kit migrate`. Verified 7 public tables + 1 recorded migration.
+
+2. **Auth foundation (Phase 2)**:
+   - `proxy.ts`: confirmed bare `clerkMiddleware()` (matcher includes `/(api|trpc)(.*)` and `/__clerk/:path*`). No `createRouteMatcher` (deprecated in `@clerk/nextjs` 7).
+   - `lib/auth/current-user.ts` (new): `getCurrentUserId()` — thin `auth()` wrapper, no bearer/triple-fallback hacks.
+   - `lib/auth/ensure-user.ts`: lazy, non-hot-path `ensureUserRow()` (PK lookup → Clerk Backend API only when missing → `onConflictDoNothing`). Never called from the tRPC context.
+   - `app/api/webhooks/clerk/route.ts`: Svix-verified (`verifyWebhook`) handler for `user.created` / `user.updated` / `user.deleted`; `force-dynamic`, public by design.
+   - `.env.local`: documented that `CLERK_WEBHOOK_SIGNING_SECRET` is optional in local dev (lazy fallback covers it).
+
+3. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`) and 0 ESLint errors/warnings (`npm run lint`).
+   - Verified clean Turbopack build (`npm run build`) with `ƒ /api/webhooks/clerk` registered alongside `/`, `/sign-in`, `/sign-up`.
+   - Runtime check (production server on port 3100): unverified `POST /api/webhooks/clerk` → `400`, `GET` → `405`.
+
+### [2026-10-11] Backend Rebuild (Phase 3): tRPC Foundation
+
+1. **Server**:
+   - `server/trpc/trpc.ts`: `initTRPC` with SuperJSON transformer + Zod `errorFormatter`; exports `router`, `publicProcedure`, `protectedProcedure` (throws `UNAUTHORIZED` when `!ctx.userId`), `createCallerFactory`.
+   - `server/trpc/context.ts`: `cache()`-wrapped `createTRPCContext()` reading Clerk `auth()` → `{ db, userId }`. **No** hot-path user sync (lazy sync only where an FK is required).
+   - `server/trpc/routers/{session,widget,learner}.ts`: empty router shells (procedures land in Phase 4/8).
+   - `server/trpc/routers/_app.ts`: root `appRouter` combining the three sub-routers.
+   - `app/api/trpc/[trpc]/route.ts`: `fetchRequestHandler` exposing `GET`/`POST`, `force-dynamic`.
+
+2. **Client**:
+   - `trpc/query-client.ts`: browser-singleton / server-fresh `QueryClient` with SuperJSON dehydrate/hydrate.
+   - `trpc/react.tsx`: `TRPCProvider` + `useTRPC` via `@trpc/tanstack-react-query`, `httpBatchLink` + superjson, cookie auth (`credentials: "include"`). **No** manual Bearer header.
+   - `trpc/server.ts`: `getTRPCApi()` RSC caller executed in-process.
+   - `app/layout.tsx`: re-added `<TRPCReactProvider>` inside `<ClerkProvider>`.
+
+3. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`) and 0 ESLint errors/warnings (`npm run lint`).
+   - Verified clean Turbopack build (`npm run build`) with `ƒ /api/trpc/[trpc]` registered.
+   - Runtime check (production server on port 3100): `/api/trpc/session.list` → `404` with the tRPC error shape (empty router; custom `errorFormatter` active), `/` → `307` redirect to `/sign-in` (confirming `auth.protect()` works with the bare middleware).
+
+### [2026-10-11] Backend Rebuild (Phase 4 & 5): Core Routers + AI Streaming Route
+
+1. **Shared message loader**:
+   - `lib/ai/load-messages.ts`: `loadUIMessages(chatId, userId)` — ownership-checked; reconstructs `UIMessage[]` from `messages.content` + `messages.toolInvocations`, merging any persisted `widget_states` submission into the tool part's `output`. Used by both `session.getMessages` and the chat route.
+
+2. **Core routers (Phase 4)**:
+   - `server/trpc/routers/session.ts`: `list`, `get`, `create` (idempotent `onConflictDoNothing` + fallback fetch; calls `ensureUserRow`), `rename`, `delete`, `getMessages` — all `protectedProcedure`.
+   - `server/trpc/routers/widget.ts`: `submitState` (FK-guarded upsert via select→update/insert to avoid the old duplicate-row bug; `topic_mastery` aggregation deferred) and `getState` (ownership-checked join). Remaining `learner` router stays empty (Phase 8).
+
+3. **AI streaming route (Phase 5)**:
+   - `lib/ai/prompts.ts` + `lib/ai/tools.ts`: recreated (Socratic system prompt + 5 tutoring tools). `updateLearnerNotes` persistence deferred to Phase 8.
+   - `app/api/chat/route.ts`: canonical AI SDK v7 flow — `auth()` → `401` when signed out; `ensureUserRow`; idempotent chat upsert; `loadUIMessages` + append incoming message; `validateUIMessages` (falls back to raw on failure); `streamText` with pinned `gemini-2.5-flash` (override via `GOOGLE_GENERATIVE_AI_MODEL`), `instructions`, tools, `stopWhen: isStepCount(5)`; `consumeStream()` for disconnect resilience; `toUIMessageStream` with `generateMessageId` and `onEnd` → `persistTurn` (idempotent message upsert + widget-state seed rows).
+
+4. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`) and 0 ESLint errors/warnings (`npm run lint`).
+   - Verified clean Turbopack build (`npm run build`) with `ƒ /api/chat` and `ƒ /api/trpc/[trpc]` registered.
+   - Runtime check (production server on port 3100, unauthenticated): `POST /api/chat` → `401`; `GET /api/trpc/session.list` → `401` `UNAUTHORIZED`; `POST /api/trpc/session.create` → `401` `UNAUTHORIZED`.
+
+### [2026-10-11] Backend Rebuild (Phase 6 & 7): Client Re-wiring + Verification
+
+1. **Client re-wiring (Phase 6) — designs unchanged**:
+   - `app/page.tsx` + new `app/c/[chatId]/page.tsx`: RSC, `auth.protect()`, data via `getTRPCApi()` (`session.list` / `session.getMessages`).
+   - `components/chat/chat-shell.tsx`: sessions from `session.list` (seeded `initialData`), create/rename/delete mutations with optimistic `setQueryData`, route-driven active session; guest branch removed.
+   - `components/chat/chat-workspace.tsx`: `useChat` + `DefaultChatTransport` sending only the newest message (`prepareSendMessagesRequest`); no manual auth headers; first send → `session.create` + `history.replaceState` (workspace key unchanged, no stream teardown).
+   - `components/widgets/*`: restored `useTRPC` + `widget.submitState` persistence; added restore props (`initialAnswers`, `initialUserAnswer`/`initialCorrect`) and `chat-messages.tsx` now feeds the persisted `userSubmission` back into the widgets.
+
+2. **Model fix**: `gemini-2.5-flash` is retired for new API users (404). Pinned **`gemini-3.8-flash`** (override via `GOOGLE_GENERATIVE_AI_MODEL`).
+
+3. **Verification**:
+   - Verified 0 TypeScript errors / 0 ESLint warnings / clean Turbopack build registering `/`, `/c/[chatId]`, `/api/chat`, `/api/trpc/[trpc]`, `/api/webhooks/clerk`.
+   - Unauthenticated: `GET /` and `/c/[chatId]` → `307` to sign-in; `POST /api/chat` → `401`; protected tRPC procedures → `401` `UNAUTHORIZED`.
+   - AI pipeline (direct `streamText` smoke test with the real prompt + tools): `gemini-3.8-flash` streamed text and invoked `createQuiz`.
+   - Data layer (real tRPC callers + Drizzle against Neon): `session` create/list/getMessages/rename/delete round-tripped OK; `widget.submitState` + `getState` persisted; `getMessages` restored the widget tool part with `isCompleted=true, score=50`; `ensureUserRow` fallback path exercised.
+   - Test artifacts cleaned up: E2E Clerk user deleted (0 users) and all test rows removed from Neon (0 rows).
+   - Note: a signed-in browser E2E (sign-in → stream → reload) still needs a manual pass — Clerk's cookie handshake cannot be reproduced from the Backend API.
+
+### [2026-10-11] Fix: Clerk Sign-in Redirect Loop + Guaranteed User Sync
+
+1. **Sign-in redirect loop — root cause: system clock skew (not code)**:
+   - Symptom: after signing in, `/` ⇄ `/sign-in` flashed continuously.
+   - Diagnosis (via a temporary `/api/auth-debug` route): all Clerk cookies were present (`__session`, `__client_uat`, `__clerk_db_jwt`), but Clerk reported `x-clerk-auth-reason: session-token-nbf` — *"JWT cannot be used prior to not before date claim (nbf) … (reason=token-not-active-yet)"*. The machine clock was running ~20–30s behind Clerk's servers, so the middleware rejected every still-valid session as "not active yet": the server saw `signed-out` while the client saw `signed-in` → infinite bounce.
+   - Fix: **sync the system clock** (Windows: Date & time → Sync now / `w32tm /resync /force`).
+
+2. **User present in Clerk but never written to Neon**:
+   - Root cause: the Clerk webhook (`user.created`) isn't configured locally (no `CLERK_WEBHOOK_SIGNING_SECRET`, no tunnel), and the lazy `ensureUserRow` only ran inside `session.create` / `/api/chat` — i.e. only once a message was sent. Merely signing in never touched the `users` table.
+   - Fix: `lib/auth/require-user.ts` (new) — `requireUser()` = `auth.protect()` + `ensureUserRow(userId)`. `app/page.tsx` and `app/c/[chatId]/page.tsx` now call it, so the row is created on the first authenticated page load (works without a webhook/tunnel). Webhook remains the canonical sync for production.
+   - Backfilled the existing user (`user_3KYeGFGUBrn5unaOPN17it5ZF5t`) and verified the real `ensureUserRow` path end-to-end (Clerk Backend API → Drizzle insert into Neon).
+
+3. **Verification**: 0 TypeScript errors / 0 ESLint warnings; temporary debug route and scripts removed.
+
+### [2026-10-11] Fix: Empty Assistant Bubble While Waiting for the First Token
+
+1. **Symptom**: while Shawky "thinks", the chat showed an empty assistant bubble with the copy / thumbs / regenerate footer, and only later the full reply appeared.
+
+2. **Root cause**: `gemini-3.8-flash` is a thinking model — measured first text delta arrives **~3.7s** after the request (and it emits the reply in a couple of coarse chunks). During that gap the UI rendered the still-empty assistant message **and** its action footer, with the "thinking" dots below.
+   - Thinking knobs don't fix it: `thinkingLevel: "minimal"` → `400 INVALID_ARGUMENT` (unsupported for this model), `"low"` → ~3.8s, `thinkingBudget: 0` → ~5.9s. It's model/server latency (the model was also returning `503` under high demand).
+
+3. **Fix (`components/chat/chat-messages.tsx`)**: assistant messages with no renderable content (no non-empty text part and no tool part) are skipped, and the "Shawky is thinking…" indicator is now gated on that same empty state. The waiting state is therefore just the indicator — no empty bubble, no action icons.
+
+4. **Verification**: 0 TypeScript errors / 0 ESLint warnings.
+
+### [2026-10-11] Rich Rendering (Phase A): Markdown Pipeline + Code Blocks
+
+> Plan: `~/.commandcode/plans/shawky-rich-ui-and-learner-memory.md`.
+
+1. **Dependencies**: added `react-markdown`, `remark-gfm`, `remark-math`, `rehype-katex`, `react-syntax-highlighter` (+ `@types/react-syntax-highlighter`); added `@aceternity/code-block` via the shadcn CLI (registry `@aceternity` → `https://ui.aceternity.com/registry/{name}.json` now in `components.json`).
+
+2. **`components/ui/code-block.tsx`** (rewrote the generated Aceternity component to project conventions): lucide `Check`/`Copy` instead of `@tabler/icons-react` (uninstalled), semantic tokens instead of hardcoded slate/zinc, `filename` & `language` now **optional**, always-on copy button, **PrismLight** with only 10 registered languages (bundle control), theme-aware `oneLight`/`oneDark`, and `dir="ltr"` so code never mirrors in RTL.
+
+3. **`components/chat/markdown.tsx`** (new, replaces the hand-rolled renderer): `react-markdown` + `remark-gfm` + `remark-math` + `rehype-katex`. Fenced code routes to `<CodeBlock/>` (the default `<pre>` is unwrapped), inline code/bold, links (`target=_blank`), tables (scroll wrapper), lists, headings, blockquotes, `hr` all styled with tokens.
+
+4. **Call-sites swapped**: every `MathRenderer` import/usage in `chat-messages.tsx` + the four widgets now uses `<Markdown/>`; `components/chat/math-renderer.tsx` deleted.
+
+5. **`lib/ai/prompts.ts`**: added a **Code Formatting** rule (always fenced code blocks with a language tag; KaTeX reserved for mathematics).
+
+6. **Verification**: 0 TypeScript errors / 0 ESLint warnings / clean Turbopack build. Note: `react-syntax-highlighter` builds fine under Turbopack — **no `transpilePackages` needed** (plan risk R1 retired).
+

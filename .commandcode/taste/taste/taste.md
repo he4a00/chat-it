@@ -1,0 +1,15 @@
+# Taste
+- Before changing code, expects a thorough upfront exploration of the codebase to understand it (structure, data flow, conventions). Confidence: 0.7
+- Wants the agent to proactively fix everything it finds broken or poorly done — not just the specific issues the user enumerated. Confidence: 0.7
+- Points the agent at architecture/agent docs (e.g. `arch.md`, `AGENTS.md`) as the source of context and expects them to be consulted. Confidence: 0.6
+- When debugging third-party integrations (e.g. Clerk), expects the agent to use the installed/available skills for that tool rather than reasoning from scratch. Confidence: 0.65
+- Wants bugs fixed at the root cause (e.g. the underlying data persistence/creation path) rather than patched at the surface so the fix unblocks moving on to the next task. Confidence: 0.6
+- Expects a written plan for a non-trivial implementation before coding begins. Confidence: 0.7
+- Explicitly encourages the agent to ask many clarifying questions up front before proceeding ("ask me bunch of questions to make a really solid plan"). Confidence: 0.8
+- Prefers hard separation of concerns between design/UI and backend: when the task is backend work, expects the UI/design left untouched. Confidence: 0.6
+- Prefers a clean-slate removal/rebuild ("start from zero") of flawed or unwanted subsystems over patching them in place. Confidence: 0.6
+- Preferred web stack for projects: tRPC + Neon Postgres (Drizzle) + Clerk auth + Vercel AI SDK. Confidence: 0.55
+- Executes large plans in discrete phases, reviewing the result and giving explicit approval ("Proceed with Phase X") before the next phase begins, rather than one continuous autonomous run. Confidence: 0.6
+- Raises issues as a numbered list and expects the agent to track and address every item raised earlier in the session, not just the most recent one. Confidence: 0.6
+xplicitly rejects generic/default treatment of loading, thinking, empty, error and sidebar states, and expects every one of them to be deliberately designed. Confidence: 0.7
+- Prefers reusing existing/pre-built UI components (e.g. shadcn CLI registry components like Aceternity) over hand-rolling them. Confidence: 0.55

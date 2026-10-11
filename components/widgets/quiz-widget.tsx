@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { MathRenderer } from "@/components/chat/math-renderer"
+import { Markdown } from "@/components/chat/markdown"
 import {
   CheckCircle2,
   XCircle,
@@ -13,10 +13,11 @@ import {
   RotateCcw,
   Send,
   Check,
-  BookOpen,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "cn"
+import { useMutation } from "@tanstack/react-query"
+import { useTRPC } from "@/trpc/react"
 
 export interface QuizOption {
   id: string
@@ -46,6 +47,7 @@ export interface QuizWidgetProps {
   explanation?: string
   isAr?: boolean
   initialSelectedId?: string
+  initialAnswers?: Record<number, string>
   onAnswerSubmitted?: (data: {
     totalQuestions: number
     correctCount: number
@@ -65,6 +67,7 @@ export function QuizWidget({
   explanation,
   isAr = false,
   initialSelectedId,
+  initialAnswers,
   onAnswerSubmitted,
 }: QuizWidgetProps) {
   // 1. Normalize questions list (multi-question primary, fallback to single)
@@ -88,10 +91,19 @@ export function QuizWidget({
 
   const totalQuestions = normalizedQuestions.length
 
+  const trpc = useTRPC()
+  const submitWidgetMutation = useMutation(trpc.widget.submitState.mutationOptions())
+
   // Navigation and answers state
   const [currentIndex, setCurrentIndex] = React.useState(0)
   const [selectedAnswers, setSelectedAnswers] = React.useState<Record<number, string>>(() => {
     const map: Record<number, string> = {}
+    if (initialAnswers) {
+      for (const [key, value] of Object.entries(initialAnswers)) {
+        map[Number(key)] = value
+      }
+      return map
+    }
     if (initialSelectedId && totalQuestions === 1) {
       map[0] = initialSelectedId
     }
@@ -100,7 +112,7 @@ export function QuizWidget({
   const [revealedHints, setRevealedHints] = React.useState<Record<number, boolean>>({})
   const [showResults, setShowResults] = React.useState(false)
   const [feedbackSent, setFeedbackSent] = React.useState(false)
-  const [hasSavedToDb, setHasSavedToDb] = React.useState(false)
+  const [hasSavedToDb, setHasSavedToDb] = React.useState(Boolean(initialAnswers))
 
   if (totalQuestions === 0) return null
 
@@ -142,41 +154,34 @@ export function QuizWidget({
     }
   }
 
-  // Persist final quiz state to Neon PostgreSQL
+  // Persist final quiz state to Neon via tRPC.
   const persistQuizResults = (finalAnswers: Record<number, string>) => {
     if (hasSavedToDb) return
     setHasSavedToDb(true)
 
     let finalCorrect = 0
     normalizedQuestions.forEach((q, idx) => {
-      const a = finalAnswers[idx]
-      const opt = q.options.find((o) => o.id === a)
+      const ansId = finalAnswers[idx]
+      const opt = q.options.find((o) => o.id === ansId)
       if (opt?.isCorrect) finalCorrect++
     })
     const finalScore = Math.round((finalCorrect / totalQuestions) * 100)
 
     try {
-      fetch("/api/widgets/state", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messageId,
-          widgetType: "quiz",
-          topic,
-          payload: {
-            title,
-            questions: normalizedQuestions,
-          },
-          userSubmission: {
-            totalQuestions,
-            correctCount: finalCorrect,
-            scorePercentage: finalScore,
-            answers: finalAnswers,
-          },
-          isCompleted: true,
-          score: finalScore,
-        }),
-      }).catch(() => {})
+      submitWidgetMutation.mutate({
+        messageId,
+        widgetType: "quiz",
+        topic,
+        payload: { title, questions: normalizedQuestions },
+        userSubmission: {
+          totalQuestions,
+          correctCount: finalCorrect,
+          scorePercentage: finalScore,
+          answers: finalAnswers,
+        },
+        isCompleted: true,
+        score: finalScore,
+      })
     } catch {
       // Non-blocking background persistence
     }
@@ -470,7 +475,7 @@ export function QuizWidget({
               </span>
             </div>
             <div className="text-sm font-medium leading-relaxed text-foreground pt-1">
-              <MathRenderer content={currentQ.question} />
+              <Markdown content={currentQ.question} />
             </div>
           </div>
 
@@ -516,7 +521,7 @@ export function QuizWidget({
                       {option.id.toUpperCase()}
                     </span>
                     <div className="min-w-0 leading-relaxed font-sans">
-                      <MathRenderer content={option.label} />
+                      <Markdown content={option.label} />
                     </div>
                   </div>
 
@@ -556,7 +561,7 @@ export function QuizWidget({
               </button>
               {revealedHints[currentIndex] && (
                 <div className="mt-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
-                  <MathRenderer content={currentQ.hint} />
+                  <Markdown content={currentQ.hint} />
                 </div>
               )}
             </div>
@@ -591,7 +596,7 @@ export function QuizWidget({
               </div>
 
               <div className="text-xs leading-relaxed opacity-95 font-sans">
-                <MathRenderer content={currentQ.explanation} />
+                <Markdown content={currentQ.explanation} />
               </div>
             </div>
           )}
