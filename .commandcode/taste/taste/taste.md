@@ -23,3 +23,6 @@
 - Prioritizes end-user simplicity: features must stay easy for the end user (e.g. the student) to understand; complexity is something to design away, not ship. Confidence: 0.7
 - Often arrives with ideas already in mind and expects the agent to draw them out through targeted questioning rather than assume or decide unilaterally. Confidence: 0.7
 - Favors precise, rich data capture and is willing to restructure/extend the database schema to achieve it, rather than settling for a minimal or approximate data model. Confidence: 0.6
+- Prefers key first-run flows (e.g. onboarding) as full-page immersive experiences rather than modals, so there's room for richer/gamified interaction. Confidence: 0.6
+- Wants gamified, character-driven UI: the AI persona's avatar should be present and actively "talk"/interact with the user (speech bubbles, animated lines, playful progress and celebration) rather than static forms. Confidence: 0.6
+- Expects the agent to stop once things are working — dislikes extended deep-dives chasing phantom/uncertain bugs; when the task is effectively done, wrap up with a concise summary and stop rather than continuing to investigate. Confidence: 0.65

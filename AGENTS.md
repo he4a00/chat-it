@@ -1087,3 +1087,30 @@ This file records architecture decisions, agent conventions, and a running log o
 
 > Note for future agents: smoke-testing modules that import `server-only` needs a shim. `node --conditions=react-server` neutralizes `server-only` but makes `react` load its server build (breaks `next/navigation` pulled in via Clerk). The reliable combo for scripts that transitively import Clerk/Next is a CJS preload hooking `Module._load` to return `{}` for `server-only` (see the C4 test recipe above).
 
+### [2026-10-11] Phase C5: Config-Driven Blocking Onboarding
+
+> Plan: `~/.commandcode/plans/shawky-learner-memory-phase-c.md`. First-run wizard that records the learner's subject / level / goal.
+
+1. **`components/learner/onboarding-config.ts`** (new) — the wizard is fully config-driven: an ordered `ONBOARDING_STEPS[]` (`id`, `kind`, bilingual title/description, `choices`, `allowCustom`, `optional`). Steps shipped: **subject** (suggestions + free text), **skill level** (beginner / intermediate / advanced), **learning goal** (presets + free text, optional). Adding a step = appending one object; every answer is recorded verbatim in `learner_profiles.onboarding_answers` (and mapped to typed columns).
+
+2. **`components/learner/onboarding-dialog.tsx`** (new) — a **non-dismissible** `Dialog` (`open`, `onOpenChange` ignored, no close button) rendering the steps with a progress bar and Back / Next / Get-started controls. Choice pills are rounded cards (primary tint when selected); an optional "type your own" input overrides the selection. Submitting calls `learner.completeOnboarding` and invalidates the `learner.getOverview` query so the gate clears.
+   - Note: the plan named the `Questionnaire` primitive, but its form/step API doesn't cleanly express "suggestions **plus** free text" within one item, so the wizard is built from `Field`/`FieldGroup` + `Button`/`Input`/`Progress`/`Dialog` instead — still config-driven, as required.
+
+3. **`components/chat/chat-shell.tsx` + RSC pages** — `ChatShell` gained an `initialOverview` prop and a `learner.getOverview` query (seeded from RSC, so no flash); it renders `<OnboardingDialog />` while `!overview?.profile?.onboardingCompleted`. `app/page.tsx` and `app/c/[chatId]/page.tsx` now fetch `learner.getOverview()` alongside sessions/messages.
+
+4. **Verification**: 0 TypeScript errors (`npm run typecheck`), 0 ESLint errors/warnings (`npm run lint`), clean Turbopack build (`npm run build`).
+
+### [2026-10-11] Phase C5 (rev): Full-Page Gamified Onboarding with Shawky
+
+> User redesign request: replace the small blocking modal with a **full-page, character-led, gamified** first-run experience. (Design pass used the `design` skill.)
+
+1. **New route `app/welcome/page.tsx`** — RSC page: `requireUser()` → `learner.getOverview()`; redirects to `/` if already onboarded, else renders the experience. `app/page.tsx` and `app/c/[chatId]/page.tsx` now `redirect("/welcome")` when onboarding is incomplete. The gate was removed from `ChatShell` (no more modal).
+
+2. **`components/learner/onboarding-experience.tsx`** (new) — full-viewport two-plane composition: Shawky's avatar (large, ambient glow, idle float, a ripple on each step) on the character plane with an **animated speech bubble** that reveals his line word-by-word (`aria-live="polite"`), and a task plane with a **3-node journey rail**, step card, selectable choice cards (native radios, spring check, focus ring), optional free-text input, and Back / Next / "Start learning". Direction-aware step transitions (RTL-safe), and a **completion celebration** (avatar + spring badge + one-shot confetti burst) before auto-navigating to `/`. All motion honors `prefers-reduced-motion`. Bilingual; language/theme controls in the header.
+
+3. **`components/learner/onboarding-config.ts`** — extended with `icon` + Shawky's spoken `talkEn`/`talkAr` per step. Adding a step is still one object.
+
+4. **Deleted `components/learner/onboarding-dialog.tsx`** (superseded).
+
+5. **Verification** — 0 type/lint/build errors; `/welcome` registered. Rendered-page checks via headless Edge against the running dev server: dark + light + Arabic RTL desktop compositions verified. Note: Windows clamps headless window width (~496px), so a narrow "390px" viewport must be emulated with `--force-device-scale-factor=2 --window-size=780,1688` — with that, `win=390`, `html=390/390`, no overflow (an earlier apparent mobile overflow was purely this screenshot artifact, not a CSS bug).
+

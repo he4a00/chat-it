@@ -1,4 +1,5 @@
 import { Metadata } from "next"
+import { redirect } from "next/navigation"
 import { ChatShell } from "@/components/chat/chat-shell"
 import { getTRPCApi } from "@/trpc/server"
 import { requireUser } from "@/lib/auth/require-user"
@@ -16,10 +17,15 @@ export default async function ChatPage(props: { params: Promise<{ chatId: string
   const { chatId } = await props.params
   const api = await getTRPCApi()
 
-  const [sessions, messages] = await Promise.all([
+  const [sessions, messages, overview] = await Promise.all([
     api.session.list(),
     api.session.getMessages({ chatId }),
+    api.learner.getOverview(),
   ])
+
+  if (!overview.profile?.onboardingCompleted) {
+    redirect("/welcome")
+  }
 
   return (
     <ChatShell
