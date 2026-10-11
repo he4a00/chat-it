@@ -7,30 +7,73 @@ import { z } from "zod"
  */
 export const createQuizTool = tool({
   description:
-    "Generate an interactive multiple-choice quiz question with options and pedagogical explanations to test understanding.",
+    "Generate an interactive multi-question quiz challenge (default: 4 questions) with question numbering, sequential next/previous navigation, instant correctness checking, hints, and explanations.",
   inputSchema: z.object({
-    topic: z.string().describe("STEM topic e.g. Quadratic Formula, Photosynthesis, Ohm's Law"),
-    question: z.string().describe("Clear question formatted with KaTeX math ($...$ or $$...$$) if applicable"),
+    topic: z.string().describe("STEM topic e.g. React Fundamentals, Quadratic Equations, Newton's Laws"),
+    title: z.string().optional().describe("Catchy title for the quiz challenge"),
+    questions: z
+      .array(
+        z.object({
+          id: z.string().describe("Unique question identifier, e.g. 'q1', 'q2', 'q3', 'q4'"),
+          question: z
+            .string()
+            .describe("Clear question statement formatted with KaTeX math ($...$ or $$...$$) or code if applicable"),
+          options: z
+            .array(
+              z.object({
+                id: z.string().describe("Unique option ID, e.g. 'a', 'b', 'c', 'd'"),
+                label: z.string().describe("Option text with LaTeX math or code snippets if applicable"),
+                isCorrect: z.boolean().describe("Whether this option is the correct answer"),
+                explanation: z.string().optional().describe("Why this choice is correct or incorrect"),
+              }),
+            )
+            .min(2)
+            .max(6)
+            .describe("2 to 6 distinct multiple choice options for this question"),
+          hint: z.string().optional().describe("Optional subtle hint for this question"),
+          explanation: z.string().describe("Comprehensive pedagogical explanation of the correct solution"),
+        }),
+      )
+      .min(1)
+      .max(10)
+      .describe(
+        "Array of quiz questions. ALWAYS provide 4 questions by default (unless user explicitly requested a different count). ALL quiz questions MUST be in this array, NEVER output quiz questions as markdown text!",
+      ),
+    // Backward compatibility for legacy single-question payload:
+    question: z.string().optional(),
     options: z
       .array(
         z.object({
-          id: z.string().describe("Unique option ID, e.g. 'a', 'b', 'c', 'd'"),
-          label: z.string().describe("Option text with LaTeX math if applicable"),
-          isCorrect: z.boolean().describe("Whether this option is the correct answer"),
-          explanation: z.string().optional().describe("Why this choice is correct or incorrect"),
+          id: z.string(),
+          label: z.string(),
+          isCorrect: z.boolean(),
+          explanation: z.string().optional(),
         }),
       )
-      .min(2)
-      .max(6)
-      .describe("2 to 6 distinct multiple choice options"),
-    hint: z.string().optional().describe("Optional subtle hint for the student"),
-    explanation: z.string().describe("Comprehensive pedagogical explanation of the solution"),
+      .optional(),
+    hint: z.string().optional(),
+    explanation: z.string().optional(),
   }),
   execute: async (input) => {
+    let questionsList = input.questions || []
+    if (questionsList.length === 0 && input.question && input.options) {
+      questionsList = [
+        {
+          id: "q1",
+          question: input.question,
+          options: input.options,
+          hint: input.hint,
+          explanation: input.explanation || "",
+        },
+      ]
+    }
+
     return {
       status: "created" as const,
       widgetType: "quiz" as const,
-      ...input,
+      topic: input.topic,
+      title: input.title,
+      questions: questionsList,
     }
   },
 })

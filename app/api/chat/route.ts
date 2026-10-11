@@ -81,9 +81,9 @@ export async function POST(req: Request) {
       )
     }
 
-    // 5. Invoke streamText with Gemini 2.0 Flash and tutoringTools
+    // 5. Invoke streamText with Gemini Flash Lite and tutoringTools
     const result = streamText({
-      model: google("gemini-2.0-flash"),
+      model: google("gemini-flash-lite-latest"),
       instructions,
       messages: await convertToModelMessages(clientMessages),
       tools: tutoringTools,

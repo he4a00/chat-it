@@ -1,0 +1,12 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Subtle ambient background glow -->
+  <rect x="4" y="4" width="40" height="40" rx="12" fill="#10B981" fill-opacity="0.12" stroke="#10B981" stroke-opacity="0.25" stroke-width="1.5"/>
+  <!-- Hexagonal Challenge Shield -->
+  <path d="M24 12L34 17.5V28.5L24 34L14 28.5V17.5L24 12Z" fill="#10B981" fill-opacity="0.25" stroke="#10B981" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Inner Target Ring -->
+  <circle cx="24" cy="23" r="6" stroke="#34D399" stroke-width="1.5" stroke-dasharray="2 2"/>
+  <!-- Bold Glowing Checkmark -->
+  <path d="M19.5 23L22.5 26L28.5 19.5" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Little Spark Star at top right -->
+  <path d="M36 12L37 14L39 15L37 16L36 18L35 16L33 15L35 14L36 12Z" fill="#6EE7B7"/>
+</svg>

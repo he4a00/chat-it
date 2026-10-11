@@ -39,6 +39,7 @@ This file records architecture decisions, agent conventions, and a running log o
    - Always run `npm run lint` and `npm run typecheck` to confirm 0 errors.
    - Run `npm run build` when modifying routing, fonts, or configuration.
 4. **Log Updates**: Always document completed features and architecture choices in the Activity Log below.
+5. **Universal Typography Enforcement (CRITICAL)**: **IBM Plex Sans** (and **IBM Plex Sans Arabic** for RTL) MUST be used for EVERY text element, button, input, label, modal, card, and surface across the entire application without exception. Never use system default fonts, Roboto, or Inter. Math formulas are isolated via KaTeX (`.katex`).
 
 ---
 
@@ -332,4 +333,230 @@ This file records architecture decisions, agent conventions, and a running log o
    - Verified 0 ESLint errors and warnings (`npm run lint`).
    - Verified clean production build with Turbopack (`npm run build`), registering `ƒ /api/chat`.
 
+### [2026-10-11] Phase 3: Chat Interface Frontend & Streaming Integration
 
+1. **KaTeX Math Renderer (`components/chat/math-renderer.tsx`)**:
+   - Implemented fast KaTeX formula parser rendering display math (`$$...$$`) and inline math (`$...$`).
+   - Enforced strict scientific LTR direction isolation (`dir="ltr"`, `unicode-bidi: isolate`) to prevent formula inversion in Arabic RTL layouts.
+   - Built resilient error fallback rendering unparsed math gracefully without crashing.
+
+2. **Empty State & Personalization (`components/chat/chat-empty-state.tsx`)**:
+   - Shawky circular monogram badge (`SH` / `ش`) with floating $\pi$ badge.
+   - Clerk user greeting with bilingual support (English / Arabic).
+   - Interactive quick-start STEM prompt cards (Calculus, Diagnostic Quiz, Trigonometric Flashcards, Euler's Intuition).
+
+3. **Expandable Composer & Math Symbol Toolbar (`components/chat/chat-composer.tsx`)**:
+   - Auto-resizing textarea with Enter-to-send and Shift+Enter for newlines.
+   - Math Quick-Symbol Toolbar: 1-click insertion for fractions (`\frac{a}{b}`), exponents (`^{2}`), square roots (`\sqrt{x}`), integrals ($\int$), and Greek letters ($\pi, \theta, \Delta, \infty, \approx, \sum$).
+   - Quick action prompt chips (*"Explain simply"*, *"Quiz me"*, *"Flashcards"*, *"Practice problem"*).
+   - Dynamic Send / Stop streaming button toggle.
+
+4. **shadcn Chat Primitives Integration (`components/chat/chat-messages.tsx`)**:
+   - Utilized shadcn `MessageScroller`, `MessageScrollerViewport`, `MessageScrollerContent`, `MessageScrollerItem`, and floating `MessageScrollerButton`.
+   - Utilized `Message`, `MessageAvatar`, `MessageContent`, `MessageHeader`, `MessageFooter`, `Bubble`, and `BubbleContent`.
+   - Styled user messages with royal blue pill bubbles and assistant messages with card surfaces and KaTeX rendering.
+   - Integrated inline visual preview cards for Generative UI tools (`createQuiz`, `createFlashcardDeck`, `createMathProblem`, `createQuickCheck`, `updateLearnerNotes`).
+   - Added ChatGPT-style message actions (Copy with checkmark feedback, Thumbs up/down, and Regenerate).
+
+5. **Main Chat Stage Workspace (`components/chat/chat-workspace.tsx` & `app/page.tsx`)**:
+   - Unified `@ai-sdk/react`'s `useChat` hook with dynamic `DefaultChatTransport` linking `chatId` to serverless backend.
+   - Integrated top header with `SidebarTrigger`, subject pill (`STEM & Math` / `الرياضيات والعلوم`), and New Chat trigger.
+   - Bound into `SidebarInset` within `app/page.tsx`.
+
+6. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`).
+   - Verified 0 ESLint errors and warnings (`npm run lint`).
+   - Verified clean production build with Turbopack (`npm run build`).
+
+### [2026-10-11] Luxury Design Overhaul & Precision STEM UX
+
+1. **Empty State Triad Architecture (`components/chat/chat-empty-state.tsx`)**:
+   - Replaced generic 2x2 dashboard cards with a luxury **Learn | Flashcards | Quiz** triad.
+   - Designed responsive cards with micro-badges (`Socratic Theory`, `Active Recall`, `Diagnostics`), directional hover affordances, and accent glows.
+   - Enforced generous bottom padding (`pb-44`) to guarantee zero collision with the floating composer.
+   - Refined glowing Shawky monogram insignia with radial gradient illumination.
+
+2. **Precision Floating Composer (`components/chat/chat-composer.tsx`)**:
+   - Eliminated colorful cartoon emojis and clutter.
+   - Created a unified floating obsidian glass capsule (`rounded-2xl`, `bg-card/85`, `backdrop-blur-xl`, `shadow-[0_12px_36px_-10px_rgba(0,0,0,0.5)]`).
+   - Added collapsible `[fx Math]` toggle button that smoothly slides out KaTeX math symbols on demand.
+   - Styled circular cobalt blue send button with subtle neon glow and hover scaling.
+
+3. **Header Alignment & Zero Truncation (`components/chat/chat-workspace.tsx` & `app/page.tsx`)**:
+   - Fixed header truncation by making `New Chat` button `whitespace-nowrap rounded-full`.
+   - Prevented mock session titles from rendering on fresh chats by setting default `activeSessionId` to `null`.
+   - Polished breadcrumbs and subject badge.
+
+4. **Elevation Shadows & Theme Normalization (`app/globals.css`)**:
+   - Fixed theme shadow variables that previously had negative -50px offsets and zero opacity.
+   - Injected multi-stage elevation shadows in `:root` and `.dark` providing tactile depth to cards, capsules, and dialogs.
+
+### [2026-10-11] Character Avatar & Visual Mode Assets (Shawky Sa'idi Persona)
+
+1. **Dark Mode Theme Bug Fixes (`app/globals.css`)**:
+   - **Hover Flash Fix**: In `.dark`, `--muted` was missing and falling back to `:root`'s `oklch(1 0 0)` (pure white). Consequently, any `hover:bg-muted` flashed solid bright white. Injected `--muted: oklch(0.20 0 0);`, `--secondary: oklch(0.22 0 0);`, and `--accent: oklch(0.20 0 0);`.
+   - **Badge Color Calibration**: Replaced washed-out badge styling with subtle dark-mode-tuned semantic tints (`bg-blue-500/10 text-blue-400`, `bg-purple-500/10 text-purple-400`, `bg-emerald-500/10 text-emerald-400`).
+
+2. **Visual Clutter Removal**:
+   - `components/chat/chat-composer.tsx`: Removed `"Socratic Engine"` watermark above the input.
+   - `components/chat/chat-workspace.tsx`: Removed `"STEM & Math"` badge and removed `"New Chat"` button from top header (New Chat is anchored cleanly in the sidebar).
+
+3. **Shawky (شوقي) Sa'idi Character Avatar Design**:
+   - Designed custom stylized 2D/vector app avatar portraying Shawky as an authentic Egyptian Sa'idi (صعيدي) character with a prominent traditional mustache, white turban/imma, and warm approachable expression.
+   - Permanently stored in `public/images/`:
+     - `public/images/shawky-avatar.png`: Circular portrait with royal blue ambient glow for hero empty-state stage (`ChatEmptyState`).
+     - `public/images/shawky-headshot.png`: Compact circular headshot used for assistant message avatars in `ChatMessages` and brand identity in `AppSidebarHeader`.
+
+4. **Custom STEM Mode Visual Assets (`Learn`, `Flashcards`, `Quiz`)**:
+   - Designed custom precision vector SVGs replacing generic Lucide icons in `public/images/`:
+     - `public/images/icon-learn.svg`: Dual-tone cobalt blue open folio with calculus curve and integral sign.
+     - `public/images/icon-flashcards.svg`: Dual-tone violet stacked formula cards with geometric grid.
+     - `public/images/icon-quiz.svg`: Dual-tone emerald hexagonal diagnostic shield with checkmark.
+   - Built `components/chat/mode-icons.tsx` providing `LearnModeIcon`, `FlashcardsModeIcon`, and `QuizModeIcon`.
+   - Integrated into `ChatEmptyState` triad action cards with micro-badges and directional hover indicators.
+
+5. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`).
+   - Verified 0 ESLint errors and warnings (`npm run lint`).
+
+### [2026-10-11] Fix: shadcn MessageScrollerProvider Context Initialization
+
+1. **Root Cause**:
+   - In [`components/chat/chat-messages.tsx`](file:///d:/Programming/chat-it/components/chat/chat-messages.tsx), the message feed was rendered using `<MessageScroller>` directly without `<MessageScrollerProvider>`.
+   - `@shadcn/react/message-scroller` internally requires a React Context created by `<MessageScroller.Provider>` (which initializes the store for `useMessageScroller()`, `useMessageScrollerScrollable()`, and `useMessageScrollerVisibility()`).
+   - Without it, `<MessageScrollerPrimitive.Root>` and `<MessageScrollerButton>` threw:
+     `Runtime Error: useMessageScroller must be used within a MessageScroller.`
+
+2. **Resolution**:
+   - Wrapped `<MessageScroller>` in `<MessageScrollerProvider autoScroll defaultScrollPosition="end">` in `components/chat/chat-messages.tsx` conforming to shadcn chat composition specifications (`chat.md`).
+   - Added `messageId` and `scrollAnchor` properties to each `MessageScrollerItem` for message position tracking and sticky scroll to latest.
+   - Cleaned up unused imports in `chat-workspace.tsx` and `chat-composer.tsx`.
+   - Verified with `npm run lint` and `npm run typecheck` (0 errors, 0 warnings).
+
+### [2026-10-11] End-to-End Chat & Streaming Flow Verification
+
+1. **Gemini Model Upgrade (`app/api/chat/route.ts`)**:
+   - Upgraded Gemini model from deprecated `gemini-2.0-flash` to production frontier `google("gemini-3.8-flash")`.
+   - Verified model streaming, multi-step tool execution, and pedagogical system prompt injection.
+
+2. **Live SSE Message Streaming Test (`/api/chat`)**:
+   - Executed live test query (*"Hi Shawky, what is calculus?"*) against `http://localhost:3000/api/chat`.
+   - Verified `200 OK` response with `text/event-stream` and `x-vercel-ai-ui-message-stream: v1`.
+   - Successfully streamed 32 SSE chunks:
+     - Socratic introductory scaffolding with LaTeX math (`$$\int_a^b f'(x)\,dx = f(b) - f(a)$$`).
+     - Autonomous tool calling triggering `createQuickCheck` with True/False diagnostic widget payload.
+     - Continuation step prompting the student to reflect on instantaneous change.
+     - Clean `finish` chunk and `[DONE]`.
+
+3. **Neon Database Persistence Flow**:
+   - Verified relational Drizzle ORM operations (`users`, `chats`, `messages`) against the live Neon PostgreSQL database.
+
+### [2026-10-11] UI Polish: Removed Message Headers, Eliminated Scroll Void & Enforced IBM Plex Sans
+
+1. **Removed Sender Name Headers (`components/chat/chat-messages.tsx`)**:
+   - Completely eliminated the noisy all-caps name headers (`AHMED HASHEM` / `SHAWKY (شوقي)`) above user and assistant bubbles.
+   - Preserved clean left/right avatar alignment for natural conversation flow.
+
+2. **Fixed Scroll Void & Empty Space Under Messages**:
+   - **Root Cause**: `MessageScrollerContent` had `min-h-full` and `pb-44` (176px), combined with `defaultScrollPosition="end"`. This forced the scroll container to be taller than the viewport on single-message chats and auto-scrolled down past the content, pushing the actual conversation off-screen and exposing an empty black void.
+   - **Resolution**:
+     - Updated `components/ui/message-scroller.tsx` to use `min-h-0` (instead of `min-h-full`) and `gap-6` (instead of `gap-8`).
+     - Removed `defaultScrollPosition="end"` from `MessageScrollerProvider` in `chat-messages.tsx` (allowing content to sit naturally at the top when it fits the viewport).
+     - Reduced bottom padding from `pb-44` to `pb-28` across `chat-messages.tsx` and `chat-workspace.tsx`.
+
+3. **Universal IBM Plex Sans Typography Enforcement**:
+   - Injected strict `font-family: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;` into `html, body` within `@layer base` in `app/globals.css`.
+   - Enforced `font-family: inherit` for all form elements (`input`, `textarea`, `button`, `select`, `kbd`, `code`, `pre`).
+   - Documented as non-negotiable **Rule 5** in `Agent Operational Rules`.
+
+4. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`).
+   - Verified 0 ESLint errors and warnings (`npm run lint`).
+
+### [2026-10-11] UX Refinement: Minimalist Uncrowded Mode Pills
+
+1. **Replaced Generic/Crowded Cards**:
+   - Replaced heavy 3-box SaaS marketing cards with a clean, uncrowded horizontal triad of tactile capsule pills (`Learn`, `Flashcards`, `Quiz`).
+   - Removed marketing descriptions, "Launch mode ->" footers, and visual noise.
+   - Preserved Shawky's custom Sa'idi avatar emblem, warm personalized greeting, and custom SVG mode icons.
+   - Integrated subtle hover borders and micro-elevation transitions (`hover:-translate-y-0.5`).
+
+2. **Verification**:
+   - Verified 0 TypeScript errors (`npm run typecheck`).
+
+### [2026-10-11] Phase 4: Generative UI Interactive Widgets & Closed-Loop Socratic Feedback
+
+1. **Interactive Generative UI Widget Suite (`components/widgets/`)**:
+   - **`quiz-widget.tsx` (Multiple-Choice Quiz Challenge)**:
+     - Selectable options with instant visual evaluation (emerald green for correct, rose red for incorrect).
+     - Letter badges (`A`, `B`, `C`, `D`), hints toggle with lightbulb disclosure, and KaTeX math formulas.
+     - Post-answer detailed explanation banner.
+     - Emits structured feedback prompt upon selection to trigger Socratic continuation.
+     - Persists completion state asynchronously to `/api/widgets/state`.
+   - **`quick-check-widget.tsx` (True/False Misconception Check)**:
+     - Dual-card binary selector (`True ✓` vs `False ✗`) diagnosing common STEM misconceptions.
+     - Instant visual confirmation and conceptual clarification reveal.
+     - Emits structured feedback prompt and persists state to Neon DB.
+   - **`flashcard-deck-widget.tsx` (Interactive Spaced-Repetition Deck)**:
+     - 3D flip card with smooth CSS perspective (`rotateY(180deg)`), preserving KaTeX math on front/back faces.
+     - Deck navigation (Previous/Next) with live index and mastery tracker (`"Got it"` / `"Review again"`).
+     - Completion state summary with automated review feedback loop.
+   - **`math-problem-widget.tsx` (Step-by-Step Guided Problem Solver)**:
+     - Multi-step procedural calculation and proof solver with step-by-step accordion.
+     - Calibrated step hints disclosed progressively.
+     - Answer submission input with multi-format validation (`finalAnswer` and `acceptedFormats`).
+     - Solution walkthrough reveal and Socratic feedback callback.
+
+2. **Neon PostgreSQL State Persistence Route (`app/api/widgets/state/route.ts`)**:
+   - Next.js serverless route handler for `POST /api/widgets/state`.
+   - Clerk user authentication (`auth()`) with dev fallback.
+   - Upserts into `widget_states` table in Neon PostgreSQL.
+   - Automatically computes quantitative accuracy and updates `topic_mastery` (`totalProblems`, `correctProblems`, `masteryScore`).
+
+3. **Closed-Loop Socratic Feedback Integration**:
+   - Updated `components/chat/chat-messages.tsx`: Replaced static tool cards with full interactive widgets inside `ToolCallWidgetCard`, passing `messageId` and `onSendFeedback`.
+   - Updated `components/chat/chat-workspace.tsx`: Passed `onSendFeedback={(feedback) => handleSendMessage(feedback)}` to `<ChatMessages />`.
+   - Student widget answers trigger instant local validation + background DB persistence + automated message dispatch into Shawky's Socratic conversation loop for immediate pedagogical follow-up.
+
+4. **Typography & Design Conformance**:
+   - Enforced **IBM Plex Sans** and **IBM Plex Sans Arabic** across all widget elements, buttons, inputs, and badges.
+   - Styled using semantic VTRON tokens (`bg-card`, `border-border`, `text-foreground`, `bg-primary`, `bg-emerald-500/10`, `bg-rose-500/10`) for consistent light and dark mode appearance.
+
+5. **Verification**:
+   - Verified 0 TypeScript errors with `npm run typecheck`.
+
+### [2026-10-11] Multi-Question Questionnaire Quiz Upgrade & System Prompt Hardening
+
+1. **Questionnaire-Style Multi-Question Quiz Interface (`components/widgets/quiz-widget.tsx`)**:
+   - Upgraded `QuizWidget` to support full multi-question quizzes with **4 questions by default**.
+   - **Numbered Stepper Pills (`[ 1 ] [ 2 ] [ 3 ] [ 4 ]`)**:
+     - Visual pill indicators with real-time feedback (active ring, emerald green `✓` for correct, rose red `✗` for wrong, neutral for unanswered).
+     - Full clickability allowing students to jump between questions for easy review.
+   - **Progress Tracking**:
+     - Live counter (`Question 1 of 4` / `السؤال ١ من ٤`) and dynamic horizontal progress bar.
+   - **Next-Order Sequential Navigation**:
+     - `Previous` and `Next Question` action buttons at the bottom.
+     - Final question presents `Finish & View Score`.
+   - **Instant Answer Validation & Marking**:
+     - Emerald green highlight on chosen correct option with checkmark.
+     - Rose red highlight on chosen incorrect option with X mark, plus dashed emerald highlight on the correct option so the student immediately learns the right answer.
+     - Collapsible hints per question (lightbulb disclosure).
+     - Per-question comprehensive pedagogical explanation banner.
+   - **Comprehensive Scorecard Summary**:
+     - Total score percentage (`Score: 3/4 (75%)`) with performance badges and trophies.
+     - Question-by-question breakdown with 1-click "Review" jump.
+     - Retake quiz button and "Ask Shawky for Socratic Review" feedback button.
+
+2. **AI Tool Schema & System Prompt Hardening (`lib/ai/tools.ts`, `lib/ai/prompts.ts`)**:
+   - Updated `createQuizTool` to take an array of questions (`questions: QuizQuestionItem[]`) with **4 questions by default**.
+   - Preserved legacy single-question payload fallback.
+   - Enforced in `lib/ai/prompts.ts` that ALL quiz questions must reside within the widget tool call and NEVER be dumped into raw markdown text.
+   - Prohibited invoking unrelated tools (like `createFlashcardDeck`) when the user specifically requested a quiz.
+
+3. **Backend & Model Reliability**:
+   - Updated `app/api/widgets/state/route.ts` to accumulate multi-question increments into `topic_mastery`.
+   - Switched LLM model in `app/api/chat/route.ts` to `gemini-flash-lite-latest` to avoid free tier quota exhaustion.
+
+4. **Verification**:
+   - Verified 0 TypeScript errors with `npm run typecheck`.
+   - Verified end-to-end multi-question quiz stream generation with Node test script.

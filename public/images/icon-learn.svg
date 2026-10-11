@@ -1,0 +1,16 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Subtle ambient background glow -->
+  <rect x="4" y="4" width="40" height="40" rx="12" fill="#2E67FF" fill-opacity="0.12" stroke="#2E67FF" stroke-opacity="0.25" stroke-width="1.5"/>
+  <!-- Open Book Left Page -->
+  <path d="M12 16C12 14.8954 12.8954 14 14 14H22C23.1046 14 24 14.8954 24 16V33C24 33.5523 23.5523 34 23 34H14C12.8954 34 12 33.1046 12 32V16Z" fill="#2E67FF" fill-opacity="0.2" stroke="#2E67FF" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Open Book Right Page -->
+  <path d="M24 16C24 14.8954 24.8954 14 26 14H34C35.1046 14 36 14.8954 36 16V32C36 33.1046 35.1046 34 34 34H25C24.4477 34 24 33.5523 24 33V16Z" fill="#2E67FF" fill-opacity="0.35" stroke="#2E67FF" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Center spine -->
+  <path d="M24 14V34" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"/>
+  <!-- Left page math lines -->
+  <path d="M16 19H20" stroke="#93C5FD" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M16 23H20" stroke="#93C5FD" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M16 27H19" stroke="#93C5FD" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Right page integral symbol -->
+  <path d="M30 19C29 19 28.5 19.5 28.5 20.5V27.5C28.5 28.5 29 29 30 29" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

@@ -35,8 +35,15 @@ export function AppSidebarHeader({
     <SidebarHeader className="border-b border-sidebar-border/70 p-3 flex flex-col gap-2.5">
       {/* Brand Logo & Collapse Trigger */}
       <div className="flex items-center justify-between">
-        <div className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-xs">
-          SH
+        <div className="flex size-8 items-center justify-center rounded-full overflow-hidden border border-border shadow-xs bg-sidebar-accent/50 shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/shawky-headshot.png"
+            alt="Shawky (شوقي)"
+            className="size-full object-cover"
+            width={32}
+            height={32}
+          />
         </div>
 
         <SidebarTrigger className="rounded-full text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent" />

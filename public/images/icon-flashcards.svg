@@ -1,0 +1,15 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Subtle ambient background glow -->
+  <rect x="4" y="4" width="40" height="40" rx="12" fill="#8B5CF6" fill-opacity="0.12" stroke="#8B5CF6" stroke-opacity="0.25" stroke-width="1.5"/>
+  <!-- Back Card (slightly angled/offset) -->
+  <rect x="18" y="11" width="18" height="23" rx="4" transform="rotate(7 18 11)" fill="#8B5CF6" fill-opacity="0.2" stroke="#8B5CF6" stroke-width="1.75"/>
+  <!-- Front Card -->
+  <rect x="13" y="14" width="20" height="23" rx="4" fill="#8B5CF6" fill-opacity="0.35" stroke="#A855F7" stroke-width="2"/>
+  <!-- Formula on front card: f(x) and lines -->
+  <path d="M18 20C17.5 20 17 20.5 17 21V25M16 22.5H19" stroke="#E9D5FF" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M22 22.5L25 25.5M25 22.5L22 25.5" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Card bottom indicator dots -->
+  <circle cx="20" cy="31" r="1" fill="#C084FC"/>
+  <circle cx="23" cy="31" r="1" fill="#C084FC"/>
+  <circle cx="26" cy="31" r="1" fill="#C084FC"/>
+</svg>
