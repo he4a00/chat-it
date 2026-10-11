@@ -20,3 +20,6 @@
 - Wants IBM Plex Sans (and IBM Plex Sans Arabic) used for everything — including code blocks, kbd, mono contexts, and menus; no monospace fonts anywhere, even for code. Confidence: 0.85
 - Project design rules are stated as global directives to be applied everywhere, including to generated shadcn/ui components (override library defaults rather than accepting them). Confidence: 0.7
 - Expects the agent to decide the design/UI approach on its own initiative and deliver a polished result without being guided each time ("First think about the design element you will use and do it polished, I don't have to tell you each time"). Confidence: 0.75
+- Prioritizes end-user simplicity: features must stay easy for the end user (e.g. the student) to understand; complexity is something to design away, not ship. Confidence: 0.7
+- Often arrives with ideas already in mind and expects the agent to draw them out through targeted questioning rather than assume or decide unilaterally. Confidence: 0.7
+- Favors precise, rich data capture and is willing to restructure/extend the database schema to achieve it, rather than settling for a minimal or approximate data model. Confidence: 0.6
