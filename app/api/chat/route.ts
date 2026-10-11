@@ -13,10 +13,12 @@ import {
 import { google } from "@ai-sdk/google"
 import { auth } from "@clerk/nextjs/server"
 import { and, eq } from "drizzle-orm"
-import { db, chats, messages as dbMessages, widgetStates } from "@/lib/db"
+import { db, chats, messages as dbMessages, widgetStates, learnerMemoryNotes } from "@/lib/db"
 import { SHAWKY_BASE_SYSTEM_PROMPT } from "@/lib/ai/prompts"
 import { tutoringTools } from "@/lib/ai/tools"
 import { loadUIMessages } from "@/lib/ai/load-messages"
+import { resolveTopic } from "@/lib/learner/resolve-topic"
+import { NOTE_TYPES } from "@/lib/learner/config"
 import { ensureUserRow } from "@/lib/auth/ensure-user"
 import { deriveSessionTitle } from "@/lib/session-utils"
 
@@ -121,7 +123,7 @@ export async function POST(req: Request) {
       originalMessages: validatedMessages,
       generateMessageId: createIdGenerator({ prefix: "msg", size: 16 }),
       onEnd: async ({ messages: finalMessages }) => {
-        await persistTurn(chatId, finalMessages)
+        await persistTurn(chatId, finalMessages, userId)
       },
     }),
   })
@@ -129,9 +131,10 @@ export async function POST(req: Request) {
 
 /**
  * Persists every user/assistant message of the turn (idempotent via
- * `onConflictDoNothing`) plus a widget-state seed row per generated widget.
+ * `onConflictDoNothing`), a widget-state seed row per generated widget, and any
+ * qualitative learner notes — all keyed by ids so re-processing history is a no-op.
  */
-async function persistTurn(chatId: string, messages: UIMessage[]) {
+async function persistTurn(chatId: string, messages: UIMessage[], userId: string) {
   try {
     for (const message of messages) {
       if (message.role !== "user" && message.role !== "assistant") continue
@@ -173,7 +176,42 @@ async function persistTurn(chatId: string, messages: UIMessage[]) {
             .onConflictDoNothing()
         }
 
-        // TODO(Phase 8): persist `updateLearnerNotes` results into learner_memory_notes.
+        // Persist qualitative learner notes (idempotent by toolCallId, so
+        // replaying historical messages never duplicates a note).
+        if (getToolName(part) === "updateLearnerNotes" && input && typeof input === "object") {
+          const args = input as Record<string, unknown>
+          const observation = typeof args.observation === "string" ? args.observation.trim() : ""
+
+          if (observation) {
+            const topicLabel =
+              typeof args.topic === "string" && args.topic.trim() ? args.topic.trim() : "General"
+            const noteType =
+              typeof args.type === "string" && (NOTE_TYPES as string[]).includes(args.type)
+                ? args.type
+                : "observation"
+            const resolved = await resolveTopic(
+              typeof args.subject === "string" ? args.subject : null,
+              topicLabel,
+            )
+
+            await db
+              .insert(learnerMemoryNotes)
+              .values({
+                id: toolCallId ?? crypto.randomUUID(),
+                userId,
+                topic: topicLabel,
+                topicId: resolved.topicId,
+                type: noteType,
+                observation,
+                recommendation:
+                  typeof args.recommendation === "string" ? args.recommendation : null,
+                confidence: typeof args.confidence === "number" ? args.confidence : null,
+                sourceMessageId: messageId,
+                status: "active",
+              })
+              .onConflictDoNothing()
+          }
+        }
       }
     }
   } catch (error) {

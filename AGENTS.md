@@ -1057,3 +1057,15 @@ This file records architecture decisions, agent conventions, and a running log o
 
 7. **Verification**: 0 TypeScript errors (`npm run typecheck`), 0 ESLint errors/warnings (`npm run lint`), clean Turbopack build (`npm run build`).
 
+### [2026-10-11] Phase C3: AI Memory Notes (qualitative insights persisted)
+
+> Plan: `~/.commandcode/plans/shawky-learner-memory-phase-c.md`. Shawky's autonomous `updateLearnerNotes` calls now land in `learner_memory_notes`. (The `recordPractice` half of C3 was folded into C2, where the attempt log is written.)
+
+1. **Tool schema (`lib/ai/tools.ts`)** — `updateLearnerNotes` now takes a required `subject`, a typed `type` (`preference` | `misconception` | `strength` | `goal` | `observation`) and a `confidence` (0–1), alongside `topic`/`observation`/`recommendation`.
+
+2. **Persistence (`app/api/chat/route.ts`)** — `persistTurn(chatId, messages, userId)` now extracts every `updateLearnerNotes` tool part, resolves its subject/topic via `resolveTopic`, validates the `type` against `NOTE_TYPES` (falling back to `observation`), and inserts into `learner_memory_notes` with `sourceMessageId`. The row id is the tool's `toolCallId` and the insert uses `onConflictDoNothing()`, so re-processing historical messages (persistTurn runs over the whole stream each turn) can never duplicate a note.
+
+3. **Prompt (`lib/ai/prompts.ts`)** — the `updateLearnerNotes` rule now instructs Shawky to always set `subject` + `topic`, choose a `type`, and give a realistic `confidence`.
+
+4. **Verification** — runtime smoke test (temporary `_c3_smoke.ts`, run via `node --conditions=react-server --import tsx`, then deleted): inserting the same note twice yielded exactly 1 row (idempotent), with `type`/`confidence`/`topicId`/`sourceMessageId` all persisted; temp user + topic cleaned up (0 leftovers). 0 TypeScript errors (`npm run typecheck`), 0 ESLint errors/warnings (`npm run lint`), clean Turbopack build (`npm run build`).
+

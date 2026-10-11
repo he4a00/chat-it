@@ -171,17 +171,28 @@ export const createQuickCheckTool = tool({
 /**
  * 5. Update Learner Notes Tool
  * Autonomous qualitative memory recording pedagogical insights about the student.
- * (Persistence to `learner_memory_notes` lands in Phase 8.)
+ * Persisted into `learner_memory_notes` by the chat route (idempotent by toolCallId).
  */
 export const updateLearnerNotesTool = tool({
   description:
     "Record an autonomous qualitative pedagogical observation or recommendation about the learner's understanding or cognitive patterns.",
   inputSchema: z.object({
+    subject: z.string().describe("Broad subject/discipline, e.g. Mathematics, Physics, Computer Science, Chemistry"),
     topic: z.string().describe("STEM topic e.g. Polynomial Long Division, Trigonometry"),
+    type: z
+      .enum(["preference", "misconception", "strength", "goal", "observation"])
+      .describe(
+        "Category: 'strength' (a demonstrated skill), 'misconception' (a recurring error), 'preference' (how they learn best), 'goal' (their stated aim), or 'observation' (anything else)",
+      ),
     observation: z
       .string()
       .describe("Qualitative insight, e.g. 'Struggles with distributing negative signs' or 'Prefers visual diagrams'"),
     recommendation: z.string().optional().describe("Pedagogical tip for future tutoring turns"),
+    confidence: z
+      .number()
+      .min(0)
+      .max(1)
+      .describe("How confident you are in this observation, from 0 (guess) to 1 (certain)"),
   }),
   execute: async (input) => {
     return {

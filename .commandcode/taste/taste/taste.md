@@ -9,7 +9,7 @@
 - Prefers hard separation of concerns between design/UI and backend: when the task is backend work, expects the UI/design left untouched. Confidence: 0.6
 - Prefers a clean-slate removal/rebuild ("start from zero") of flawed or unwanted subsystems over patching them in place. Confidence: 0.6
 - Preferred web stack for projects: tRPC + Neon Postgres (Drizzle) + Clerk auth + Vercel AI SDK. Confidence: 0.55
-- Executes large plans in discrete phases, reviewing the result and giving explicit approval ("Proceed with Phase X") before the next phase begins, rather than one continuous autonomous run. Confidence: 0.65
+- Executes large plans in discrete phases, reviewing the result and giving explicit approval ("Proceed with Phase X") before the next phase begins, rather than one continuous autonomous run. Confidence: 0.7
 - Raises issues as a numbered list and expects the agent to track and address every item raised earlier in the session, not just the most recent one. Confidence: 0.6
 - Explicitly rejects generic/default treatment of loading, thinking, empty, error and sidebar states, and expects every one of them to be deliberately designed. Confidence: 0.7
 - Prefers reusing existing/pre-built UI components (e.g. shadcn CLI registry components like Aceternity) over hand-rolling them. Confidence: 0.55
