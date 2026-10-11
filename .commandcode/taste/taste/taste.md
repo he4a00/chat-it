@@ -9,7 +9,14 @@
 - Prefers hard separation of concerns between design/UI and backend: when the task is backend work, expects the UI/design left untouched. Confidence: 0.6
 - Prefers a clean-slate removal/rebuild ("start from zero") of flawed or unwanted subsystems over patching them in place. Confidence: 0.6
 - Preferred web stack for projects: tRPC + Neon Postgres (Drizzle) + Clerk auth + Vercel AI SDK. Confidence: 0.55
-- Executes large plans in discrete phases, reviewing the result and giving explicit approval ("Proceed with Phase X") before the next phase begins, rather than one continuous autonomous run. Confidence: 0.6
+- Executes large plans in discrete phases, reviewing the result and giving explicit approval ("Proceed with Phase X") before the next phase begins, rather than one continuous autonomous run. Confidence: 0.65
 - Raises issues as a numbered list and expects the agent to track and address every item raised earlier in the session, not just the most recent one. Confidence: 0.6
-xplicitly rejects generic/default treatment of loading, thinking, empty, error and sidebar states, and expects every one of them to be deliberately designed. Confidence: 0.7
+- Explicitly rejects generic/default treatment of loading, thinking, empty, error and sidebar states, and expects every one of them to be deliberately designed. Confidence: 0.7
 - Prefers reusing existing/pre-built UI components (e.g. shadcn CLI registry components like Aceternity) over hand-rolling them. Confidence: 0.55
+- Never wants uppercase text-transform anywhere — no all-caps labels, titles, menu items, buttons, or group labels; strip `uppercase`/`tracking-widest`/`tracking-wider` from component base styles. Confidence: 0.9
+- Wants everything rounded — dialogs, dropdowns, menus, alerts, buttons, inputs, popovers, sheets, toasts; never `rounded-none`. Confidence: 0.9
+- Destructive actions (delete/remove) must use the red/destructive variant, not primary/default. Confidence: 0.85
+- Menu items should be grouped under labeled sections so future actions have a home. Confidence: 0.75
+- Wants IBM Plex Sans (and IBM Plex Sans Arabic) used for everything — including code blocks, kbd, mono contexts, and menus; no monospace fonts anywhere, even for code. Confidence: 0.85
+- Project design rules are stated as global directives to be applied everywhere, including to generated shadcn/ui components (override library defaults rather than accepting them). Confidence: 0.7
+- Expects the agent to decide the design/UI approach on its own initiative and deliver a polished result without being guided each time ("First think about the design element you will use and do it polished, I don't have to tell you each time"). Confidence: 0.75

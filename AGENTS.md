@@ -939,3 +939,49 @@ This file records architecture decisions, agent conventions, and a running log o
 
 6. **Verification**: 0 TypeScript errors / 0 ESLint warnings / clean Turbopack build. Note: `react-syntax-highlighter` builds fine under Turbopack — **no `transpilePackages` needed** (plan risk R1 retired).
 
+### [2026-10-11] Rich States & Polish (Phase B)
+
+1. **Foundations**: mounted `<Toaster />` in `app/layout.tsx`; added `lib/toast.ts` (`notify.success/error/info`); added `components/chat/thinking-indicator.tsx` (motion-animated staggered dots); installed `motion`.
+
+2. **Messages (`components/chat/chat-messages.tsx`)**:
+   - Replaced the static pulse with the animated `ThinkingIndicator`.
+   - New local `ToolPlaceholder` (`Spinner` + `Skeleton`) replaces the four `animate-pulse` tool cards.
+   - `part.state === "output-error"` now renders a destructive `Alert` (previously silently dropped).
+   - `updateLearnerNotes` renders via the **`Marker`** primitive instead of an ad-hoc div.
+   - Unrecognized tools render a visible fallback instead of `null`.
+   - Thumbs up/down are now functional (local toggle + color); added a streaming caret on the last assistant bubble.
+
+3. **Workspace (`chat-workspace.tsx`)**: reads `error` from `useChat` and shows a destructive `Alert` + **Retry** (`regenerate`); header shows a "New chat" placeholder.
+
+4. **Sidebar**: loading skeleton via `SidebarMenuSkeleton` (`isLoading`); **relative timestamps** now rendered; **bilingual category labels**; richer row menu (Rename / Duplicate / Copy link / Delete); delete now confirms via **`AlertDialog`**; Copy link → toast.
+
+5. **Backend**: new `session.duplicate` procedure — copies a chat's messages into a new session.
+
+6. **Composer**: added a **"Code" insert** button (```` ``` ```` fence with caret placed inside) via a new `caretOffset` option on the symbol inserter.
+
+7. **Empty state**: added example-prompt chips and a "Continue: <recent chat>" shortcut (plumbed workspace → shell; `recentSession` / `onOpenSession`).
+
+8. **Deferred from the plan** (flagged): pin/star (needs a `chats.pinned` column + migration), sidebar keyboard navigation, and composer attachments.
+
+9. **Verification**: 0 TypeScript errors / 0 ESLint warnings / clean Turbopack build.
+
+### [2026-10-11] Design Rules Pass: No All-Caps, Rounded Everywhere, IBM Plex Sans Only
+
+1. **Recorded as project taste (design rules)**: never use uppercase text-transform; everything must be rounded (`rounded-none` is banned); destructive actions use the red/destructive variant; menus are grouped under labeled sections; **IBM Plex Sans / IBM Plex Sans Arabic for everything — no monospace anywhere, including code**.
+
+2. **`app/globals.css`**:
+   - `--font-mono` now maps to `var(--font-sans)` (the IBM Plex stack) in `:root`, `.dark`, and `@theme inline` — so any `font-mono` utility renders IBM Plex Sans.
+   - Added an `@layer utilities` guard that neutralizes any leftover `.uppercase` (`text-transform: none`) and `.rounded-none` (border-radius) — a durable safety net for the rules.
+
+3. **Swept all of `components/**`**: removed `uppercase`, `tracking-wide`, `tracking-wider`, `tracking-widest`; replaced `rounded-none` → `rounded-lg` (**52 files**). Bumped the primary surfaces (dialog, alert-dialog, dropdown-menu, code-block) to `rounded-xl`.
+
+4. **Session row menu**: grouped into labeled sections — **"Chat"** (Rename / Duplicate / Copy link) and **"Danger"** (Delete), separated by a divider; Delete uses the destructive (red) variant.
+
+5. **Delete confirmation dialog**: now rounded, and its action button is the **destructive (red)** variant instead of primary blue; the title is no longer all-caps.
+
+6. **`components/ui/code-block.tsx`**: font switched to the IBM Plex stack (no monospace).
+
+7. **Self-inflicted bug, caught and fixed**: the bulk PowerShell sweep initially read files as ANSI and rewrote them as UTF-8, mojibake-ing the Arabic in **6 files** (`session-list`, `user-preferences-page`, and the 4 widgets). Recovered losslessly via a cp1252→UTF-8 round-trip (verified codepoint-exact: `حذف`/`إعادة` restored, 0 files remaining with mojibake).
+
+8. **Verification**: 0 TypeScript errors / 0 ESLint warnings / clean Turbopack build.
+

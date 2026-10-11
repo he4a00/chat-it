@@ -2,8 +2,16 @@
 
 import * as React from "react"
 import { useLanguage } from "@/hooks/use-language"
-import { ArrowUp, Square, Pi } from "lucide-react"
+import { ArrowUp, Square, Pi, Code2, Calculator, CheckCircle2, HelpCircle, Layers, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { cn } from "cn"
 
 interface ChatComposerProps {
@@ -27,6 +35,50 @@ const MATH_SYMBOLS = [
   { label: "≈", insert: "\\approx", title: "Approximately equal" },
   { label: "∑", insert: "\\sum_{i=1}^{n}", title: "Summation" },
 ]
+
+/** One-tap starters that drop a tool-shaped prompt into the composer. */
+const TOOL_PRESETS = [
+  {
+    id: "quiz",
+    icon: HelpCircle,
+    accent: "text-emerald-500",
+    label: { en: "Quiz", ar: "اختبار" },
+    prompt: {
+      en: "Create me a quiz with 4 multiple-choice questions on ",
+      ar: "أنشئ لي اختباراً من ٤ أسئلة متعددة الخيارات عن ",
+    },
+  },
+  {
+    id: "flashcards",
+    icon: Layers,
+    accent: "text-violet-500",
+    label: { en: "Flashcards", ar: "بطاقات" },
+    prompt: {
+      en: "Create a flashcard deck of the key formulas and definitions for ",
+      ar: "أنشئ مجموعة بطاقات لأهم القوانين والتعريفات في ",
+    },
+  },
+  {
+    id: "math",
+    icon: Calculator,
+    accent: "text-blue-500",
+    label: { en: "Problem", ar: "مسألة" },
+    prompt: {
+      en: "Give me a step-by-step practice problem on ",
+      ar: "أعطني مسألة تدريبية خطوة بخطوة عن ",
+    },
+  },
+  {
+    id: "quickcheck",
+    icon: CheckCircle2,
+    accent: "text-amber-500",
+    label: { en: "Quick check", ar: "صواب/خطأ" },
+    prompt: {
+      en: "Give me a quick True/False check on ",
+      ar: "أعطني سؤال صواب/خطأ سريع عن ",
+    },
+  },
+] as const
 
 export function ChatComposer({
   input,
@@ -58,7 +110,7 @@ export function ChatComposer({
     }
   }
 
-  const handleInsertSymbol = (symbolInsert: string) => {
+  const handleInsertSymbol = (symbolInsert: string, caretOffset?: number) => {
     if (!textareaRef.current) return
     const textarea = textareaRef.current
     const start = textarea.selectionStart
@@ -70,9 +122,19 @@ export function ChatComposer({
     // Reset focus and cursor position after insertion
     setTimeout(() => {
       textarea.focus()
-      const newPos = start + symbolInsert.length
+      const newPos = start + (caretOffset ?? symbolInsert.length)
       textarea.setSelectionRange(newPos, newPos)
     }, 0)
+  }
+
+  const handleToolPreset = (preset: (typeof TOOL_PRESETS)[number]) => {
+    const text = preset.prompt[isAr ? "ar" : "en"]
+    onInputChange(text)
+    const textarea = textareaRef.current
+    if (textarea) {
+      textarea.focus()
+      requestAnimationFrame(() => textarea.setSelectionRange(text.length, text.length))
+    }
   }
 
   return (
@@ -121,6 +183,36 @@ export function ChatComposer({
         <div className="flex items-center justify-between px-3.5 pb-2.5 pt-1">
           {/* Left Actions */}
           <div className="flex items-center gap-1.5">
+            {/* Quick tools — pick a tool and it fills the input */}
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <button
+                    type="button"
+                    title={isAr ? "أدوات سريعة" : "Quick tools"}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors border-border/40 bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground"
+                  >
+                    <Sparkles className="size-3.5" />
+                    <span className="text-[11px]">{isAr ? "أدوات" : "Tools"}</span>
+                  </button>
+                }
+              />
+              <DropdownMenuContent align="start" side="top" className="min-w-52">
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>{isAr ? "ابدأ سريعاً" : "Quick start"}</DropdownMenuLabel>
+                  {TOOL_PRESETS.map((preset) => {
+                    const Icon = preset.icon
+                    return (
+                      <DropdownMenuItem key={preset.id} onClick={() => handleToolPreset(preset)}>
+                        <Icon className={cn("size-3.5 mr-2", preset.accent)} />
+                        <span>{preset.label[isAr ? "ar" : "en"]}</span>
+                      </DropdownMenuItem>
+                    )
+                  })}
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {/* Math Symbols Toggle */}
             <button
               type="button"
@@ -135,6 +227,17 @@ export function ChatComposer({
             >
               <Pi className="size-3.5" />
               <span className="font-mono text-[11px]">fx Math</span>
+            </button>
+
+            {/* Code Block Insert */}
+            <button
+              type="button"
+              onClick={() => handleInsertSymbol("```\n\n```", 4)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border border-border/40 bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title={isAr ? "إدراج كتلة كود" : "Insert a code block"}
+            >
+              <Code2 className="size-3.5" />
+              <span className="font-mono text-[11px]">Code</span>
             </button>
           </div>
 

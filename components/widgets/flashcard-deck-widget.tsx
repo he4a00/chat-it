@@ -76,7 +76,7 @@ export function FlashcardDeckWidget({
           <span>{isAr ? "مجموعة بطاقات تفاعلية" : "Interactive Flashcard Deck"}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
             {topic}
           </span>
           <span className="text-[11px] font-mono text-muted-foreground">
@@ -111,7 +111,7 @@ export function FlashcardDeckWidget({
               <RotateCw className="size-3 text-purple-400" />
               <span>{isFlipped ? (isAr ? "الوجه الخلفي (التوضيح)" : "Back (Explanation)") : (isAr ? "الوجه الأمامي (المفهوم)" : "Front (Concept)")}</span>
             </span>
-            <span className="text-[10px] uppercase tracking-wider opacity-70">
+            <span className="text-[10px] opacity-70">
               {currentCard.conceptTag || (isAr ? "انقر للقلب" : "Click to flip")}
             </span>
           </div>

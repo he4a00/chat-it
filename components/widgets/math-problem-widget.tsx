@@ -112,7 +112,7 @@ export function MathProblemWidget({
           <Calculator className="size-4 shrink-0" />
           <span>{isAr ? "مسألة رياضية تفاعلية موجهة" : "Guided Math Problem"}</span>
         </div>
-        <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
           {topic}
         </span>
       </div>
@@ -126,7 +126,7 @@ export function MathProblemWidget({
         {/* Guided Steps List */}
         {steps.length > 0 && (
           <div className="space-y-2 border-t border-border/40 pt-3">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <div className="text-xs font-semibold text-muted-foreground">
               {isAr ? "خطوات التفكير والتوجيه:" : "Scaffolded Steps:"}
             </div>
 

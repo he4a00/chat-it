@@ -276,7 +276,7 @@ export function QuizWidget({
             <span className="text-xs font-semibold text-foreground truncate">
               {title || (isAr ? "اختبار تفاعلي تشخيصي" : "Interactive Quiz Challenge")}
             </span>
-            <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
               {topic}
             </span>
           </div>
@@ -389,7 +389,7 @@ export function QuizWidget({
 
           {/* Question Breakdown List */}
           <div className="space-y-2">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
+            <div className="text-xs font-semibold text-muted-foreground px-1">
               {isAr ? "تفاصيل الأسئلة:" : "Question Breakdown:"}
             </div>
             <div className="grid grid-cols-1 gap-2">

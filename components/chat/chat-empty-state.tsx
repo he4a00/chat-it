@@ -2,14 +2,21 @@
 
 import * as React from "react"
 import { useUser } from "@clerk/nextjs"
+import { HistoryIcon } from "lucide-react"
 import { useLanguage } from "@/hooks/use-language"
 import { LearnModeIcon, FlashcardsModeIcon, QuizModeIcon } from "@/components/chat/mode-icons"
 
 interface ChatEmptyStateProps {
   onSelectPrompt: (prompt: string) => void
+  recentSession?: { id: string; title: string } | null
+  onOpenSession?: (id: string) => void
 }
 
-export function ChatEmptyState({ onSelectPrompt }: ChatEmptyStateProps) {
+export function ChatEmptyState({
+  onSelectPrompt,
+  recentSession,
+  onOpenSession,
+}: ChatEmptyStateProps) {
   const { user } = useUser()
   const { language } = useLanguage()
   const isAr = language === "ar"
@@ -45,6 +52,18 @@ export function ChatEmptyState({ onSelectPrompt }: ChatEmptyStateProps) {
         : "Give me an interactive diagnostic quiz challenge on a key STEM topic to test my understanding.",
     },
   ]
+
+  const suggestions = isAr
+    ? [
+        "ما هو المشتق؟ ولماذا نستخدمه؟",
+        "اشرح لي المتتابعات والمتسلسلات ببساطة.",
+        "ما الفرق بين المتجه والمقياس؟",
+      ]
+    : [
+        "What is a derivative, intuitively?",
+        "Explain limits with a simple example.",
+        "Difference between a vector and a scalar?",
+      ]
 
   return (
     <div className="flex flex-col items-center justify-center px-4 max-w-xl w-full mx-auto my-auto text-center select-none font-sans space-y-6">
@@ -91,6 +110,34 @@ export function ChatEmptyState({ onSelectPrompt }: ChatEmptyStateProps) {
           )
         })}
       </div>
+
+      {/* Example prompts */}
+      <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+        {suggestions.map((suggestion) => (
+          <button
+            key={suggestion}
+            type="button"
+            onClick={() => onSelectPrompt(suggestion)}
+            className="rounded-full border border-border/60 bg-muted/30 px-3 py-1.5 text-[11px] text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground font-sans"
+          >
+            {suggestion}
+          </button>
+        ))}
+      </div>
+
+      {/* Resume the most recent session */}
+      {recentSession && onOpenSession ? (
+        <button
+          type="button"
+          onClick={() => onOpenSession(recentSession.id)}
+          className="mx-auto flex max-w-full items-center gap-2 rounded-full border border-border/70 bg-card/60 px-3.5 py-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground hover:border-border font-sans"
+        >
+          <HistoryIcon className="size-3.5 shrink-0" />
+          <span className="truncate max-w-[220px]">
+            {isAr ? "متابعة" : "Continue"}: {recentSession.title}
+          </span>
+        </button>
+      ) : null}
     </div>
   )
 }

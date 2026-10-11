@@ -59,7 +59,7 @@ function resolveLanguage(language?: string): string | null {
 }
 
 const MONO_FONT =
-  'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace'
+  'var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif'
 
 export interface CodeBlockProps {
   code: string
@@ -100,7 +100,7 @@ export function CodeBlock({ code, language, filename, className }: CodeBlockProp
       )}
     >
       <div className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-1.5">
-        <span className="truncate font-mono text-[11px] tracking-wide text-muted-foreground">
+        <span className="truncate font-mono text-[11px] text-muted-foreground">
           {filename ?? label}
         </span>
         <button

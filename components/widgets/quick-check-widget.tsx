@@ -83,7 +83,7 @@ export function QuickCheckWidget({
           <CheckCircle2 className="size-4 shrink-0" />
           <span>{isAr ? "تحقق مفاهيمي سريع" : "Concept Quick Check"}</span>
         </div>
-        <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
           True / False
         </span>
       </div>

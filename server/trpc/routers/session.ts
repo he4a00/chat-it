@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server"
 import { and, desc, eq } from "drizzle-orm"
 import type { UIMessage } from "ai"
 import { router, protectedProcedure } from "../trpc"
-import { chats } from "@/lib/db"
+import { chats, messages as dbMessages } from "@/lib/db"
 import { computeSessionCategory, formatSessionTimestamp } from "@/lib/session-utils"
 import type { ChatSession, SessionSubject } from "@/types/session"
 import { ensureUserRow } from "@/lib/auth/ensure-user"
@@ -118,6 +118,51 @@ export const sessionRouter = router({
       }
 
       return { success: true }
+    }),
+
+  /** Duplicate an owned chat, copying its messages into a fresh session. */
+  duplicate: protectedProcedure
+    .input(z.object({ chatId: z.string() }))
+    .mutation(async ({ ctx, input }): Promise<ChatSession> => {
+      const [source] = await ctx.db
+        .select()
+        .from(chats)
+        .where(and(eq(chats.id, input.chatId), eq(chats.userId, ctx.userId)))
+        .limit(1)
+
+      if (!source) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" })
+      }
+
+      const newId = crypto.randomUUID()
+      const [created] = await ctx.db
+        .insert(chats)
+        .values({
+          id: newId,
+          userId: ctx.userId,
+          title: `${source.title} (copy)`,
+          subject: source.subject,
+        })
+        .returning()
+
+      const sourceMessages = await ctx.db
+        .select()
+        .from(dbMessages)
+        .where(eq(dbMessages.chatId, input.chatId))
+
+      if (sourceMessages.length > 0) {
+        await ctx.db.insert(dbMessages).values(
+          sourceMessages.map((message) => ({
+            id: crypto.randomUUID(),
+            chatId: newId,
+            role: message.role,
+            content: message.content,
+            toolInvocations: message.toolInvocations,
+          })),
+        )
+      }
+
+      return toChatSession(created)
     }),
 
   /** Restore the full conversation stream (with widget state) for an owned chat. */

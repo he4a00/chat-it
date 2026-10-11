@@ -6,7 +6,9 @@ import {
   CalculatorIcon,
   CheckIcon,
   ClockIcon,
+  CopyPlusIcon,
   FlaskConicalIcon,
+  LinkIcon,
   MessageSquareTextIcon,
   MoreHorizontalIcon,
   PencilIcon,
@@ -25,12 +27,26 @@ import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSkeleton,
 } from "@/components/ui/sidebar"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { notify } from "@/lib/toast"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
@@ -43,9 +59,11 @@ interface SessionListProps {
   sessions: ChatSession[]
   activeSessionId: string | null
   searchQuery: string
+  isLoading?: boolean
   onSelectSession: (id: string) => void
   onDeleteSession: (id: string) => void
   onRenameSession: (id: string, newTitle: string) => void
+  onDuplicateSession?: (id: string) => void
   onClearSearch: () => void
 }
 
@@ -56,11 +74,11 @@ const CATEGORY_ORDER: SessionCategory[] = [
   "older",
 ]
 
-const CATEGORY_LABELS: Record<SessionCategory, string> = {
-  today: "Today",
-  yesterday: "Yesterday",
-  previous_7_days: "Previous 7 Days",
-  older: "Older",
+const CATEGORY_LABELS: Record<SessionCategory, { en: string; ar: string }> = {
+  today: { en: "Today", ar: "اليوم" },
+  yesterday: { en: "Yesterday", ar: "أمس" },
+  previous_7_days: { en: "Previous 7 Days", ar: "آخر ٧ أيام" },
+  older: { en: "Older", ar: "أقدم" },
 }
 
 function getSubjectIcon(subject?: string) {
@@ -82,15 +100,26 @@ export function SessionList({
   sessions,
   activeSessionId,
   searchQuery,
+  isLoading = false,
   onSelectSession,
   onDeleteSession,
   onRenameSession,
+  onDuplicateSession,
   onClearSearch,
 }: SessionListProps) {
   const { language } = useLanguage()
   const isAr = language === "ar"
   const [editingSessionId, setEditingSessionId] = React.useState<string | null>(null)
   const [editTitle, setEditTitle] = React.useState("")
+  const [pendingDelete, setPendingDelete] = React.useState<ChatSession | null>(null)
+
+  const handleCopyLink = (id: string) => {
+    const url = `${window.location.origin}/c/${id}`
+    navigator.clipboard.writeText(url).then(
+      () => notify.success(isAr ? "تم نسخ الرابط" : "Link copied"),
+      () => notify.error(isAr ? "تعذّر نسخ الرابط" : "Couldn't copy the link"),
+    )
+  }
 
   // Filter sessions by search query
   const filteredSessions = React.useMemo(() => {
@@ -138,7 +167,19 @@ export function SessionList({
 
   return (
     <SidebarContent className="px-2 py-1 select-none">
-      {filteredSessions.length === 0 ? (
+      {isLoading && sessions.length === 0 ? (
+        <SidebarGroup className="p-0 py-1.5">
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-0.5">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <SidebarMenuItem key={index}>
+                  <SidebarMenuSkeleton showIcon />
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      ) : filteredSessions.length === 0 ? (
         searchQuery.trim().length > 0 ? (
           /* Case 1: Search returned no matching sessions */
           <div className="flex flex-col items-center justify-center gap-2.5 px-3 py-10 text-center animate-in fade-in-50 duration-200">
@@ -184,8 +225,8 @@ export function SessionList({
 
           return (
             <SidebarGroup key={category} className="p-0 py-1.5">
-              <SidebarGroupLabel className="h-6 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
-                {CATEGORY_LABELS[category]}
+              <SidebarGroupLabel className="h-6 px-2 text-[11px] font-semibold text-muted-foreground/80">
+                {isAr ? CATEGORY_LABELS[category].ar : CATEGORY_LABELS[category].en}
               </SidebarGroupLabel>
 
               <SidebarGroupContent>
@@ -254,6 +295,11 @@ export function SessionList({
                               <span className="truncate flex-1 text-left">
                                 {session.title}
                               </span>
+                              {session.timestamp ? (
+                                <span className="ms-1 shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground/60 transition-opacity group-hover/btn:opacity-0">
+                                  {session.timestamp}
+                                </span>
+                              ) : null}
                             </SidebarMenuButton>
 
                             {/* Hover Actions Menu */}
@@ -269,8 +315,9 @@ export function SessionList({
                                   </SidebarMenuAction>
                                 }
                               />
-                              <DropdownMenuContent side="right" align="start" className="min-w-36 text-xs">
+                              <DropdownMenuContent side="right" align="start" className="min-w-44 text-xs">
                                 <DropdownMenuGroup>
+                                  <DropdownMenuLabel>{isAr ? "المحادثة" : "Chat"}</DropdownMenuLabel>
                                   <DropdownMenuItem
                                     onClick={(e) => {
                                       e.stopPropagation()
@@ -280,11 +327,36 @@ export function SessionList({
                                     <PencilIcon className="size-3.5 mr-2" />
                                     <span>{isAr ? "إعادة تسمية" : "Rename"}</span>
                                   </DropdownMenuItem>
+                                  {onDuplicateSession ? (
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        onDuplicateSession(session.id)
+                                      }}
+                                    >
+                                      <CopyPlusIcon className="size-3.5 mr-2" />
+                                      <span>{isAr ? "تكرار" : "Duplicate"}</span>
+                                    </DropdownMenuItem>
+                                  ) : null}
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleCopyLink(session.id)
+                                    }}
+                                  >
+                                    <LinkIcon className="size-3.5 mr-2" />
+                                    <span>{isAr ? "نسخ الرابط" : "Copy link"}</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuGroup>
+
+                                <DropdownMenuSeparator />
+                                <DropdownMenuGroup>
+                                  <DropdownMenuLabel>{isAr ? "منطقة الخطر" : "Danger"}</DropdownMenuLabel>
                                   <DropdownMenuItem
                                     variant="destructive"
                                     onClick={(e) => {
                                       e.stopPropagation()
-                                      onDeleteSession(session.id)
+                                      setPendingDelete(session)
                                     }}
                                   >
                                     <Trash2Icon className="size-3.5 mr-2" />
@@ -304,6 +376,36 @@ export function SessionList({
           )
         })
       )}
+
+      <AlertDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null)
+        }}
+      >
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{isAr ? "حذف المحادثة؟" : "Delete chat?"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {isAr
+                ? "سيتم حذف هذه المحادثة وكل رسائلها نهائيًا. لا يمكن التراجع."
+                : "This chat and all of its messages will be permanently deleted. This can't be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isAr ? "إلغاء" : "Cancel"}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (pendingDelete) onDeleteSession(pendingDelete.id)
+                setPendingDelete(null)
+              }}
+            >
+              {isAr ? "حذف" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarContent>
   )
 }

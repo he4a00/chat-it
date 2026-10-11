@@ -43,7 +43,7 @@ export function ChatShell({
   const listKey = trpc.session.list.queryKey()
 
   // Sessions: the tRPC query cache is the single source of truth, seeded from RSC.
-  const { data: sessionsData } = useQuery({
+  const { data: sessionsData, isPending } = useQuery({
     ...trpc.session.list.queryOptions(),
     initialData: initialSessions,
   })
@@ -53,6 +53,7 @@ export function ChatShell({
   const createMutation = useMutation(trpc.session.create.mutationOptions())
   const renameMutation = useMutation(trpc.session.rename.mutationOptions())
   const deleteMutation = useMutation(trpc.session.delete.mutationOptions())
+  const duplicateMutation = useMutation(trpc.session.duplicate.mutationOptions())
 
   const activeSessionTitle = React.useMemo(
     () => sessions.find((s) => s.id === activeSessionId)?.title,
@@ -145,6 +146,20 @@ export function ChatShell({
     [renameMutation, queryClient, listKey]
   )
 
+  const handleDuplicateSession = React.useCallback(
+    async (id: string) => {
+      try {
+        const copy = await duplicateMutation.mutateAsync({ chatId: id })
+        queryClient.setQueryData<ChatSession[]>(listKey, (prev) => [copy, ...(prev ?? [])])
+      } catch (err) {
+        console.error("Failed to duplicate session:", err)
+      } finally {
+        queryClient.invalidateQueries({ queryKey: listKey })
+      }
+    },
+    [duplicateMutation, queryClient, listKey]
+  )
+
   const refreshSessions = React.useCallback(() => {
     queryClient.invalidateQueries({ queryKey: listKey })
   }, [queryClient, listKey])
@@ -157,10 +172,12 @@ export function ChatShell({
         sessions={sessions}
         activeSessionId={activeSessionId}
         searchQuery={searchQuery}
+        isLoading={isPending && sessions.length === 0}
         onSearchChange={setSearchQuery}
         onSelectSession={handleSelectSession}
         onDeleteSession={handleDeleteSession}
         onRenameSession={handleRenameSession}
+        onDuplicateSession={handleDuplicateSession}
         onNewChat={handleNewChat}
         onClearSearch={() => setSearchQuery("")}
       />
@@ -172,8 +189,10 @@ export function ChatShell({
           initialMessages={initialMessages}
           activeSessionTitle={activeSessionTitle}
           isNewChat={!activeSessionId}
+          recentSession={sessions[0] ? { id: sessions[0].id, title: sessions[0].title } : null}
           onFirstMessage={handleFirstMessage}
           onFinishResponse={refreshSessions}
+          onOpenSession={handleSelectSession}
         />
       </SidebarInset>
     </SidebarProvider>

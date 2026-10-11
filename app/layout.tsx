@@ -5,6 +5,7 @@ import localFont from "next/font/local"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { Toaster } from "@/components/ui/toast"
 import { TRPCReactProvider } from "@/trpc/react"
 import { cn } from "@/lib/utils"
 
@@ -56,7 +57,10 @@ export default function RootLayout({
         >
           <TRPCReactProvider>
             <ThemeProvider>
-              <TooltipProvider>{children}</TooltipProvider>
+              <TooltipProvider>
+                {children}
+                <Toaster />
+              </TooltipProvider>
             </ThemeProvider>
           </TRPCReactProvider>
         </ClerkProvider>

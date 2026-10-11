@@ -11,10 +11,12 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   sessions: ChatSession[]
   activeSessionId: string | null
   searchQuery: string
+  isLoading?: boolean
   onSearchChange: (query: string) => void
   onSelectSession: (id: string) => void
   onDeleteSession: (id: string) => void
   onRenameSession: (id: string, newTitle: string) => void
+  onDuplicateSession?: (id: string) => void
   onNewChat: () => void
   onClearSearch: () => void
 }
@@ -23,10 +25,12 @@ export function AppSidebar({
   sessions,
   activeSessionId,
   searchQuery,
+  isLoading = false,
   onSearchChange,
   onSelectSession,
   onDeleteSession,
   onRenameSession,
+  onDuplicateSession,
   onNewChat,
   onClearSearch,
   ...props
@@ -47,9 +51,11 @@ export function AppSidebar({
         sessions={sessions}
         activeSessionId={activeSessionId}
         searchQuery={searchQuery}
+        isLoading={isLoading}
         onSelectSession={onSelectSession}
         onDeleteSession={onDeleteSession}
         onRenameSession={onRenameSession}
+        onDuplicateSession={onDuplicateSession}
         onClearSearch={onClearSearch}
       />
 

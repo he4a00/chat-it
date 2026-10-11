@@ -20,18 +20,13 @@ import {
 } from "@/components/ui/message"
 import { Bubble, BubbleContent } from "@/components/ui/bubble"
 import { Markdown } from "@/components/chat/markdown"
-import {
-  Copy,
-  Check,
-  RotateCcw,
-  ThumbsUp,
-  ThumbsDown,
-  Sparkles,
-  HelpCircle,
-  Layers,
-  Calculator,
-  CheckCircle2,
-} from "lucide-react"
+import { ThinkingIndicator } from "@/components/chat/thinking-indicator"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Marker, MarkerIcon, MarkerContent } from "@/components/ui/marker"
+import { cn } from "cn"
+import { Copy, Check, RotateCcw, ThumbsUp, ThumbsDown, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { QuizWidget, type QuizQuestionItem, type QuizOption } from "@/components/widgets/quiz-widget"
 import { QuickCheckWidget } from "@/components/widgets/quick-check-widget"
@@ -61,6 +56,17 @@ export function ChatMessages({
     navigator.clipboard.writeText(text)
     setCopiedId(id)
     setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  const [feedback, setFeedback] = React.useState<Record<string, "up" | "down">>({})
+
+  const handleFeedback = (id: string, value: "up" | "down") => {
+    setFeedback((prev) => {
+      const next = { ...prev }
+      if (next[id] === value) delete next[id]
+      else next[id] = value
+      return next
+    })
   }
 
   const isGenerating = status === "streaming" || status === "submitted"
@@ -186,6 +192,9 @@ export function ChatMessages({
                             ) : (
                               <Markdown content={fullText} className="leading-relaxed" />
                             )}
+                            {isLast && isGenerating && (
+                              <span className="ms-0.5 inline-block h-3.5 w-1.5 translate-y-0.5 animate-pulse rounded-xs bg-primary/70 align-middle" />
+                            )}
                           </BubbleContent>
                         </Bubble>
 
@@ -208,7 +217,13 @@ export function ChatMessages({
                           <Button
                             variant="ghost"
                             size="icon-xs"
-                            className="size-7 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
+                            onClick={() => handleFeedback(message.id, "up")}
+                            className={cn(
+                              "size-7 rounded-md hover:bg-muted",
+                              feedback[message.id] === "up"
+                                ? "text-emerald-500"
+                                : "text-muted-foreground hover:text-foreground"
+                            )}
                             title={isAr ? "مفيد" : "Helpful"}
                           >
                             <ThumbsUp className="size-3.5" />
@@ -217,7 +232,13 @@ export function ChatMessages({
                           <Button
                             variant="ghost"
                             size="icon-xs"
-                            className="size-7 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
+                            onClick={() => handleFeedback(message.id, "down")}
+                            className={cn(
+                              "size-7 rounded-md hover:bg-muted",
+                              feedback[message.id] === "down"
+                                ? "text-rose-500"
+                                : "text-muted-foreground hover:text-foreground"
+                            )}
                             title={isAr ? "غير مفيد" : "Not helpful"}
                           >
                             <ThumbsDown className="size-3.5" />
@@ -243,14 +264,13 @@ export function ChatMessages({
             )
           })}
 
-          {/* Typing Indicator while waiting for the first token */}
+          {/* Thinking indicator while waiting for the first token */}
           {showThinkingIndicator && (
-            <MessageScrollerItem messageId="typing-indicator" scrollAnchor>
-              <div className="flex items-center gap-2 text-muted-foreground text-xs py-2 px-1 animate-pulse font-sans">
-                <div className="size-2 rounded-full bg-primary" />
-                <div className="size-2 rounded-full bg-primary delay-75" />
-                <div className="size-2 rounded-full bg-primary delay-150" />
-                <span className="ms-1">{isAr ? "شوقي يفكر ويبني الإجابة..." : "Shawky is thinking..."}</span>
+            <MessageScrollerItem messageId="thinking-indicator" scrollAnchor>
+              <div className="px-1 py-2">
+                <ThinkingIndicator
+                  label={isAr ? "شوقي يفكر ويبني الإجابة..." : "Shawky is thinking..."}
+                />
               </div>
             </MessageScrollerItem>
           )}
@@ -283,20 +303,36 @@ function ToolCallWidgetCard({
   const output = (part.output ?? {}) as Record<string, unknown>
   const submission = (output.userSubmission ?? {}) as Record<string, unknown>
 
+  if (part.state === "output-error") {
+    const errorText = (part as { errorText?: string }).errorText
+    return (
+      <Alert variant="destructive" className="my-2.5">
+        <AlertTitle>{isAr ? "تعذّر تجهيز العنصر" : "Something went wrong"}</AlertTitle>
+        <AlertDescription>
+          {errorText ||
+            (isAr
+              ? "تعذّر توليد هذا العنصر التفاعلي. حاول مرة أخرى."
+              : "This interactive element couldn't be generated. Please try again.")}
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
   if (toolName === "updateLearnerNotes") {
     const topic = String(input.topic || "")
     const observation = String(input.observation || "")
     return (
-      <div className="my-2.5 p-3 rounded-xl border border-primary/25 bg-primary/5 text-xs text-foreground flex items-center gap-2.5 font-sans">
-        <Sparkles className="size-4 text-primary shrink-0" />
-        <div className="leading-relaxed">
+      <Marker variant="border" className="my-3 normal-case tracking-normal">
+        <MarkerIcon>
+          <Sparkles className="size-3.5 text-primary" />
+        </MarkerIcon>
+        <MarkerContent className="text-[11px] leading-relaxed text-muted-foreground">
           <span className="font-semibold text-primary">
-            {isAr ? "ملاحظة تربوية مسجلة:" : "Pedagogical Note Captured:"}
-          </span>{" "}
-          {topic && <span className="text-muted-foreground font-mono">[{topic}]</span>}{" "}
-          <span>{observation}</span>
-        </div>
-      </div>
+            {isAr ? "ملاحظة تربوية مسجّلة" : "Pedagogical note captured"}
+          </span>
+          {topic ? <span className="font-mono"> [{topic}]</span> : null} — {observation}
+        </MarkerContent>
+      </Marker>
     )
   }
 
@@ -320,10 +356,9 @@ function ToolCallWidgetCard({
 
     if (questionsList.length === 0) {
       return (
-        <div className="my-2.5 p-3.5 rounded-xl border border-border/60 bg-muted/20 text-xs text-muted-foreground flex items-center gap-2.5 font-sans animate-pulse">
-          <HelpCircle className="size-4 text-primary" />
-          <span>{isAr ? "جاري تجهيز الاختبار التفاعلي..." : "Shawky is preparing your quiz challenge..."}</span>
-        </div>
+        <ToolPlaceholder
+          label={isAr ? "جاري تجهيز الاختبار التفاعلي..." : "Shawky is preparing your quiz challenge..."}
+        />
       )
     }
 
@@ -348,10 +383,9 @@ function ToolCallWidgetCard({
 
     if (cards.length === 0) {
       return (
-        <div className="my-2.5 p-3.5 rounded-xl border border-border/60 bg-muted/20 text-xs text-muted-foreground flex items-center gap-2.5 font-sans animate-pulse">
-          <Layers className="size-4 text-primary" />
-          <span>{isAr ? "جاري إنشاء البطاقات التعليمية..." : "Shawky is creating your flashcard deck..."}</span>
-        </div>
+        <ToolPlaceholder
+          label={isAr ? "جاري إنشاء البطاقات التعليمية..." : "Shawky is creating your flashcard deck..."}
+        />
       )
     }
 
@@ -378,10 +412,9 @@ function ToolCallWidgetCard({
 
     if (!problemStatement) {
       return (
-        <div className="my-2.5 p-3.5 rounded-xl border border-border/60 bg-muted/20 text-xs text-muted-foreground flex items-center gap-2.5 font-sans animate-pulse">
-          <Calculator className="size-4 text-primary" />
-          <span>{isAr ? "جاري تجهيز المسألة الرياضية الموجهة..." : "Shawky is structuring the guided math problem..."}</span>
-        </div>
+        <ToolPlaceholder
+          label={isAr ? "جاري تجهيز المسألة الرياضية الموجهة..." : "Shawky is structuring the guided math problem..."}
+        />
       )
     }
 
@@ -411,10 +444,9 @@ function ToolCallWidgetCard({
 
     if (!statement) {
       return (
-        <div className="my-2.5 p-3.5 rounded-xl border border-border/60 bg-muted/20 text-xs text-muted-foreground flex items-center gap-2.5 font-sans animate-pulse">
-          <CheckCircle2 className="size-4 text-primary" />
-          <span>{isAr ? "جاري تحضير سؤال الصواب والخطأ..." : "Shawky is preparing the quick check..."}</span>
-        </div>
+        <ToolPlaceholder
+          label={isAr ? "جاري تحضير سؤال الصواب والخطأ..." : "Shawky is preparing the quick check..."}
+        />
       )
     }
 
@@ -433,5 +465,27 @@ function ToolCallWidgetCard({
     )
   }
 
-  return null
+  return (
+    <div className="my-2.5 rounded-xl border border-border/60 bg-muted/20 p-3.5 font-sans text-xs text-muted-foreground">
+      {isAr ? `عنصر تفاعلي: ${toolName}` : `Interactive element: ${toolName}`}
+    </div>
+  )
+}
+
+/**
+ * Skeleton placeholder shown while a tool's payload is still streaming in.
+ */
+function ToolPlaceholder({ label }: { label: string }) {
+  return (
+    <div className="my-2.5 rounded-xl border border-border/60 bg-muted/20 p-3.5">
+      <div className="flex items-center gap-2.5">
+        <Spinner className="size-4 text-primary" />
+        <span className="font-sans text-xs text-muted-foreground">{label}</span>
+      </div>
+      <div className="mt-3 flex flex-col gap-2">
+        <Skeleton className="h-3 w-3/4 rounded-full" />
+        <Skeleton className="h-3 w-1/2 rounded-full" />
+      </div>
+    </div>
+  )
 }

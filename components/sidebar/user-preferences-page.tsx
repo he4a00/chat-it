@@ -174,7 +174,7 @@ export function UserPreferencesPage() {
                     <span className="text-xs font-bold text-foreground">
                       {opt.label}
                     </span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-muted text-muted-foreground font-mono uppercase">
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-muted text-muted-foreground font-mono">
                       {opt.direction}
                     </span>
                   </div>
