@@ -30,7 +30,7 @@ export function ThinkingIndicator({ label, className }: ThinkingIndicatorProps) 
           alt=""
           width={24}
           height={24}
-          className="relative size-6 rounded-md ring-1 ring-border/60"
+          className="relative size-6 rounded-lg ring-1 ring-border/60"
           animate={reduce ? undefined : { scale: [1, 1.06, 1] }}
           transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
         />

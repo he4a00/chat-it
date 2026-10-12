@@ -114,7 +114,7 @@ export function ChatMessages({
                 >
                   <Message align={isUser ? "end" : "start"} className="gap-3">
                   {/* Avatar */}
-                  <MessageAvatar className="size-8 rounded-none border border-border/60 shrink-0 mt-0.5">
+                  <MessageAvatar className="size-8 rounded-lg border border-border/60 shrink-0 mt-0.5">
                     {isUser ? (
                       user?.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element

@@ -1243,3 +1243,18 @@ This file records architecture decisions, agent conventions, and a running log o
 
 5. **Verification**: typecheck / lint / build clean. Temp probe route (`app/font-check`) and both sweep scripts removed. A hard refresh may be needed to drop the browser's cached `@font-face`/CSS.
 
+### [2026-10-12] Fix: RTL UI Polish Batch (theme switch, language label, progress sheet, header avatar)
+
+1. **Dark-mode switch was inconsistent in RTL.** `ThemeSwitch` renders `Sun · Switch · Moon`; RTL flips the row (Moon ends up on the left) but the `Switch` thumb translates physically, so "dark" put the thumb next to the *sun*. Fixed by mirroring the control in RTL (`rtl:-scale-x-100` on the `Switch`).
+
+2. **Language menu now shows the active locale.** `LanguageMenu` gained an `EN` / `AR` label beside the globe (`language.toUpperCase()`), so the current locale is visible without opening the dropdown.
+
+3. **Learner sheet opened over the sidebar in Arabic.** `ProgressPanel` hardcoded `side="right"`; in RTL the sidebar sits on the right, so the two collided. Now `side={i18n.dir() === "rtl" ? "left" : "right"}`.
+
+4. **Header avatar never actually rounded — the `[--radius:0]` gotcha.** The vendored shadcn `SidebarHeader` and `SidebarContent` include `[--radius:0]`, so **every** `rounded-*` utility inside them resolves through `var(--radius)` to **0px**. Measured in headless Edge: the header `<img>` computed `border-radius: 0px` while an identical image with the same class outside the sidebar computed `8px`. An earlier `rounded-md` → `rounded-lg` change therefore had no visual effect.
+   - **Fix**: restore the variable locally on the brand link — `[--radius:0.5rem]` — so `rounded-lg` resolves to 8px again (verified computed `8px`).
+   - Also made the mark a `<Link href="/">` (with a focus ring) and, for visual consistency, moved the other small Shawky avatars to the same token: assistant `MessageAvatar` (`rounded-none` → `rounded-lg`) and the thinking indicator (`rounded-md` → `rounded-lg`).
+   - **Note for future agents:** anything inside `SidebarHeader` / `SidebarContent` that needs visible corner rounding must use a fixed radius (`rounded-full`, `rounded-[8px]`) or re-declare `--radius` locally.
+
+5. **Verification**: typecheck / lint / build clean; temp probes (`app/radius-check`, `app/header-check`) removed.
+

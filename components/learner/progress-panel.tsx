@@ -78,7 +78,7 @@ export function ProgressPanel({
   onStartReview,
   isStartingReview = false,
 }: ProgressPanelProps) {
-  const { t } = useTranslation("learner")
+  const { t, i18n } = useTranslation("learner")
 
   const streak = overview?.streak
   const accuracy = Math.round((overview?.stats.accuracy ?? 0) * 100)
@@ -89,7 +89,10 @@ export function ProgressPanel({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-md">
+      <SheetContent
+        side={i18n.dir() === "rtl" ? "left" : "right"}
+        className="w-full gap-0 p-0 sm:max-w-md"
+      >
         <SheetHeader className="border-b border-border/60 p-6 pe-14">
           <SheetTitle className="flex items-center gap-2">
             <TrendingUp className="size-4 text-primary" />

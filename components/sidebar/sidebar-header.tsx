@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { PlusIcon } from "lucide-react"
 import { SidebarHeader, SidebarTrigger } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
@@ -36,16 +37,21 @@ export function AppSidebarHeader({
     <SidebarHeader className="border-b border-sidebar-border/70 p-3 flex flex-col gap-2.5">
       {/* Brand Logo & Collapse Trigger */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center justify-center">
+        {/* SidebarHeader sets [--radius:0]; restore it so the avatar can round. */}
+        <Link
+          href="/"
+          aria-label="Shawky"
+          className="flex items-center justify-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring/40 [--radius:0.5rem]"
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={shawkyAvatar(64)}
             alt="Shawky (شوقي)"
-            className="relative size-6 rounded-md"
+            className="size-6 rounded-lg"
             width={24}
             height={24}
           />
-        </div>
+        </Link>
 
         <SidebarTrigger className="rounded-full text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent" />
       </div>

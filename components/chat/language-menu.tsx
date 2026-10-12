@@ -38,9 +38,10 @@ export function LanguageMenu() {
             variant="ghost"
             size="icon-sm"
             aria-label={t("sidebar:language.change")}
-            className="size-6 rounded-full text-muted-foreground hover:bg-background/70 hover:text-foreground"
+            className="h-6 w-auto gap-1 rounded-full px-1.5 text-[10px] font-semibold text-muted-foreground hover:bg-background/70 hover:text-foreground"
           >
             <GlobeIcon className="size-3.5" />
+            <span>{language.toUpperCase()}</span>
           </Button>
         }
       />

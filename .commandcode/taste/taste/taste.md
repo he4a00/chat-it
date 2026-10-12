@@ -34,10 +34,12 @@
 - After a milestone is complete, looks to the agent to propose a prioritized set of next steps / roadmap to choose from rather than deciding the next move alone. Confidence: 0.6
 - New TanStack Query hooks/files for a feature should live inside `server/hooks/` (explicitly specified project convention). Confidence: 0.8
 - For localization, wants i18next/react-i18next with the `t()` function as the single mechanism, with all strings centralized in locale files rather than scattered inline bilingual ternaries (`isAr ? … : …`). Confidence: 0.7
-- Prefers Arabic UI copy in warm, Egyptian-flavored Arabic (colloquial touches) rather than overly formal Modern Standard Arabic. Confidence: 0.7
+- Prefers Arabic content (UI copy and written deliverables like posts) in warm, Egyptian-flavored colloquial Arabic rather than formal Modern Standard Arabic — explicitly asks that Arabic be "a little loose, not fully formal." Confidence: 0.7
 - Wants cache mutations reflected immediately in the UI (optimistic updates, not refetch-after-write blanketing), actively disliking stale-state flashes such as a deleted item briefly reappearing. Confidence: 0.65
 - Prefers driving third-party services through installed MCP integrations (e.g. Vercel MCP) rather than shelling out to the vendor's CLI. Confidence: 0.55
 - Hosts/deploys projects on Vercel and expects the agent to own the entire deploy lifecycle end-to-end (create project, import/detected git repo, add env vars, trigger deploy, confirm the live URL) from a single terse instruction. Confidence: 0.6
 - Wants the deployed/production app to run on live production credentials (e.g. Clerk live keys), treating test/dev keys as acceptable only for local development; supplies the live keys expecting them swapped in. Confidence: 0.5
 - When adding RTL/Arabic support, expects correct bidirectional layout parity across every surface (sidebar, chat, all screens) — translating strings is not enough; nothing may be visually broken in either direction. Confidence: 0.75
 - Verification must include the actual rendered UI, not just passing typecheck/lint/build — a green build alongside a visibly broken layout (misapplied/absent fonts, broken direction) is treated as failure. Confidence: 0.7
+- Wants user-facing content deliverables (e.g. a LinkedIn/social post, launch copy) produced in both English and Arabic versions, with relevant tags/hashtags attached. Confidence: 0.6
+- Prefers concise, uncluttered written content that leads with the single most important idea rather than enumerating every feature. Confidence: 0.5
