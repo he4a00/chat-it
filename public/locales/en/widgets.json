@@ -1,1 +1,77 @@
-{}
+{
+  "quiz": {
+    "title": "Interactive Quiz Challenge",
+    "questionCounter": "Question {{current}} of {{total}}",
+    "jumpTo": "Jump to Question {{number}}",
+    "score": "Score",
+    "perfect": "Outstanding! Perfect Score 🎉",
+    "great": "Great job! Core Concepts Mastered 👍",
+    "good": "Good Practice! Let's Review Key Insights 📚",
+    "resultSubtitle": "You answered {{correct}} out of {{total}} questions correctly",
+    "breakdown": "Question Breakdown:",
+    "review": "Review",
+    "retake": "Retake Quiz",
+    "share": "Ask Shawky for Socratic Review",
+    "shared": "Results Shared with Shawky",
+    "selectAnswer": "Select the best answer:",
+    "needHint": "Need a hint?",
+    "hideHint": "Hide hint",
+    "correct": "Spot on! That's correct.",
+    "incorrect": "Not quite, but here is the key insight:",
+    "previous": "Previous",
+    "next": "Next Question",
+    "finish": "Finish & View Score",
+    "feedback": {
+      "intro": "[Student Quiz Results]: I finished the {{total}}-question quiz on \"{{topic}}\" with a score of {{correct}}/{{total}} ({{score}}%).",
+      "missed": " I missed Question(s): {{questions}}. Shawky, can you walk me through the key concept behind where my reasoning went wrong?",
+      "perfect": " I scored 100%! What is the next logical advanced challenge to tackle?",
+      "missedQuestion": "Q{{number}}",
+      "separator": ", "
+    }
+  },
+  "flashcard": {
+    "title": "Interactive Flashcard Deck",
+    "front": "Front (Concept)",
+    "back": "Back (Explanation)",
+    "clickToFlip": "Click to flip",
+    "flipHint": "Click card to flip",
+    "prev": "Prev",
+    "next": "Next",
+    "markMastered": "Mark as Mastered",
+    "mastered": "Mastered ✓",
+    "feedback": {
+      "completed": "[Flashcard Deck Completed]: I reviewed and mastered all {{count}} flashcards on \"{{topic}}\"! Could you give me an applied problem to test these formulas?"
+    }
+  },
+  "math": {
+    "title": "Guided Math Problem",
+    "steps": "Scaffolded Steps:",
+    "toggleHint": "Toggle hint",
+    "answerPlaceholder": "Enter final answer (e.g. 4, x=2)...",
+    "check": "Check",
+    "correct": "Excellent! Answer matches target.",
+    "yourAnswer": "Your answer: ({{answer}}), Target: ",
+    "feedback": {
+      "intro": "[Guided Problem Submission]: My answer was: \"{{answer}}\" while the target is \"{{target}}\". Result: {{result}}.",
+      "resultCorrect": "Correct ✓",
+      "resultIncorrect": "Incorrect ✗",
+      "followUpCorrect": " Is there an alternative or more elegant way to solve this?",
+      "followUpIncorrect": " Could you guide me through where my derivation went off track?"
+    }
+  },
+  "quickCheck": {
+    "title": "Concept Quick Check",
+    "badge": "True / False",
+    "true": "True",
+    "false": "False",
+    "correct": "Spot on! That's correct.",
+    "incorrect": "Incorrect, but here is the key concept:",
+    "feedback": {
+      "intro": "[Concept Quick Check]: I answered ({{answer}}) for the statement: \"{{statement}}\". Result: {{result}}.",
+      "resultCorrect": "Correct ✓",
+      "resultIncorrect": "Incorrect ✗",
+      "followUpCorrect": " What is a deeper edge-case or generalization of this?",
+      "followUpIncorrect": " Could you break down why this is a common misconception?"
+    }
+  }
+}

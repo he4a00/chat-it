@@ -8,7 +8,7 @@ import { ArrowLeft, ArrowRight, Check, Compass, Gauge, Sparkles, Target } from "
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "cn"
-import { useLanguage } from "@/hooks/use-language"
+import { useTranslation } from "react-i18next"
 import { useTRPC } from "@/trpc/react"
 import { notify } from "@/lib/toast"
 import { shawkyAvatar } from "@/lib/brand"
@@ -52,8 +52,9 @@ export function OnboardingExperience() {
   const router = useRouter()
   const trpc = useTRPC()
   const queryClient = useQueryClient()
-  const { language } = useLanguage()
-  const isAr = language === "ar"
+  const { t, i18n } = useTranslation("onboarding")
+  // Direction only (slide/RTL awareness) — all copy comes from `t`.
+  const isAr = (i18n.resolvedLanguage ?? "en").startsWith("ar")
   const reduce = useReducedMotion()
 
   const [stepIndex, setStepIndex] = React.useState(0)
@@ -74,10 +75,7 @@ export function OnboardingExperience() {
         setDone(true)
       },
       onError: () => {
-        notify.error(
-          isAr ? "تعذّر حفظ ملفك" : "Couldn't save your profile",
-          isAr ? "حاول مرة أخرى بعد قليل." : "Please try again in a moment.",
-        )
+        notify.error(t("experience.saveErrorTitle"), t("experience.saveErrorDetail"))
       },
     }),
   )
@@ -129,7 +127,7 @@ export function OnboardingExperience() {
     setStepIndex((index) => Math.max(0, index - 1))
   }
 
-  const talk = isAr ? step.talkAr : step.talkEn
+  const talk = t(step.talkKey)
   const words = talk.split(" ")
   const headingId = `ob-heading-${step.id}`
   const oc = (multiplier: number) => (isAr ? -1 : 1) * direction * multiplier
@@ -155,9 +153,9 @@ export function OnboardingExperience() {
             height={36}
           />
           <div className="flex flex-col leading-tight">
-            <span className="text-sm font-semibold">{isAr ? "شوقي" : "Shawky"}</span>
+            <span className="text-sm font-semibold">{t("experience.brandName")}</span>
             <span className="text-[11px] text-muted-foreground">
-              {isAr ? "رفيقك في التعلّم" : "Your learning companion"}
+              {t("experience.tagline")}
             </span>
           </div>
         </div>
@@ -196,7 +194,7 @@ export function OnboardingExperience() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={shawkyAvatar(448)}
-                alt={isAr ? "شوقي، مدرّسك" : "Shawky, your tutor"}
+                alt={t("experience.avatarAlt")}
                 className="size-40 rounded-4xl ring-1 ring-border/50 sm:size-48 lg:size-56"
                 width={224}
                 height={224}
@@ -216,7 +214,7 @@ export function OnboardingExperience() {
             >
               <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-primary">
                 <Sparkles className="size-3.5" />
-                <span>{isAr ? "شوقي" : "Shawky"}</span>
+                <span>{t("experience.brandName")}</span>
               </div>
               <p
                 key={step.id}
@@ -243,10 +241,10 @@ export function OnboardingExperience() {
           <div className="mb-7">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground">
-                {isAr ? "خطوات الإعداد" : "Getting set up"}
+                {t("experience.journeyLabel")}
               </span>
               <span className="text-xs font-semibold tabular-nums text-primary">
-                {isAr ? `${stepIndex + 1} من ${total}` : `Step ${stepIndex + 1} of ${total}`}
+                {t("experience.stepCounter", { current: stepIndex + 1, total })}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -307,14 +305,12 @@ export function OnboardingExperience() {
                 </span>
                 <div className="min-w-0">
                   <h1 id={headingId} className="text-base font-semibold text-foreground">
-                    {isAr ? step.titleAr : step.titleEn}
+                    {t(step.titleKey)}
                   </h1>
-                  {isAr ? (
-                    step.descriptionAr ? (
-                      <p className="mt-0.5 text-sm text-muted-foreground">{step.descriptionAr}</p>
-                    ) : null
-                  ) : step.descriptionEn ? (
-                    <p className="mt-0.5 text-sm text-muted-foreground">{step.descriptionEn}</p>
+                  {step.descriptionKey ? (
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                      {t(step.descriptionKey)}
+                    </p>
                   ) : null}
                 </div>
               </div>
@@ -353,11 +349,11 @@ export function OnboardingExperience() {
                         />
                         <span className="flex min-w-0 flex-col">
                           <span className="text-sm font-medium text-foreground">
-                            {isAr ? item.labelAr : item.labelEn}
+                            {t(item.labelKey)}
                           </span>
-                          {(isAr ? item.descriptionAr : item.descriptionEn) ? (
+                          {item.descriptionKey ? (
                             <span className="text-[11px] text-muted-foreground">
-                              {isAr ? item.descriptionAr : item.descriptionEn}
+                              {t(item.descriptionKey)}
                             </span>
                           ) : null}
                         </span>
@@ -394,13 +390,13 @@ export function OnboardingExperience() {
                     htmlFor={`ob-custom-${step.id}`}
                     className="text-xs font-medium text-muted-foreground"
                   >
-                    {isAr ? step.customLabelAr : step.customLabelEn}
+                    {step.customLabelKey ? t(step.customLabelKey) : null}
                   </label>
                   <Input
                     id={`ob-custom-${step.id}`}
                     value={custom[step.id] ?? ""}
                     onChange={(event) => handleCustom(event.target.value)}
-                    placeholder={isAr ? step.customPlaceholderAr : step.customPlaceholderEn}
+                    placeholder={step.customPlaceholderKey ? t(step.customPlaceholderKey) : undefined}
                     className="h-11 text-base sm:h-10 sm:text-sm"
                   />
                 </div>
@@ -410,7 +406,7 @@ export function OnboardingExperience() {
               <div className="mt-6 flex items-center justify-between gap-3">
                 <Button variant="outline" onClick={goBack} disabled={stepIndex === 0}>
                   <ArrowLeft className="me-1.5 size-4 rtl:rotate-180" />
-                  {isAr ? "السابق" : "Back"}
+                  {t("experience.back")}
                 </Button>
 
                 {isLast ? (
@@ -420,16 +416,12 @@ export function OnboardingExperience() {
                     className="min-w-32"
                   >
                     {completeOnboarding.isPending
-                      ? isAr
-                        ? "جاري الحفظ…"
-                        : "Saving…"
-                      : isAr
-                        ? "لنبدأ التعلّم"
-                        : "Start learning"}
+                      ? t("experience.saving")
+                      : t("experience.start")}
                   </Button>
                 ) : (
                   <Button onClick={goNext} disabled={!canAdvance}>
-                    {isAr ? "التالي" : "Next"}
+                    {t("experience.next")}
                     <ArrowRight className="ms-1.5 size-4 rtl:rotate-180" />
                   </Button>
                 )}
@@ -489,12 +481,10 @@ export function OnboardingExperience() {
 
               <div>
                 <h2 className="text-lg font-semibold text-foreground">
-                  {isAr ? "كل شيء جاهز" : "You're all set"}
+                  {t("experience.done.title")}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {isAr
-                    ? "لنبدأ أول درس معاً."
-                    : "Let's dive into your first lesson together."}
+                  {t("experience.done.description")}
                 </p>
               </div>
             </div>

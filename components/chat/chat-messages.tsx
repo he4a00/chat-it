@@ -49,8 +49,7 @@ export function ChatMessages({
   onSendFeedback,
 }: ChatMessagesProps) {
   const { user } = useUser()
-  const { t, i18n } = useTranslation("chat")
-  const isAr = (i18n.resolvedLanguage ?? "en").startsWith("ar")
+  const { t } = useTranslation("chat")
   const [copiedId, setCopiedId] = React.useState<string | null>(null)
 
   const handleCopy = (id: string, text: string) => {
@@ -182,7 +181,6 @@ export function ChatMessages({
                                       key={`tool-${pIdx}`}
                                       messageId={message.id}
                                       part={part}
-                                      isAr={isAr}
                                       onSendFeedback={onSendFeedback}
                                     />
                                   )
@@ -289,12 +287,10 @@ export function ChatMessages({
 function ToolCallWidgetCard({
   messageId,
   part,
-  isAr,
   onSendFeedback,
 }: {
   messageId?: string
   part: { type: string; input?: unknown; output?: unknown; state?: string }
-  isAr: boolean
   onSendFeedback?: (feedback: string) => void
 }) {
   const { t } = useTranslation("chat")
@@ -364,7 +360,6 @@ function ToolCallWidgetCard({
         subject={input.subject ? String(input.subject) : undefined}
         title={title}
         questions={questionsList}
-        isAr={isAr}
         initialAnswers={submission.answers as Record<number, string> | undefined}
         onAnswerSubmitted={(data) => {
           onSendFeedback?.(data.feedbackPrompt)
@@ -391,7 +386,6 @@ function ToolCallWidgetCard({
         topic={topic}
         subject={input.subject ? String(input.subject) : undefined}
         cards={cards}
-        isAr={isAr}
         initialMasteredIds={
           Array.isArray(submission.masteredIds) ? (submission.masteredIds as string[]) : undefined
         }
@@ -433,7 +427,6 @@ function ToolCallWidgetCard({
         finalAnswer={finalAnswer}
         acceptedFormats={acceptedFormats}
         explanation={explanation}
-        isAr={isAr}
         initialUserAnswer={typeof submission.userAnswer === "string" ? submission.userAnswer : undefined}
         initialCorrect={typeof submission.isCorrect === "boolean" ? submission.isCorrect : undefined}
         onAnswerSubmitted={(data) => {
@@ -464,7 +457,6 @@ function ToolCallWidgetCard({
         statement={statement}
         isTrue={isTrue}
         explanation={explanation}
-        isAr={isAr}
         initialUserChoice={typeof submission.userChoice === "boolean" ? submission.userChoice : undefined}
         onAnswerSubmitted={(data) => {
           onSendFeedback?.(data.feedbackPrompt)

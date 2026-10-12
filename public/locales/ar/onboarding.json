@@ -1,1 +1,68 @@
-{}
+{
+  "steps": {
+    "subject": {
+      "talk": "أهلاً! أنا شوقي مدرّسك. تحب نبدأ بإيه؟",
+      "title": "اختار المادة",
+      "description": "اختار نقطة بداية، واسألني عن أي حاجة في أي وقت.",
+      "customLabel": "أو اكتب المادة بنفسك",
+      "customPlaceholder": "مثال: اقتصاد، تاريخ، نظرية الموسيقى…",
+      "choices": {
+        "mathematics": "الرياضيات",
+        "physics": "الفيزياء",
+        "chemistry": "الكيمياء",
+        "biology": "الأحياء",
+        "computerScience": "علوم الحاسب",
+        "english": "اللغة الإنجليزية"
+      }
+    },
+    "skillLevel": {
+      "talk": "اختيار حلو. إيه مستواك في المجال ده؟",
+      "title": "حدّد مستواك",
+      "description": "هعدّل شرحى على قد مستواك.",
+      "choices": {
+        "beginner": {
+          "label": "لسه ببدأ",
+          "description": "جديد في المادة"
+        },
+        "intermediate": {
+          "label": "متمكن من الأساسيات",
+          "description": "عندي فكرة عن الأساسيات"
+        },
+        "advanced": {
+          "label": "واثق",
+          "description": "جاهز لمسائل صعبة"
+        }
+      }
+    },
+    "learningGoal": {
+      "talk": "آخر خطوة. إيه اللي نفسك توصله؟",
+      "title": "هدفك",
+      "description": "اختياري، بس بيساعدني أخليك على المسار.",
+      "customLabel": "أو اكتب هدفك بنفسك",
+      "customPlaceholder": "مثال: أستعد للامتحانات في تلات أسابيع",
+      "choices": {
+        "examPreparation": "الاستعداد للامتحانات",
+        "masterTopic": "إتقان موضوع معيّن",
+        "dailyPractice": "ممارسة يومية",
+        "explore": "استكشاف بحرّية"
+      }
+    }
+  },
+  "experience": {
+    "brandName": "شوقي",
+    "tagline": "رفيقك في التعلّم",
+    "journeyLabel": "خطوات التجهيز",
+    "stepCounter": "خطوة {{current}} من {{total}}",
+    "back": "السابق",
+    "next": "التالي",
+    "start": "يالا نبدأ",
+    "saving": "بنحفظ…",
+    "saveErrorTitle": "مقدرناش نحفظ ملفك",
+    "saveErrorDetail": "جرّب تاني بعد شوية.",
+    "avatarAlt": "شوقي، مدرّسك",
+    "done": {
+      "title": "تمام، خلصنا!",
+      "description": "يالا نبدأ أول درس مع بعض."
+    }
+  }
+}

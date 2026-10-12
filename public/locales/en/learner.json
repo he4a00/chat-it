@@ -1,1 +1,43 @@
-{}
+{
+  "progress": {
+    "title": "Your progress",
+    "subtitle": "A summary of what Shawky has tracked and remembers about your learning.",
+    "empty": {
+      "title": "No progress yet",
+      "description": "Try a quiz or a flashcard deck and Shawky will start tracking your mastery here."
+    },
+    "streak": {
+      "label": "Practice streak",
+      "unit_one": "day",
+      "unit_other": "days",
+      "practicedToday": "Practiced today",
+      "notPracticedToday": "Not practiced yet today"
+    },
+    "accuracy": {
+      "label": "Overall accuracy",
+      "fraction": "{{correct}} of {{total}} correct"
+    },
+    "mastery": {
+      "title": "Topic mastery",
+      "empty": "No topics tracked yet.",
+      "practiceRecommended": "Practice recommended"
+    },
+    "due": {
+      "title": "Due for review",
+      "empty": "Nothing due right now.",
+      "start": "Start a review session",
+      "preparing": "Preparing…"
+    },
+    "notes": {
+      "title": "Shawky's notes",
+      "empty": "Observations about how you learn will show up here.",
+      "types": {
+        "strength": "Strength",
+        "misconception": "Misconception",
+        "preference": "Preference",
+        "goal": "Goal",
+        "observation": "Observation"
+      }
+    }
+  }
+}

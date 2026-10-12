@@ -1,1 +1,46 @@
-{}
+{
+  "progress": {
+    "title": "تقدّمك",
+    "subtitle": "ملخّص للي شوقي بيتبعه ويفتكره عن تعلّمك.",
+    "empty": {
+      "title": "لسه مفيش تقدّم",
+      "description": "جرّب اختبار أو بطاقات، وشوقي هيبدأ يتبّع إتقانك هنا."
+    },
+    "streak": {
+      "label": "سلسلة التدريب",
+      "unit_one": "يوم",
+      "unit_two": "يومين",
+      "unit_few": "أيام",
+      "unit_many": "يوم",
+      "unit_other": "يوم",
+      "practicedToday": "اتدربت النهاردة",
+      "notPracticedToday": "لسه ما اتدربتش النهاردة"
+    },
+    "accuracy": {
+      "label": "الدقة الإجمالية",
+      "fraction": "{{correct}} من {{total}} إجابة صحيحة"
+    },
+    "mastery": {
+      "title": "إتقان المواضيع",
+      "empty": "لسه مفيش مواضيع.",
+      "practiceRecommended": "محتاج نتدرب على ده"
+    },
+    "due": {
+      "title": "مستحق للمراجعة",
+      "empty": "مفيش حاجة مستحقة للمراجعة دلوقتي.",
+      "start": "ابدأ جلسة مراجعة",
+      "preparing": "بنجهّز…"
+    },
+    "notes": {
+      "title": "ملاحظات شوقي",
+      "empty": "هنا هيظهر ليك اللي شوقي لاحظه عن طريقة تعلّمك.",
+      "types": {
+        "strength": "نقطة قوة",
+        "misconception": "تصوّر خاطئ",
+        "preference": "تفضيل",
+        "goal": "هدف",
+        "observation": "ملاحظة"
+      }
+    }
+  }
+}

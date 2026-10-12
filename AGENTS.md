@@ -1203,3 +1203,20 @@ This file records architecture decisions, agent conventions, and a running log o
    - `lib/session-utils.ts` is **unchanged**: its `isAr` ternaries select a locale *code* (`ar-EG`/`en-US`) for date formatting, not copy. Localised date output remains a follow-up.
 3. **Verification:** typecheck / lint / build clean; an Arabic string confirmed present in the built chunk. The remaining `isAr` ternaries are exactly the P3 (`onboarding-experience`, `progress-panel`) and P4 (4 widgets) targets.
 
+### [2026-10-12] Arabic i18n — Phase 3: Learner Surfaces (`learner`, `onboarding`)
+
+1. `learner` + `onboarding` catalogs authored (English + Egyptian-flavoured Arabic) and the learner surfaces migrated to `t()`:
+   - **`progress-panel`** — all strings via `learner:progress.*`; `NOTE_META` lost its `en`/`ar` pairs for a single `labelKey`; the streak unit uses i18next **plurals** (`streak.unit_one`/`_two`/`_few`/`_many`/`_other`, so Arabic renders يوم / يومين / أيام correctly); the accuracy line uses `{{correct}}`/`{{total}}` interpolation.
+   - **`onboarding-experience`** — brand/tagline, journey label, step counter (`{{current}}`/`{{total}}`), Back/Next/Start/Saving, the save-error toast, and the completion screen all via `onboarding:experience.*`. `isAr` is retained **only** to pick the slide direction (`oc()`), not for copy.
+2. **`onboarding-config.ts` is now key-based**: `talkEn/talkAr`, `titleEn/titleAr`, `descriptionEn/descriptionAr`, `customLabel*`, `customPlaceholder*` and the per-choice `labelEn/labelAr` were replaced with `talkKey`, `titleKey`, `descriptionKey`, `customLabelKey`, `customPlaceholderKey`, `labelKey`/`descriptionKey`. Crucially the persisted `value` fields are untouched (they're what gets stored in `learner_profiles`), so existing answers stay valid. Adding a step is still one object.
+3. **Verification:** typecheck / lint / build clean; Arabic onboarding copy confirmed present in the built chunk. Remaining `isAr` ternaries: the 4 widgets (P4), `lib/session-utils.ts` (locale code, not copy) and the single direction helper in `onboarding-experience`.
+
+### [2026-10-12] Arabic i18n — Phase 4: Widgets (`widgets`)
+
+1. Authored the `widgets` catalog (English + Egyptian-flavoured Arabic) and migrated all four Generative-UI widgets: `quiz-widget`, `flashcard-deck-widget`, `math-problem-widget`, `quick-check-widget`.
+2. Notable decisions:
+   - The `isAr?: boolean` prop was **removed from every widget** (and from `ToolCallWidgetCard`) — each reads the locale via `useTranslation("widgets")`, so `chat-messages` no longer threads `isAr` down at all.
+   - The **feedback prompts** (the closed-loop messages sent back into the chat) are translated too: `widgets:<x>.feedback.*`, built with interpolation (`{{topic}}`, `{{correct}}`, `{{total}}`, `{{count}}`, `{{answer}}`, `{{statement}}`, `{{result}}`) plus the correct/incorrect follow-up variants. The quiz's missed-question list composes `feedback.missedQuestion` with a locale-aware `feedback.separator` (`"، "` vs `", "`).
+   - Result headlines (perfect / great / good) and counters (`questionCounter`, `jumpTo`, `resultSubtitle`) are key-based.
+3. **Verification:** typecheck / lint / build clean. **No `isAr ? "…" : "…"` copy ternaries remain anywhere** in the app — only two intentional non-copy uses: the RTL slide-direction helper in `onboarding-experience` and the `ar-EG`/`en-US` locale *code* in `lib/session-utils.ts`.
+

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTranslation } from "react-i18next"
 import { Markdown } from "@/components/chat/markdown"
 import { CheckCircle2, XCircle, Check, X } from "lucide-react"
 import { cn } from "cn"
@@ -16,7 +17,6 @@ export interface QuickCheckWidgetProps {
   statement: string
   isTrue: boolean
   explanation: string
-  isAr?: boolean
   initialUserChoice?: boolean
   onAnswerSubmitted?: (data: {
     userChoice: boolean
@@ -32,10 +32,10 @@ export function QuickCheckWidget({
   statement,
   isTrue,
   explanation,
-  isAr = false,
   initialUserChoice,
   onAnswerSubmitted,
 }: QuickCheckWidgetProps) {
+  const { t } = useTranslation("widgets")
   const [userChoice, setUserChoice] = React.useState<boolean | null>(
     initialUserChoice !== undefined ? initialUserChoice : null
   )
@@ -55,13 +55,17 @@ export function QuickCheckWidget({
     setUserChoice(choice)
 
     const correct = choice === isTrue
-    const feedbackPrompt = isAr
-      ? `[التحقق السريع من المفهوم]: اخترت (${choice ? "صحيح" : "خطأ"}) والعبارة هي: "${statement}". النتيجة: ${
-          correct ? "صحيحة ✓" : "غير صحيحة ✗"
-        }. ${correct ? "ما هو المثال المعاكس أو التعميم المناسب لهذا المفهوم؟" : "اشرح لي الحدس وراء الخطأ الشائع في هذا التصور."}`
-      : `[Concept Quick Check]: I answered (${choice ? "True" : "False"}) for the statement: "${statement}". Result: ${
-          correct ? "Correct ✓" : "Incorrect ✗"
-        }. ${correct ? "What is a deeper edge-case or generalization of this?" : "Could you break down why this is a common misconception?"}`
+    const feedbackPrompt =
+      t("quickCheck.feedback.intro", {
+        answer: choice ? t("quickCheck.true") : t("quickCheck.false"),
+        statement,
+        result: correct
+          ? t("quickCheck.feedback.resultCorrect")
+          : t("quickCheck.feedback.resultIncorrect"),
+      }) +
+      (correct
+        ? t("quickCheck.feedback.followUpCorrect")
+        : t("quickCheck.feedback.followUpIncorrect"))
 
     // Persist to Neon via tRPC.
     try {
@@ -101,10 +105,10 @@ export function QuickCheckWidget({
       <div className="flex items-center justify-between px-4 sm:px-5 py-2.5 border-b border-border/60 bg-muted/30">
         <div className="flex items-center gap-2 text-xs font-semibold text-emerald-500">
           <CheckCircle2 className="size-4 shrink-0" />
-          <span>{isAr ? "تحقق مفاهيمي سريع" : "Concept Quick Check"}</span>
+          <span>{t("quickCheck.title")}</span>
         </div>
         <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          True / False
+          {t("quickCheck.badge")}
         </span>
       </div>
 
@@ -130,7 +134,7 @@ export function QuickCheckWidget({
             )}
           >
             <Check className="size-4 text-emerald-500" />
-            <span>{isAr ? "صحيح (True)" : "True"}</span>
+            <span>{t("quickCheck.true")}</span>
           </button>
 
           {/* False Button */}
@@ -147,7 +151,7 @@ export function QuickCheckWidget({
             )}
           >
             <X className="size-4 text-rose-500" />
-            <span>{isAr ? "خطأ (False)" : "False"}</span>
+            <span>{t("quickCheck.false")}</span>
           </button>
         </div>
 
@@ -165,12 +169,12 @@ export function QuickCheckWidget({
               {isCorrect ? (
                 <>
                   <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                  <span>{isAr ? "أحسنت! إجابة صحيحة." : "Spot on! That's correct."}</span>
+                  <span>{t("quickCheck.correct")}</span>
                 </>
               ) : (
                 <>
                   <XCircle className="size-4 text-rose-500 shrink-0" />
-                  <span>{isAr ? "إجابة غير صحيحة، وإليك التوضيح المفاهيمي:" : "Incorrect, but here is the key concept:"}</span>
+                  <span>{t("quickCheck.incorrect")}</span>
                 </>
               )}
             </div>

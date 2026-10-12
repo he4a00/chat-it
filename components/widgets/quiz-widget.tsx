@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTranslation } from "react-i18next"
 import { Markdown } from "@/components/chat/markdown"
 import {
   CheckCircle2,
@@ -48,7 +49,6 @@ export interface QuizWidgetProps {
   options?: QuizOption[]
   hint?: string
   explanation?: string
-  isAr?: boolean
   initialSelectedId?: string
   initialAnswers?: Record<number, string>
   onAnswerSubmitted?: (data: {
@@ -69,11 +69,11 @@ export function QuizWidget({
   options = [],
   hint,
   explanation,
-  isAr = false,
   initialSelectedId,
   initialAnswers,
   onAnswerSubmitted,
 }: QuizWidgetProps) {
+  const { t } = useTranslation("widgets")
   // 1. Normalize questions list (multi-question primary, fallback to single)
   const normalizedQuestions: QuizQuestionItem[] = React.useMemo(() => {
     if (Array.isArray(questions) && questions.length > 0) {
@@ -244,30 +244,30 @@ export function QuizWidget({
     if (feedbackSent) return
     setFeedbackSent(true)
 
-    const missedQuestions: string[] = []
+    const missedQuestions: number[] = []
     normalizedQuestions.forEach((q, idx) => {
       const ansId = selectedAnswers[idx]
       const chosen = q.options.find((o) => o.id === ansId)
       if (!chosen || !chosen.isCorrect) {
-        missedQuestions.push(`سؤال ${idx + 1}`)
+        missedQuestions.push(idx + 1)
       }
     })
 
-    let prompt = ""
-    if (isAr) {
-      prompt = `[نتيجة اختبار الطالب]: أكملت اختبار (${topic}) المكون من ${totalQuestions} أسئلة، بنتيجة ${correctCount}/${totalQuestions} (%${scorePercentage}).`
-      if (missedQuestions.length > 0) {
-        prompt += ` أخطأت في: ${missedQuestions.join("، ")}. يا شوقي، هل يمكنك مراجعة المفاهيم التي أخطأت فيها وتبسيطها لي؟`
-      } else {
-        prompt += ` حققت الدرجة الكاملة! ما هي الخطوة التعليمية التالية أو التحدي المتقدم الذي تنصحني به؟`
-      }
+    let prompt = t("quiz.feedback.intro", {
+      total: totalQuestions,
+      topic,
+      correct: correctCount,
+      score: scorePercentage,
+    })
+
+    if (missedQuestions.length > 0) {
+      prompt += t("quiz.feedback.missed", {
+        questions: missedQuestions
+          .map((number) => t("quiz.feedback.missedQuestion", { number }))
+          .join(t("quiz.feedback.separator")),
+      })
     } else {
-      prompt = `[Student Quiz Results]: I finished the ${totalQuestions}-question quiz on "${topic}" with a score of ${correctCount}/${totalQuestions} (${scorePercentage}%).`
-      if (missedQuestions.length > 0) {
-        prompt += ` I missed Question(s): ${missedQuestions.map((_, i) => `Q${i + 1}`).join(", ")}. Shawky, can you walk me through the key concept behind where my reasoning went wrong?`
-      } else {
-        prompt += ` I scored 100%! What is the next logical advanced challenge to tackle?`
-      }
+      prompt += t("quiz.feedback.perfect")
     }
 
     if (onAnswerSubmitted) {
@@ -300,7 +300,7 @@ export function QuizWidget({
           <div className="flex items-center gap-2 min-w-0">
             <HelpCircle className="size-4 text-primary shrink-0" />
             <span className="text-xs font-semibold text-foreground truncate">
-              {title || (isAr ? "اختبار تفاعلي تشخيصي" : "Interactive Quiz Challenge")}
+              {title || t("quiz.title")}
             </span>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
               {topic}
@@ -309,9 +309,7 @@ export function QuizWidget({
 
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-xs font-medium text-muted-foreground tabular-nums">
-              {isAr
-                ? `السؤال ${currentIndex + 1} من ${totalQuestions}`
-                : `Question ${currentIndex + 1} of ${totalQuestions}`}
+              {t("quiz.questionCounter", { current: currentIndex + 1, total: totalQuestions })}
             </span>
             {allAnswered && !showResults && (
               <Button
@@ -321,7 +319,7 @@ export function QuizWidget({
                 className="h-6 px-2 text-[11px] text-primary hover:bg-primary/10"
               >
                 <Trophy className="size-3 me-1" />
-                {isAr ? "النتيجة" : "Score"}
+                {t("quiz.score")}
               </Button>
             )}
           </div>
@@ -354,11 +352,7 @@ export function QuizWidget({
                   "size-7 rounded-lg border text-xs flex items-center justify-center transition-all cursor-pointer shrink-0 font-mono",
                   pillStyle
                 )}
-                title={
-                  isAr
-                    ? `الانتقال إلى السؤال ${idx + 1}`
-                    : `Jump to Question ${idx + 1}`
-                }
+                title={t("quiz.jumpTo", { number: idx + 1 })}
               >
                 {idx + 1}
               </button>
@@ -387,21 +381,13 @@ export function QuizWidget({
               <div>
                 <h4 className="text-sm font-semibold text-foreground">
                   {scorePercentage === 100
-                    ? isAr
-                      ? "علامة كاملة! إتقان ممتاز 🎉"
-                      : "Outstanding! Perfect Score 🎉"
+                    ? t("quiz.perfect")
                     : scorePercentage >= 70
-                    ? isAr
-                      ? "أداء رائع! فهمت المفاهيم الأساسية 👍"
-                      : "Great job! Core Concepts Mastered 👍"
-                    : isAr
-                      ? "تدريب مفيد! لنراجع المفاهيم مع شوقي 📚"
-                      : "Good Practice! Let's Review Key Insights 📚"}
+                    ? t("quiz.great")
+                    : t("quiz.good")}
                 </h4>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {isAr
-                    ? `أجبت بشكل صحيح على ${correctCount} من إجمالي ${totalQuestions} أسئلة`
-                    : `You answered ${correctCount} out of ${totalQuestions} questions correctly`}
+                  {t("quiz.resultSubtitle", { correct: correctCount, total: totalQuestions })}
                 </p>
               </div>
             </div>
@@ -416,7 +402,7 @@ export function QuizWidget({
           {/* Question Breakdown List */}
           <div className="space-y-2">
             <div className="text-xs font-semibold text-muted-foreground px-1">
-              {isAr ? "تفاصيل الأسئلة:" : "Question Breakdown:"}
+              {t("quiz.breakdown")}
             </div>
             <div className="grid grid-cols-1 gap-2">
               {normalizedQuestions.map((q, idx) => {
@@ -446,7 +432,7 @@ export function QuizWidget({
                       onClick={() => handleJumpTo(idx)}
                       className="text-primary hover:underline text-xs shrink-0 ms-2 cursor-pointer font-medium"
                     >
-                      {isAr ? "مراجعة" : "Review"}
+                      {t("quiz.review")}
                     </button>
                   </div>
                 )
@@ -463,7 +449,7 @@ export function QuizWidget({
               className="w-full sm:w-auto text-xs"
             >
               <RotateCcw className="size-3.5 me-1.5" />
-              {isAr ? "إعادة الاختبار" : "Retake Quiz"}
+              {t("quiz.retake")}
             </Button>
 
             <Button
@@ -476,12 +462,12 @@ export function QuizWidget({
               {feedbackSent ? (
                 <>
                   <Check className="size-3.5 me-1.5 text-emerald-500" />
-                  {isAr ? "تم إرسال النتيجة لشوقي" : "Results Shared with Shawky"}
+                  {t("quiz.shared")}
                 </>
               ) : (
                 <>
                   <Send className="size-3.5 me-1.5" />
-                  {isAr ? "اطلب مراجعة شوقي للنتيجة" : "Ask Shawky for Socratic Review"}
+                  {t("quiz.share")}
                 </>
               )}
             </Button>
@@ -497,7 +483,7 @@ export function QuizWidget({
                 {currentIndex + 1}
               </span>
               <span className="text-xs font-medium text-muted-foreground">
-                {isAr ? "اختر الإجابة الصحيحة:" : "Select the best answer:"}
+                {t("quiz.selectAnswer")}
               </span>
             </div>
             <div className="text-sm font-medium leading-relaxed text-foreground pt-1">
@@ -576,13 +562,7 @@ export function QuizWidget({
               >
                 <Lightbulb className="size-3.5 text-amber-500" />
                 <span>
-                  {revealedHints[currentIndex]
-                    ? isAr
-                      ? "إخفاء التلميح"
-                      : "Hide hint"
-                    : isAr
-                      ? "احتاج تلميحاً؟"
-                      : "Need a hint?"}
+                  {revealedHints[currentIndex] ? t("quiz.hideHint") : t("quiz.needHint")}
                 </span>
               </button>
               {revealedHints[currentIndex] && (
@@ -607,16 +587,12 @@ export function QuizWidget({
                 {currentQ.options.find((o) => o.id === currentAnswerId)?.isCorrect ? (
                   <>
                     <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                    <span>{isAr ? "إجابة صحيحة وممتازة!" : "Spot on! That's correct."}</span>
+                    <span>{t("quiz.correct")}</span>
                   </>
                 ) : (
                   <>
                     <XCircle className="size-4 text-rose-500 shrink-0" />
-                    <span>
-                      {isAr
-                        ? "إجابة غير دقيقة، لكن لنتعلم السبب:"
-                        : "Not quite, but here is the key insight:"}
-                    </span>
+                    <span>{t("quiz.incorrect")}</span>
                   </>
                 )}
               </div>
@@ -638,7 +614,7 @@ export function QuizWidget({
               className="text-xs"
             >
               <ChevronLeft className="size-4 me-1" />
-              {isAr ? "السابق" : "Previous"}
+              {t("quiz.previous")}
             </Button>
 
             <div className="flex items-center gap-2">
@@ -650,7 +626,7 @@ export function QuizWidget({
                   onClick={handleNext}
                   className="text-xs font-medium"
                 >
-                  <span>{isAr ? "السؤال التالي" : "Next Question"}</span>
+                  <span>{t("quiz.next")}</span>
                   <ChevronRight className="size-4 ms-1" />
                 </Button>
               ) : (
@@ -662,7 +638,7 @@ export function QuizWidget({
                   className="text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   <Trophy className="size-3.5 me-1.5" />
-                  <span>{isAr ? "إنهاء وعرض النتيجة" : "Finish & View Score"}</span>
+                  <span>{t("quiz.finish")}</span>
                 </Button>
               )}
             </div>

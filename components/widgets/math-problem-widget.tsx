@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTranslation } from "react-i18next"
 import { Markdown } from "@/components/chat/markdown"
 import { Calculator, CheckCircle2, Lightbulb, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -26,7 +27,6 @@ export interface MathProblemWidgetProps {
   finalAnswer: string
   acceptedFormats?: string[]
   explanation: string
-  isAr?: boolean
   initialUserAnswer?: string
   initialCorrect?: boolean
   onAnswerSubmitted?: (data: {
@@ -45,11 +45,11 @@ export function MathProblemWidget({
   finalAnswer,
   acceptedFormats = [],
   explanation,
-  isAr = false,
   initialUserAnswer,
   initialCorrect,
   onAnswerSubmitted,
 }: MathProblemWidgetProps) {
+  const { t } = useTranslation("widgets")
   const [userAnswer, setUserAnswer] = React.useState(initialUserAnswer ?? "")
   const [revealedHints, setRevealedHints] = React.useState<Record<number, boolean>>({})
   const [isAnswered, setIsAnswered] = React.useState(initialUserAnswer !== undefined)
@@ -77,13 +77,15 @@ export function MathProblemWidget({
     setIsCorrect(match)
     setIsAnswered(true)
 
-    const feedbackPrompt = isAr
-      ? `[حل المسألة الرياضية]: كتبت إجابتي: "${userAnswer}" والناتج النهائي هو "${finalAnswer}". النتيجة: ${
-          match ? "صحيحة ومطابقة ✓" : "غير متطابقة ✗"
-        }. ${match ? "هل هناك طريقة حل بديلة أو أسرع لهذه المسألة؟" : "أين حدث الخطأ في خطواتي؟ أريد تلميحاً موجهاً."}`
-      : `[Guided Problem Submission]: My answer was: "${userAnswer}" while the target is "${finalAnswer}". Result: ${
-          match ? "Correct ✓" : "Incorrect ✗"
-        }. ${match ? "Is there an alternative or more elegant way to solve this?" : "Could you guide me through where my derivation went off track?"}`
+    const feedbackPrompt =
+      t("math.feedback.intro", {
+        answer: userAnswer,
+        target: finalAnswer,
+        result: match
+          ? t("math.feedback.resultCorrect")
+          : t("math.feedback.resultIncorrect"),
+      }) +
+      (match ? t("math.feedback.followUpCorrect") : t("math.feedback.followUpIncorrect"))
 
     // Persist to Neon via tRPC.
     try {
@@ -128,7 +130,7 @@ export function MathProblemWidget({
       <div className="flex items-center justify-between px-4 sm:px-5 py-2.5 border-b border-border/60 bg-muted/30">
         <div className="flex items-center gap-2 text-xs font-semibold text-primary">
           <Calculator className="size-4 shrink-0" />
-          <span>{isAr ? "مسألة رياضية تفاعلية موجهة" : "Guided Math Problem"}</span>
+          <span>{t("math.title")}</span>
         </div>
         <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
           {topic}
@@ -145,7 +147,7 @@ export function MathProblemWidget({
         {steps.length > 0 && (
           <div className="space-y-2 border-t border-border/40 pt-3">
             <div className="text-xs font-semibold text-muted-foreground">
-              {isAr ? "خطوات التفكير والتوجيه:" : "Scaffolded Steps:"}
+              {t("math.steps")}
             </div>
 
             <div className="space-y-2">
@@ -171,7 +173,7 @@ export function MathProblemWidget({
                           type="button"
                           onClick={() => toggleHint(s.stepNumber)}
                           className="shrink-0 p-1 text-muted-foreground hover:text-amber-500 transition-colors"
-                          title="Toggle hint"
+                          title={t("math.toggleHint")}
                         >
                           <Lightbulb className={cn("size-3.5", isHintOpen && "text-amber-500")} />
                         </button>
@@ -197,11 +199,11 @@ export function MathProblemWidget({
             <Input
               value={userAnswer}
               onChange={(e) => setUserAnswer(e.target.value)}
-              placeholder={isAr ? "اكتب ناتجك النهائي (مثال: x = 4)..." : "Enter final answer (e.g. 4, x=2)..."}
+              placeholder={t("math.answerPlaceholder")}
               className="text-xs sm:text-sm font-mono h-9"
             />
             <Button type="submit" size="sm" className="rounded-md h-9 px-3 gap-1.5 shrink-0">
-              <span>{isAr ? "تحقق" : "Check"}</span>
+              <span>{t("math.check")}</span>
               <Send className="size-3" />
             </Button>
           </form>
@@ -219,13 +221,13 @@ export function MathProblemWidget({
               {isCorrect ? (
                 <>
                   <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                  <span>{isAr ? "إجابة دقيقة وصحيحة بالكامل!" : "Excellent! Answer matches target."}</span>
+                  <span>{t("math.correct")}</span>
                 </>
               ) : (
                 <>
                   <span className="font-bold text-rose-500">✗</span>
                   <span>
-                    {isAr ? `إجابتك (${userAnswer})، والإجابة الدقيقة: ` : `Your answer: (${userAnswer}), Target: `}
+                    {t("math.yourAnswer", { answer: userAnswer })}
                     <code className="px-1.5 py-0.5 rounded bg-muted/60 font-mono text-xs">{finalAnswer}</code>
                   </span>
                 </>

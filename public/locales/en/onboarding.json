@@ -1,1 +1,68 @@
-{}
+{
+  "steps": {
+    "subject": {
+      "talk": "Hi, I'm Shawky, your tutor. What would you like to explore first?",
+      "title": "Choose a subject",
+      "description": "Pick a starting point. You can ask me about anything, anytime.",
+      "customLabel": "Or type your own subject",
+      "customPlaceholder": "e.g. Economics, History, Music theory…",
+      "choices": {
+        "mathematics": "Mathematics",
+        "physics": "Physics",
+        "chemistry": "Chemistry",
+        "biology": "Biology",
+        "computerScience": "Computer Science",
+        "english": "English"
+      }
+    },
+    "skillLevel": {
+      "talk": "Nice choice. How much experience do you have here?",
+      "title": "Set your level",
+      "description": "I'll match how much I explain to it.",
+      "choices": {
+        "beginner": {
+          "label": "Just starting out",
+          "description": "New to the subject"
+        },
+        "intermediate": {
+          "label": "Getting comfortable",
+          "description": "I know the basics"
+        },
+        "advanced": {
+          "label": "Confident",
+          "description": "Ready for hard problems"
+        }
+      }
+    },
+    "learningGoal": {
+      "talk": "Last one. What are you working toward?",
+      "title": "Your goal",
+      "description": "Optional, but it helps me keep you on track.",
+      "customLabel": "Or describe your own goal",
+      "customPlaceholder": "e.g. Get ready for finals in three weeks",
+      "choices": {
+        "examPreparation": "Exam preparation",
+        "masterTopic": "Master a topic",
+        "dailyPractice": "Daily practice",
+        "explore": "Explore freely"
+      }
+    }
+  },
+  "experience": {
+    "brandName": "Shawky",
+    "tagline": "Your learning companion",
+    "journeyLabel": "Getting set up",
+    "stepCounter": "Step {{current}} of {{total}}",
+    "back": "Back",
+    "next": "Next",
+    "start": "Start learning",
+    "saving": "Saving…",
+    "saveErrorTitle": "Couldn't save your profile",
+    "saveErrorDetail": "Please try again in a moment.",
+    "avatarAlt": "Shawky, your tutor",
+    "done": {
+      "title": "You're all set",
+      "description": "Let's dive into your first lesson together."
+    }
+  }
+}

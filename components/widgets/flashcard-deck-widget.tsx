@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTranslation } from "react-i18next"
 import { Markdown } from "@/components/chat/markdown"
 import { Layers, ChevronLeft, ChevronRight, RotateCw, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -24,7 +25,6 @@ export interface FlashcardDeckWidgetProps {
   topic: string
   subject?: string
   cards: FlashcardItem[]
-  isAr?: boolean
   initialMasteredIds?: string[]
   initialGraded?: Record<string, FlashcardGrade>
   onDeckCompleted?: (feedbackPrompt: string) => void
@@ -35,11 +35,11 @@ export function FlashcardDeckWidget({
   topic,
   subject,
   cards = [],
-  isAr = false,
   initialMasteredIds,
   initialGraded,
   onDeckCompleted,
 }: FlashcardDeckWidgetProps) {
+  const { t } = useTranslation("widgets")
   const [currentIndex, setCurrentIndex] = React.useState(0)
   const [isFlipped, setIsFlipped] = React.useState(false)
   const [masteredIds, setMasteredIds] = React.useState<Set<string>>(
@@ -137,10 +137,7 @@ export function FlashcardDeckWidget({
 
     // Check if all cards mastered
     if (nextMastered.size === cards.length && onDeckCompleted) {
-      const feedback = isAr
-        ? `[إتمام البطاقات التعليمية]: راجعت جميع بطاقات "${topic}" (${cards.length} بطاقات) وأتقنتها كاملة! ما هو التطبيق العملي أو المسألة التي نختبر بها هذه القوانين؟`
-        : `[Flashcard Deck Completed]: I reviewed and mastered all ${cards.length} flashcards on "${topic}"! Could you give me an applied problem to test these formulas?`
-      onDeckCompleted(feedback)
+      onDeckCompleted(t("flashcard.feedback.completed", { count: cards.length, topic }))
     }
 
     persistIfComplete(nextGraded, nextMastered)
@@ -152,7 +149,7 @@ export function FlashcardDeckWidget({
       <div className="flex items-center justify-between px-4 sm:px-5 py-2.5 border-b border-border/60 bg-muted/30">
         <div className="flex items-center gap-2 text-xs font-semibold text-purple-400">
           <Layers className="size-4 shrink-0" />
-          <span>{isAr ? "مجموعة بطاقات تفاعلية" : "Interactive Flashcard Deck"}</span>
+          <span>{t("flashcard.title")}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
@@ -188,10 +185,10 @@ export function FlashcardDeckWidget({
           <div className="flex items-center justify-between text-[11px] text-muted-foreground w-full font-mono">
             <span className="flex items-center gap-1">
               <RotateCw className="size-3 text-purple-400" />
-              <span>{isFlipped ? (isAr ? "الوجه الخلفي (التوضيح)" : "Back (Explanation)") : (isAr ? "الوجه الأمامي (المفهوم)" : "Front (Concept)")}</span>
+              <span>{isFlipped ? t("flashcard.back") : t("flashcard.front")}</span>
             </span>
             <span className="text-[10px] opacity-70">
-              {currentCard.conceptTag || (isAr ? "انقر للقلب" : "Click to flip")}
+              {currentCard.conceptTag || t("flashcard.clickToFlip")}
             </span>
           </div>
 
@@ -202,7 +199,7 @@ export function FlashcardDeckWidget({
 
           {/* Flip Prompt Subtext */}
           <div className="text-center text-[10px] text-muted-foreground/60 font-mono">
-            {isAr ? "اضغط للمشاهدة العكسية" : "Click card to flip"}
+            {t("flashcard.flipHint")}
           </div>
         </div>
 
@@ -216,7 +213,7 @@ export function FlashcardDeckWidget({
             className="rounded-full text-xs h-8 px-3 gap-1"
           >
             <ChevronLeft className="size-3.5" />
-            <span className="hidden sm:inline">{isAr ? "السابق" : "Prev"}</span>
+            <span className="hidden sm:inline">{t("flashcard.prev")}</span>
           </Button>
 
           {/* Self-Rating Mastery Button */}
@@ -232,7 +229,7 @@ export function FlashcardDeckWidget({
             )}
           >
             <CheckCircle2 className={cn("size-3.5", isMastered && "text-emerald-500")} />
-            <span>{isMastered ? (isAr ? "متقن ✓" : "Mastered ✓") : (isAr ? "أتقنت المفهوم؟" : "Mark as Mastered")}</span>
+            <span>{isMastered ? t("flashcard.mastered") : t("flashcard.markMastered")}</span>
           </Button>
 
           {/* Next Button */}
@@ -242,7 +239,7 @@ export function FlashcardDeckWidget({
             onClick={handleNext}
             className="rounded-full text-xs h-8 px-3 gap-1"
           >
-            <span className="hidden sm:inline">{isAr ? "التالي" : "Next"}</span>
+            <span className="hidden sm:inline">{t("flashcard.next")}</span>
             <ChevronRight className="size-3.5" />
           </Button>
         </div>

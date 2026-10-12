@@ -5,8 +5,8 @@
  * whatever it finds, and every answer is recorded verbatim into
  * `learner_profiles.onboarding_answers` (plus known keys mapped to typed columns).
  *
- * `talkEn` / `talkAr` are Shawky's spoken lines (rendered in his speech bubble);
- * `titleEn` / `titleAr` are the crisp heading on the task panel.
+ * Display copy lives in the `onboarding` namespace (see public/locales); each field
+ * holds a translation KEY, while `value` is the stable string that gets persisted.
  */
 
 export type OnboardingStepKind = "single" | "text"
@@ -14,11 +14,10 @@ export type OnboardingStepKind = "single" | "text"
 export type OnboardingStepIcon = "compass" | "gauge" | "target"
 
 export interface OnboardingChoice {
+  /** The persisted answer value — never translated. */
   value: string
-  labelEn: string
-  labelAr: string
-  descriptionEn?: string
-  descriptionAr?: string
+  labelKey: string
+  descriptionKey?: string
 }
 
 export interface OnboardingStep {
@@ -27,19 +26,14 @@ export interface OnboardingStep {
   kind: OnboardingStepKind
   icon: OnboardingStepIcon
   /** Shawky's spoken line for this step. */
-  talkEn: string
-  talkAr: string
-  titleEn: string
-  titleAr: string
-  descriptionEn?: string
-  descriptionAr?: string
+  talkKey: string
+  titleKey: string
+  descriptionKey?: string
   choices?: OnboardingChoice[]
   /** Show an optional "type your own" input alongside the choices. */
   allowCustom?: boolean
-  customLabelEn?: string
-  customLabelAr?: string
-  customPlaceholderEn?: string
-  customPlaceholderAr?: string
+  customLabelKey?: string
+  customPlaceholderKey?: string
   optional?: boolean
 }
 
@@ -48,57 +42,43 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "subject",
     kind: "single",
     icon: "compass",
-    talkEn: "Hi, I'm Shawky, your tutor. What would you like to explore first?",
-    talkAr: "أهلاً، أنا شوقي مدرّسك. ما الذي تودّ استكشافه أولاً؟",
-    titleEn: "Choose a subject",
-    titleAr: "اختر المادة",
-    descriptionEn: "Pick a starting point. You can ask me about anything, anytime.",
-    descriptionAr: "اختر نقطة بداية، ويمكنك سؤالي عن أي شيء في أي وقت.",
+    talkKey: "steps.subject.talk",
+    titleKey: "steps.subject.title",
+    descriptionKey: "steps.subject.description",
     allowCustom: true,
-    customLabelEn: "Or type your own subject",
-    customLabelAr: "أو اكتب المادة بنفسك",
-    customPlaceholderEn: "e.g. Economics, History, Music theory…",
-    customPlaceholderAr: "مثال: الاقتصاد، التاريخ، نظرية الموسيقى…",
+    customLabelKey: "steps.subject.customLabel",
+    customPlaceholderKey: "steps.subject.customPlaceholder",
     choices: [
-      { value: "Mathematics", labelEn: "Mathematics", labelAr: "الرياضيات" },
-      { value: "Physics", labelEn: "Physics", labelAr: "الفيزياء" },
-      { value: "Chemistry", labelEn: "Chemistry", labelAr: "الكيمياء" },
-      { value: "Biology", labelEn: "Biology", labelAr: "الأحياء" },
-      { value: "Computer Science", labelEn: "Computer Science", labelAr: "علوم الحاسب" },
-      { value: "English", labelEn: "English", labelAr: "اللغة الإنجليزية" },
+      { value: "Mathematics", labelKey: "steps.subject.choices.mathematics" },
+      { value: "Physics", labelKey: "steps.subject.choices.physics" },
+      { value: "Chemistry", labelKey: "steps.subject.choices.chemistry" },
+      { value: "Biology", labelKey: "steps.subject.choices.biology" },
+      { value: "Computer Science", labelKey: "steps.subject.choices.computerScience" },
+      { value: "English", labelKey: "steps.subject.choices.english" },
     ],
   },
   {
     id: "skillLevel",
     kind: "single",
     icon: "gauge",
-    talkEn: "Nice choice. How much experience do you have here?",
-    talkAr: "اختيار جيد. ما مقدار خبرتك في هذا المجال؟",
-    titleEn: "Set your level",
-    titleAr: "حدّد مستواك",
-    descriptionEn: "I'll match how much I explain to it.",
-    descriptionAr: "سأضبط مقدار الشرح وفقاً لمستواك.",
+    talkKey: "steps.skillLevel.talk",
+    titleKey: "steps.skillLevel.title",
+    descriptionKey: "steps.skillLevel.description",
     choices: [
       {
         value: "beginner",
-        labelEn: "Just starting out",
-        labelAr: "مبتدئ",
-        descriptionEn: "New to the subject",
-        descriptionAr: "جديد في المادة",
+        labelKey: "steps.skillLevel.choices.beginner.label",
+        descriptionKey: "steps.skillLevel.choices.beginner.description",
       },
       {
         value: "intermediate",
-        labelEn: "Getting comfortable",
-        labelAr: "متوسط",
-        descriptionEn: "I know the basics",
-        descriptionAr: "أعرف الأساسيات",
+        labelKey: "steps.skillLevel.choices.intermediate.label",
+        descriptionKey: "steps.skillLevel.choices.intermediate.description",
       },
       {
         value: "advanced",
-        labelEn: "Confident",
-        labelAr: "متقدّم",
-        descriptionEn: "Ready for hard problems",
-        descriptionAr: "جاهز للمسائل الصعبة",
+        labelKey: "steps.skillLevel.choices.advanced.label",
+        descriptionKey: "steps.skillLevel.choices.advanced.description",
       },
     ],
   },
@@ -106,39 +86,18 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "learningGoal",
     kind: "single",
     icon: "target",
-    talkEn: "Last one. What are you working toward?",
-    talkAr: "آخر خطوة. ما الذي تسعى إليه؟",
-    titleEn: "Your goal",
-    titleAr: "هدفك",
-    descriptionEn: "Optional, but it helps me keep you on track.",
-    descriptionAr: "اختياري، لكنه يساعدني على إبقائك على المسار.",
+    talkKey: "steps.learningGoal.talk",
+    titleKey: "steps.learningGoal.title",
+    descriptionKey: "steps.learningGoal.description",
     optional: true,
     allowCustom: true,
-    customLabelEn: "Or describe your own goal",
-    customLabelAr: "أو صِف هدفك بنفسك",
-    customPlaceholderEn: "e.g. Get ready for finals in three weeks",
-    customPlaceholderAr: "مثال: الاستعداد للامتحانات خلال ثلاثة أسابيع",
+    customLabelKey: "steps.learningGoal.customLabel",
+    customPlaceholderKey: "steps.learningGoal.customPlaceholder",
     choices: [
-      {
-        value: "Exam preparation",
-        labelEn: "Exam preparation",
-        labelAr: "الاستعداد للامتحانات",
-      },
-      {
-        value: "Master a specific topic",
-        labelEn: "Master a topic",
-        labelAr: "إتقان موضوع معيّن",
-      },
-      {
-        value: "Build a daily practice habit",
-        labelEn: "Daily practice",
-        labelAr: "ممارسة يومية",
-      },
-      {
-        value: "Explore and stay curious",
-        labelEn: "Explore freely",
-        labelAr: "استكشاف بحرّية",
-      },
+      { value: "Exam preparation", labelKey: "steps.learningGoal.choices.examPreparation" },
+      { value: "Master a specific topic", labelKey: "steps.learningGoal.choices.masterTopic" },
+      { value: "Build a daily practice habit", labelKey: "steps.learningGoal.choices.dailyPractice" },
+      { value: "Explore and stay curious", labelKey: "steps.learningGoal.choices.explore" },
     ],
   },
 ]
