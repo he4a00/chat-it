@@ -2,16 +2,28 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/react"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/sidebar/app-sidebar"
 import { ChatWorkspace } from "@/components/chat/chat-workspace"
 import { ProgressPanel } from "@/components/learner/progress-panel"
-import { ChatSession } from "@/types/session"
+import {
+  useCreateSession,
+  useDeleteSession,
+  useDuplicateSession,
+  useRenameSession,
+  useSessions,
+} from "@/server/hooks/use-sessions"
+import {
+  useLearnerOverview,
+  useRefreshLearnerOverview,
+  useStartReview,
+} from "@/server/hooks/use-learner"
 import { formatSessionTimestamp } from "@/lib/session-utils"
 import { useLanguage } from "@/hooks/use-language"
 import { notify } from "@/lib/toast"
+import type { ChatSession } from "@/types/session"
 import type { LearnerOverview } from "@/types/learner"
 import type { UIMessage } from "ai"
 
@@ -31,6 +43,7 @@ export function ChatShell({
   const router = useRouter()
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const { language } = useLanguage()
 
   const [searchQuery, setSearchQuery] = React.useState("")
 
@@ -48,31 +61,22 @@ export function ChatShell({
 
   const listKey = trpc.session.list.queryKey()
 
-  // Sessions: the tRPC query cache is the single source of truth, seeded from RSC.
-  const { data: sessionsData, isPending } = useQuery({
-    ...trpc.session.list.queryOptions(),
-    initialData: initialSessions,
-  })
+  // Sessions + learner progress: TanStack Query is the source of truth, seeded from RSC.
+  const { sessions, isPending } = useSessions(initialSessions)
+  const { data: overview, isPending: isOverviewPending } = useLearnerOverview(initialOverview)
+  const refreshOverview = useRefreshLearnerOverview()
 
-  const sessions = sessionsData ?? initialSessions
-
-  // Learner progress — seeded from RSC; consumed by the progress panel + sidebar card.
-  const overviewQuery = trpc.learner.getOverview.queryOptions()
-  const { data: overview, isPending: isOverviewPending } = useQuery({
-    ...overviewQuery,
-    ...(initialOverview ? { initialData: initialOverview } : {}),
-  })
   const [progressOpen, setProgressOpen] = React.useState(false)
-  const { language } = useLanguage()
 
-  const createMutation = useMutation(trpc.session.create.mutationOptions())
-  const renameMutation = useMutation(trpc.session.rename.mutationOptions())
-  const deleteMutation = useMutation(trpc.session.delete.mutationOptions())
-  const duplicateMutation = useMutation(trpc.session.duplicate.mutationOptions())
+  const createMutation = useCreateSession()
+  const renameMutation = useRenameSession()
+  const deleteMutation = useDeleteSession()
+  const duplicateMutation = useDuplicateSession()
+  const startReviewMutation = useStartReview()
 
   const activeSessionTitle = React.useMemo(
-    () => sessions.find((s) => s.id === activeSessionId)?.title,
-    [sessions, activeSessionId]
+    () => sessions.find((session) => session.id === activeSessionId)?.title,
+    [sessions, activeSessionId],
   )
 
   const handleSelectSession = React.useCallback(
@@ -80,7 +84,7 @@ export function ChatShell({
       // Let the route drive state so the workspace remounts with the right messages.
       router.push(`/c/${id}`)
     },
-    [router]
+    [router],
   )
 
   const handleNewChat = React.useCallback(() => {
@@ -88,6 +92,12 @@ export function ChatShell({
     setNewChatId(crypto.randomUUID())
     router.push("/")
   }, [router])
+
+  // The panel refetches progress on open, so it's always current without polling.
+  const handleOpenProgress = React.useCallback(() => {
+    setProgressOpen(true)
+    refreshOverview()
+  }, [refreshOverview])
 
   // Called once, when the first message is sent in a brand-new session.
   const handleFirstMessage = React.useCallback(
@@ -104,8 +114,8 @@ export function ChatShell({
 
       queryClient.setQueryData<ChatSession[]>(listKey, (prev) => {
         const list = prev ?? []
-        return list.some((s) => s.id === chatId)
-          ? list.map((s) => (s.id === chatId ? { ...s, ...optimistic } : s))
+        return list.some((session) => session.id === chatId)
+          ? list.map((session) => (session.id === chatId ? { ...session, ...optimistic } : session))
           : [optimistic, ...list]
       })
 
@@ -120,74 +130,45 @@ export function ChatShell({
         console.error("Failed to create session:", err)
       }
     },
-    [queryClient, listKey, createMutation]
+    [queryClient, listKey, createMutation],
   )
 
   const handleDeleteSession = React.useCallback(
-    async (id: string) => {
-      queryClient.setQueryData<ChatSession[]>(listKey, (prev) =>
-        (prev ?? []).filter((s) => s.id !== id)
-      )
+    (id: string) => {
+      // Remove optimistically (with rollback on failure) — handled by the hook.
       if (activeSessionId === id) handleNewChat()
-
-      try {
-        await deleteMutation.mutateAsync({ chatId: id })
-      } catch (err) {
-        console.error("Failed to delete session:", err)
-      } finally {
-        queryClient.invalidateQueries({ queryKey: listKey })
-      }
+      deleteMutation.mutate({ chatId: id })
     },
-    [activeSessionId, handleNewChat, deleteMutation, queryClient, listKey]
+    [activeSessionId, handleNewChat, deleteMutation],
   )
 
   const handleRenameSession = React.useCallback(
-    async (id: string, newTitle: string) => {
+    (id: string, newTitle: string) => {
       const trimmed = newTitle.trim()
       if (!trimmed) return
-
-      queryClient.setQueryData<ChatSession[]>(listKey, (prev) =>
-        (prev ?? []).map((s) => (s.id === id ? { ...s, title: trimmed } : s))
-      )
-
-      try {
-        await renameMutation.mutateAsync({ chatId: id, title: trimmed })
-      } catch (err) {
-        console.error("Failed to rename session:", err)
-      } finally {
-        queryClient.invalidateQueries({ queryKey: listKey })
-      }
+      renameMutation.mutate({ chatId: id, title: trimmed })
     },
-    [renameMutation, queryClient, listKey]
+    [renameMutation],
   )
 
   const handleDuplicateSession = React.useCallback(
-    async (id: string) => {
-      try {
-        const copy = await duplicateMutation.mutateAsync({ chatId: id })
-        queryClient.setQueryData<ChatSession[]>(listKey, (prev) => [copy, ...(prev ?? [])])
-      } catch (err) {
-        console.error("Failed to duplicate session:", err)
-      } finally {
-        queryClient.invalidateQueries({ queryKey: listKey })
-      }
+    (id: string) => {
+      duplicateMutation.mutate({ chatId: id })
     },
-    [duplicateMutation, queryClient, listKey]
+    [duplicateMutation],
   )
 
+  // A finished turn can change the title/timestamp, so refresh the session list.
   const refreshSessions = React.useCallback(() => {
     queryClient.invalidateQueries({ queryKey: listKey })
   }, [queryClient, listKey])
 
   // One-tap review: create a targeted review session, stash the seed prompt, and open it.
-  const startReviewMutation = useMutation(trpc.learner.startReview.mutationOptions())
-
   const handleStartReview = React.useCallback(async () => {
     try {
       const review = await startReviewMutation.mutateAsync({ lang: language })
       sessionStorage.setItem(`shawky:review:${review.chatId}`, review.prompt)
       setProgressOpen(false)
-      queryClient.invalidateQueries({ queryKey: listKey })
       router.push(`/c/${review.chatId}`)
     } catch (err) {
       console.error("Failed to start review:", err)
@@ -196,7 +177,7 @@ export function ChatShell({
         language === "ar" ? "حاول مرة أخرى بعد قليل." : "Please try again in a moment.",
       )
     }
-  }, [startReviewMutation, language, queryClient, listKey, router])
+  }, [startReviewMutation, language, router])
 
   const currentChatId = activeSessionId || newChatId
 
@@ -214,21 +195,23 @@ export function ChatShell({
         onDuplicateSession={handleDuplicateSession}
         onNewChat={handleNewChat}
         onClearSearch={() => setSearchQuery("")}
-        onOpenProgress={() => setProgressOpen(true)}
+        onOpenProgress={handleOpenProgress}
       />
 
       <SidebarInset className="flex flex-col flex-1 h-screen overflow-hidden bg-background">
         <ChatWorkspace
           key={currentChatId}
           chatId={currentChatId}
-          initialMessages={initialMessages}
+          // Only seed messages for a real session. Otherwise a just-deleted chat's
+          // messages would flash into the fresh "new chat" workspace.
+          initialMessages={activeSessionId ? initialMessages : []}
           activeSessionTitle={activeSessionTitle}
           isNewChat={!activeSessionId}
           recentSession={sessions[0] ? { id: sessions[0].id, title: sessions[0].title } : null}
           onFirstMessage={handleFirstMessage}
           onFinishResponse={refreshSessions}
           onOpenSession={handleSelectSession}
-          onOpenProgress={() => setProgressOpen(true)}
+          onOpenProgress={handleOpenProgress}
         />
       </SidebarInset>
 

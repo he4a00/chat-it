@@ -11,7 +11,7 @@ import { cn } from "cn"
 import { useLanguage } from "@/hooks/use-language"
 import { useTRPC } from "@/trpc/react"
 import { notify } from "@/lib/toast"
-import { SHAWKY_AVATAR } from "@/lib/brand"
+import { shawkyAvatar } from "@/lib/brand"
 import { LanguageMenu } from "@/components/chat/language-menu"
 import { ThemeSwitch } from "@/components/chat/theme-switch"
 import { ONBOARDING_STEPS, type OnboardingStepIcon } from "./onboarding-config"
@@ -148,7 +148,7 @@ export function OnboardingExperience() {
         <div className="flex items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={SHAWKY_AVATAR}
+            src={shawkyAvatar(72)}
             alt=""
             className="size-9 rounded-2xl ring-1 ring-border/60"
             width={36}
@@ -195,7 +195,7 @@ export function OnboardingExperience() {
               <div className="absolute inset-1.5 rounded-full border border-primary/15" aria-hidden="true" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={SHAWKY_AVATAR}
+                src={shawkyAvatar(448)}
                 alt={isAr ? "شوقي، مدرّسك" : "Shawky, your tutor"}
                 className="size-40 rounded-4xl ring-1 ring-border/50 sm:size-48 lg:size-56"
                 width={224}
@@ -471,7 +471,7 @@ export function OnboardingExperience() {
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={SHAWKY_AVATAR}
+                  src={shawkyAvatar(224)}
                   alt=""
                   className="size-28 rounded-4xl ring-4 ring-primary/20"
                   width={112}

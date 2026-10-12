@@ -2,12 +2,11 @@
 
 import { Show, SignInButton, UserButton } from "@clerk/nextjs"
 import { Flame, LogInIcon, Settings2Icon } from "lucide-react"
-import { useQuery } from "@tanstack/react-query"
 
 import { SidebarFooter } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { UserPreferencesPage } from "./user-preferences-page"
-import { useTRPC } from "@/trpc/react"
+import { useLearnerOverview } from "@/server/hooks/use-learner"
 import { useLanguage } from "@/hooks/use-language"
 import { useTranslation } from "react-i18next"
 
@@ -17,12 +16,11 @@ interface AppSidebarFooterProps {
 
 export function AppSidebarFooter({ onOpenProgress }: AppSidebarFooterProps) {
   const { t } = useTranslation()
-  const trpc = useTRPC()
   const { language } = useLanguage()
   const isAr = language === "ar"
 
   // Shares the cache entry seeded by ChatShell — no extra request.
-  const { data: overview } = useQuery(trpc.learner.getOverview.queryOptions())
+  const { data: overview } = useLearnerOverview()
   const streak = overview?.streak.current ?? 0
   const accuracy = Math.round((overview?.stats.accuracy ?? 0) * 100)
 

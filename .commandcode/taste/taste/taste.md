@@ -16,6 +16,7 @@
 - Prefers reusing existing/pre-built UI components (e.g. shadcn CLI registry components like Aceternity) over hand-rolling them. Confidence: 0.55
 - Never wants uppercase text-transform anywhere — no all-caps labels, titles, menu items, buttons, or group labels; strip `uppercase`/`tracking-widest`/`tracking-wider` from component base styles. Confidence: 0.9
 - Wants everything rounded — dialogs, dropdowns, menus, alerts, buttons, inputs, popovers, sheets, toasts; never `rounded-none`. Confidence: 0.9
+- "Rounded" means a subtle corner radius (rounded-square), not fully rounded: rejects circular/pill shapes for avatars and similar elements, insisting they not be fully rounded. Confidence: 0.6
 - Destructive actions (delete/remove) must use the red/destructive variant, not primary/default. Confidence: 0.85
 - Menu items should be grouped under labeled sections so future actions have a home. Confidence: 0.75
 - Wants IBM Plex Sans (and IBM Plex Sans Arabic) used for everything — including code blocks, kbd, mono contexts, and menus; no monospace fonts anywhere, even for code. Confidence: 0.85
@@ -27,3 +28,7 @@
 - Prefers key first-run flows (e.g. onboarding) as full-page immersive experiences rather than modals, so there's room for richer/gamified interaction. Confidence: 0.6
 - Wants gamified, character-driven UI: the AI persona's avatar should be present and actively "talk"/interact with the user (speech bubbles, animated lines, playful progress and celebration) rather than static forms. Confidence: 0.6
 - Expects the agent to stop once things are working — dislikes extended deep-dives chasing phantom/uncertain bugs; when the task is effectively done, wrap up with a concise summary and stop rather than continuing to investigate. Confidence: 0.65
+- When a chosen third-party/external approach (e.g. a CDN transformation) doesn't behave correctly, prefers falling back to the plain local/original asset that just works rather than continuing to debug the integration ("just put the original image for now"). Confidence: 0.6
+- When the user supplies their own brand asset, expects it wired in as the canonical one and applied consistently across every relevant surface, not just one spot ("make it the main avatar for messages and everything"). Confidence: 0.6
+- Expects the agent to hold onto plan/phase state and be able to report exactly where execution left off ("where we stopped at executing the plan?"), rather than requiring the user to reconstruct progress. Confidence: 0.55
+- After a milestone is complete, looks to the agent to propose a prioritized set of next steps / roadmap to choose from rather than deciding the next move alone. Confidence: 0.55

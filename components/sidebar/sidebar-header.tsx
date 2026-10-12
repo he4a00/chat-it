@@ -5,7 +5,7 @@ import { PlusIcon } from "lucide-react"
 import { SidebarHeader, SidebarTrigger } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { SidebarSearch } from "./sidebar-search"
-import { SHAWKY_AVATAR } from "@/lib/brand"
+import { shawkyAvatar } from "@/lib/brand"
 import { useTranslation } from 'react-i18next'
 
 interface AppSidebarHeaderProps {
@@ -39,7 +39,7 @@ export function AppSidebarHeader({
         <div className="flex size-8 items-center justify-center rounded-4xl overflow-hidden border border-border shadow-xs bg-sidebar-accent/50 shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={SHAWKY_AVATAR}
+            src={shawkyAvatar(64)}
             alt="Shawky (شوقي)"
             className=""
             width={32}

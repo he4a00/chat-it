@@ -6,8 +6,7 @@ import { Calculator, CheckCircle2, Lightbulb, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "cn"
-import { useMutation } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/react"
+import { useSubmitWidgetState } from "@/server/hooks/use-learner"
 
 /** Module-scope timestamp helper (keeps render pure). */
 const nowMs = () => Date.now()
@@ -56,8 +55,7 @@ export function MathProblemWidget({
   const [isAnswered, setIsAnswered] = React.useState(initialUserAnswer !== undefined)
   const [isCorrect, setIsCorrect] = React.useState(initialCorrect ?? false)
 
-  const trpc = useTRPC()
-  const submitWidgetMutation = useMutation(trpc.widget.submitState.mutationOptions())
+  const submitWidgetMutation = useSubmitWidgetState()
 
   // Best-effort time-on-task, measured from mount to submission.
   const startedAtRef = React.useRef<number>(0)

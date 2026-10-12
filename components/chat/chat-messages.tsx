@@ -26,7 +26,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Marker, MarkerIcon, MarkerContent } from "@/components/ui/marker"
 import { cn } from "cn"
-import { SHAWKY_AVATAR } from "@/lib/brand"
+import { shawkyAvatar } from "@/lib/brand"
 import { Copy, Check, RotateCcw, ThumbsUp, ThumbsDown, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { QuizWidget, type QuizQuestionItem, type QuizOption } from "@/components/widgets/quiz-widget"
@@ -132,7 +132,7 @@ export function ChatMessages({
                     ) : (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={SHAWKY_AVATAR}
+                        src={shawkyAvatar(64)}
                         alt="Shawky (شوقي)"
                         className=""
                         width={32}

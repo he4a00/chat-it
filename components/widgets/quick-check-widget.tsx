@@ -4,8 +4,7 @@ import * as React from "react"
 import { Markdown } from "@/components/chat/markdown"
 import { CheckCircle2, XCircle, Check, X } from "lucide-react"
 import { cn } from "cn"
-import { useMutation } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/react"
+import { useSubmitWidgetState } from "@/server/hooks/use-learner"
 
 /** Module-scope timestamp helper (keeps render pure). */
 const nowMs = () => Date.now()
@@ -43,8 +42,7 @@ export function QuickCheckWidget({
   const isAnswered = userChoice !== null
   const isCorrect = userChoice === isTrue
 
-  const trpc = useTRPC()
-  const submitWidgetMutation = useMutation(trpc.widget.submitState.mutationOptions())
+  const submitWidgetMutation = useSubmitWidgetState()
 
   // Best-effort time-on-task, measured from mount to submission.
   const startedAtRef = React.useRef<number>(0)

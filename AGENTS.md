@@ -1151,3 +1151,11 @@ This file records architecture decisions, agent conventions, and a running log o
 
 > **Phase C complete (C1–C7).** Remaining known follow-ups: `startReview`/widget `timeSpentMs` are best-effort, the animated avatar is the local 2.5 MB asset (Cloudinary stripped animation without `fl_animated`), and the global i18next instance is still inert (new UI uses the `useLanguage()` + inline bilingual pattern).
 
+### [2026-10-11] Avatar: Animated Shawky via Cloudinary (weight fixed)
+
+1. **Root causes** — (a) Cloudinary's `f_auto` transcoded the animated GIF to a **static** WebP once a transformation was applied (`fl_animated` is required to keep the animation); (b) the local fallback was heavy (2.5 MB WebP / 8.7 MB GIF) and two old PNGs were still in `public/`.
+2. **`lib/brand.ts`** — `shawkyAvatar(width)` now builds `…/upload/f_webp,q_auto,fl_animated,w_<width>/shawky-teacher-smooth`. `fl_animated` preserves animation; `f_webp` beats `f_auto` here (`f_auto` served the ~836 KB animated GIF vs a 352 KB WebP at `w_160`). Measured sizes: `w_64` ≈ 116 KB, `w_160` ≈ 352 KB, `w_448` ≈ 1.09 MB (a static frame would be ~3 KB, confirming animation is preserved). Per-usage widths: message/sidebar `w_64`, onboarding header `w_72`, empty state `w_160`, completion `w_224`, hero `w_448`.
+3. **Removed unused locals (~11.9 MB)** — `public/images/shawky-avatar.png`, `shawky-headshot.png`, `shawky-teacher-smooth.gif`, `shawky-teacher-smooth.webp`. All six avatar call-sites use the CDN helper; `public/images/` now holds only the three mode-icon SVGs. (Sources remain on Cloudinary; the two PNGs are recoverable via git.)
+4. **Trade-off** — the avatar now loads from the Cloudinary CDN (no offline fallback). If that becomes a concern, re-add a small local WebP and use it as an `onError` fallback.
+5. **Verification**: typecheck / lint / build all clean; Cloudinary variants confirmed `200` + `image/webp`.
+

@@ -9,8 +9,18 @@ export function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 30 * 1000,
+        // Cached data is considered fresh for a minute, so returning to a page
+        // reuses the cache instead of refetching. Mutations keep the cache in
+        // sync, and realtime-ish data is invalidated explicitly.
+        staleTime: 60 * 1000,
+        gcTime: 5 * 60 * 1000,
         refetchOnWindowFocus: false,
+        refetchOnReconnect: true,
+        retry: 1,
+        retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+      },
+      mutations: {
+        retry: 0,
       },
       dehydrate: {
         serializeData: superjson.serialize,

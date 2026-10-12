@@ -16,8 +16,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "cn"
-import { useMutation } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/react"
+import { useSubmitWidgetState } from "@/server/hooks/use-learner"
 
 /** Module-scope timestamp helper (keeps render pure). */
 const nowMs = () => Date.now()
@@ -96,8 +95,7 @@ export function QuizWidget({
 
   const totalQuestions = normalizedQuestions.length
 
-  const trpc = useTRPC()
-  const submitWidgetMutation = useMutation(trpc.widget.submitState.mutationOptions())
+  const submitWidgetMutation = useSubmitWidgetState()
 
   // Best-effort time-on-task, measured from mount to submission.
   const startedAtRef = React.useRef<number>(0)

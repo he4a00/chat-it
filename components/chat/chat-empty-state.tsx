@@ -4,7 +4,7 @@ import * as React from "react"
 import { useUser } from "@clerk/nextjs"
 import { HistoryIcon } from "lucide-react"
 import { useLanguage } from "@/hooks/use-language"
-import { SHAWKY_AVATAR } from "@/lib/brand"
+import { shawkyAvatar } from "@/lib/brand"
 import { LearnModeIcon, FlashcardsModeIcon, QuizModeIcon } from "@/components/chat/mode-icons"
 
 interface ChatEmptyStateProps {
@@ -73,7 +73,7 @@ export function ChatEmptyState({
         <div className="overflow-hidden transition-transform group-hover:scale-105 duration-200">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={SHAWKY_AVATAR}
+            src={shawkyAvatar(160)}
             alt="Shawky (شوقي)"
             className=" rounded-4xl"
             width={80}
