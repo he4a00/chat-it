@@ -13,44 +13,39 @@ import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { TrendingUp } from "lucide-react"
-import { useLanguage } from "@/hooks/use-language"
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 import { deriveSessionTitle } from "@/lib/session-utils"
 import type { UIMessage } from "ai"
 
 function describeChatError(
   error: Error | undefined,
-  isAr: boolean,
+  t: TFunction,
 ): { title: string; detail: string } {
   const raw = `${error?.message ?? ""}`.toLowerCase()
 
   if (raw.includes("quota") || raw.includes("rate limit") || raw.includes("429")) {
     return {
-      title: isAr ? "تم استهلاك حصة الذكاء الاصطناعي" : "AI quota reached",
-      detail: isAr
-        ? "لقد استُهلكت الحصة المجانية لليوم. ستتجدد تلقائياً بعد قليل، فحاول مرة أخرى لاحقاً."
-        : "Today's free AI quota is used up. It resets automatically, so try again a little later.",
+      title: t("errors.quota.title"),
+      detail: t("errors.quota.detail"),
     }
   }
   if (raw.includes("unauthor")) {
     return {
-      title: isAr ? "انتهت الجلسة" : "Session expired",
-      detail: isAr ? "يرجى تسجيل الدخول مرة أخرى." : "Please sign in again.",
+      title: t("errors.session.title"),
+      detail: t("errors.session.detail"),
     }
   }
   if (raw.includes("api key") || raw.includes("api_key")) {
     return {
-      title: isAr ? "مفتاح الذكاء الاصطناعي غير مُهيّأ" : "AI key not configured",
-      detail: isAr
-        ? "لم يتم إعداد مفتاح Gemini. تحقّق من ملف .env.local."
-        : "The Gemini API key is missing. Check .env.local.",
+      title: t("errors.key.title"),
+      detail: t("errors.key.detail"),
     }
   }
 
   return {
-    title: isAr ? "تعذّر إكمال الرد" : "The response failed",
-    detail: isAr
-      ? "حدث خطأ أثناء توليد الرد. يمكنك المحاولة مرة أخرى."
-      : "Something went wrong while generating the reply.",
+    title: t("errors.generic.title"),
+    detail: t("errors.generic.detail"),
   }
 }
 
@@ -79,8 +74,7 @@ export function ChatWorkspace({
 }: ChatWorkspaceProps) {
   const [input, setInput] = React.useState("")
   const hasTriggeredFirstMessageRef = React.useRef(!isNewChat)
-  const { language } = useLanguage()
-  const isAr = language === "ar"
+  const { t } = useTranslation("chat")
 
   // Send only the newest message; the server loads the rest of the history from Neon.
   const transport = React.useMemo(
@@ -137,7 +131,7 @@ export function ChatWorkspace({
     handleSendMessage()
   }
 
-  const errorCopy = describeChatError(error, isAr)
+  const errorCopy = describeChatError(error, t)
 
   return (
     <div className="relative flex flex-col flex-1 h-screen overflow-hidden bg-background">
@@ -148,7 +142,7 @@ export function ChatWorkspace({
 
           <Separator orientation="vertical" className="h-4" />
           <h1 className="text-xs sm:text-sm font-semibold text-foreground/90 truncate max-w-[200px] sm:max-w-md font-sans">
-            {activeSessionTitle ?? (isAr ? "محادثة جديدة" : "New chat")}
+            {activeSessionTitle ?? t("header.newChat")}
           </h1>
         </div>
 
@@ -159,8 +153,8 @@ export function ChatWorkspace({
               variant="ghost"
               size="icon-sm"
               onClick={onOpenProgress}
-              aria-label={isAr ? "عرض تقدّمك" : "View your progress"}
-              title={isAr ? "تقدّمك" : "Your progress"}
+              aria-label={t("header.progressAria")}
+              title={t("header.progressTitle")}
               className="size-6 rounded-full text-muted-foreground hover:bg-background/70 hover:text-foreground"
             >
               <TrendingUp className="size-3.5" />
@@ -206,7 +200,7 @@ export function ChatWorkspace({
                     onClick={() => regenerate()}
                     className="shrink-0"
                   >
-                    {isAr ? "إعادة المحاولة" : "Retry"}
+                    {t("common:retry")}
                   </Button>
                 </AlertDescription>
               </Alert>

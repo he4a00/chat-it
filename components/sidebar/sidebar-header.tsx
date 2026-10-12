@@ -36,14 +36,14 @@ export function AppSidebarHeader({
     <SidebarHeader className="border-b border-sidebar-border/70 p-3 flex flex-col gap-2.5">
       {/* Brand Logo & Collapse Trigger */}
       <div className="flex items-center justify-between">
-        <div className="flex size-8 items-center justify-center rounded-4xl overflow-hidden border border-border shadow-xs bg-sidebar-accent/50 shrink-0">
+        <div className="flex items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={shawkyAvatar(64)}
             alt="Shawky (شوقي)"
-            className=""
-            width={32}
-            height={32}
+            className="relative size-6 rounded-md"
+            width={24}
+            height={24}
           />
         </div>
 
@@ -59,10 +59,10 @@ export function AppSidebarHeader({
       >
         <span className="flex items-center gap-2">
           <PlusIcon className="size-3.5 text-primary transition-transform group-hover:scale-110" />
-          <span>{t('newChat', 'New Chat')}</span>
+          <span>{t("common:newChat")}</span>
         </span>
         <kbd className="pointer-events-none rounded-full border border-sidebar-border bg-sidebar-accent/50 px-2 py-0.5 text-[10px] font-mono text-muted-foreground">
-          {t('ctrlk', 'Ctrl+K')}
+          Ctrl+K
         </kbd>
       </Button>
 

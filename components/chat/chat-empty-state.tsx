@@ -1,9 +1,8 @@
 "use client"
 
-import * as React from "react"
 import { useUser } from "@clerk/nextjs"
+import { useTranslation } from "react-i18next"
 import { HistoryIcon } from "lucide-react"
-import { useLanguage } from "@/hooks/use-language"
 import { shawkyAvatar } from "@/lib/brand"
 import { LearnModeIcon, FlashcardsModeIcon, QuizModeIcon } from "@/components/chat/mode-icons"
 
@@ -19,52 +18,39 @@ export function ChatEmptyState({
   onOpenSession,
 }: ChatEmptyStateProps) {
   const { user } = useUser()
-  const { language } = useLanguage()
-  const isAr = language === "ar"
+  const { t } = useTranslation("chat")
 
-  const firstName = user?.firstName || (isAr ? "يا بطل" : "Learner")
+  const firstName = user?.firstName || t("empty.fallbackName")
 
   const modes = [
     {
       id: "learn",
-      title: isAr ? "تعلّم (Learn)" : "Learn",
+      title: t("empty.modes.learn"),
       icon: LearnModeIcon,
       hoverClass: "hover:border-blue-500/60 hover:bg-blue-500/[0.06] hover:text-blue-500 dark:hover:text-blue-400",
-      prompt: isAr
-        ? "اشرح لي مفهوماً رياضياً أساسياً بأسلوب سقراطي تفاعلي مع أمثلة حدسية وتدرج خطوة بخطوة."
-        : "Teach me a core mathematical concept with intuitive step-by-step Socratic guidance.",
+      prompt: t("empty.prompts.learn"),
     },
     {
       id: "flashcards",
-      title: isAr ? "بطاقات (Flashcards)" : "Flashcards",
+      title: t("empty.modes.flashcards"),
       icon: FlashcardsModeIcon,
       hoverClass: "hover:border-purple-500/60 hover:bg-purple-500/[0.06] hover:text-purple-500 dark:hover:text-purple-400",
-      prompt: isAr
-        ? "أنشئ لي مجموعة بطاقات تعليمية تفاعلية (Flashcards) لمراجعة وحفظ أهم القوانين والصيغ الرياضية."
-        : "Create an interactive flashcard deck of essential STEM formulas for quick drill and active recall.",
+      prompt: t("empty.prompts.flashcards"),
     },
     {
       id: "quiz",
-      title: isAr ? "اختبار (Quiz)" : "Quiz",
+      title: t("empty.modes.quiz"),
       icon: QuizModeIcon,
       hoverClass: "hover:border-emerald-500/60 hover:bg-emerald-500/[0.06] hover:text-emerald-500 dark:hover:text-emerald-400",
-      prompt: isAr
-        ? "اطرح عليّ اختباراً تفاعلياً (Quiz) من أسئلة متعددة الخيارات لاختبار استيعابي وتقديم تغذية راجعة فورية."
-        : "Give me an interactive diagnostic quiz challenge on a key STEM topic to test my understanding.",
+      prompt: t("empty.prompts.quiz"),
     },
   ]
 
-  const suggestions = isAr
-    ? [
-        "ما هو المشتق؟ ولماذا نستخدمه؟",
-        "اشرح لي المتتابعات والمتسلسلات ببساطة.",
-        "ما الفرق بين المتجه والمقياس؟",
-      ]
-    : [
-        "What is a derivative, intuitively?",
-        "Explain limits with a simple example.",
-        "Difference between a vector and a scalar?",
-      ]
+  const suggestions = [
+    t("empty.suggestions.derivative"),
+    t("empty.suggestions.limits"),
+    t("empty.suggestions.vector"),
+  ]
 
   return (
     <div className="flex flex-col items-center justify-center px-4 max-w-xl w-full mx-auto my-auto text-center select-none font-sans space-y-6">
@@ -85,12 +71,10 @@ export function ChatEmptyState({
       {/* Clean Greeting */}
       <div className="space-y-1.5">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-sans">
-          {isAr ? `أهلاً بك، ${firstName}!` : `What shall we solve today, ${firstName}?`}
+          {t("empty.greeting", { name: firstName })}
         </h1>
         <p className="text-xs sm:text-sm text-muted-foreground/80 max-w-sm mx-auto leading-relaxed font-sans">
-          {isAr
-            ? "رفيقك السقراطي للعلوم والرياضيات. اختر وضعاً للبدء أو اطرح مسألتك."
-            : "Your personal Socratic STEM companion. Choose a mode to start or ask a problem."}
+          {t("empty.subtitle")}
         </p>
       </div>
 
@@ -135,7 +119,7 @@ export function ChatEmptyState({
         >
           <HistoryIcon className="size-3.5 shrink-0" />
           <span className="truncate max-w-[220px]">
-            {isAr ? "متابعة" : "Continue"}: {recentSession.title}
+            {t("empty.continue")}: {recentSession.title}
           </span>
         </button>
       ) : null}

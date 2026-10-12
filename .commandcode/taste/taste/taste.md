@@ -3,7 +3,7 @@
 - Before changing code, expects a thorough upfront exploration of the codebase to understand it (structure, data flow, conventions). Confidence: 0.7
 - Wants the agent to proactively fix everything it finds broken or poorly done — not just the specific issues the user enumerated. Confidence: 0.7
 - Points the agent at architecture/agent docs (e.g. `arch.md`, `AGENTS.md`) as the source of context and expects them to be consulted. Confidence: 0.6
-- When debugging third-party integrations (e.g. Clerk), expects the agent to use the installed/available skills for that tool rather than reasoning from scratch. Confidence: 0.65
+- When working with or debugging third-party services (e.g. Clerk, Vercel), explicitly expects the agent to activate and use the installed/available skills for that service ("use clerk, vercel skills") rather than reasoning from scratch. Confidence: 0.75
 - Wants bugs fixed at the root cause (e.g. the underlying data persistence/creation path) rather than patched at the surface so the fix unblocks moving on to the next task. Confidence: 0.6
 - Expects a written plan for a non-trivial implementation before coding begins. Confidence: 0.7
 - Explicitly encourages the agent to ask many clarifying questions up front before proceeding ("ask me bunch of questions to make a really solid plan"). Confidence: 0.8
@@ -31,4 +31,11 @@
 - When a chosen third-party/external approach (e.g. a CDN transformation) doesn't behave correctly, prefers falling back to the plain local/original asset that just works rather than continuing to debug the integration ("just put the original image for now"). Confidence: 0.6
 - When the user supplies their own brand asset, expects it wired in as the canonical one and applied consistently across every relevant surface, not just one spot ("make it the main avatar for messages and everything"). Confidence: 0.6
 - Expects the agent to hold onto plan/phase state and be able to report exactly where execution left off ("where we stopped at executing the plan?"), rather than requiring the user to reconstruct progress. Confidence: 0.55
-- After a milestone is complete, looks to the agent to propose a prioritized set of next steps / roadmap to choose from rather than deciding the next move alone. Confidence: 0.55
+- After a milestone is complete, looks to the agent to propose a prioritized set of next steps / roadmap to choose from rather than deciding the next move alone. Confidence: 0.6
+- New TanStack Query hooks/files for a feature should live inside `server/hooks/` (explicitly specified project convention). Confidence: 0.8
+- For localization, wants i18next/react-i18next with the `t()` function as the single mechanism, with all strings centralized in locale files rather than scattered inline bilingual ternaries (`isAr ? … : …`). Confidence: 0.7
+- Prefers Arabic UI copy in warm, Egyptian-flavored Arabic (colloquial touches) rather than overly formal Modern Standard Arabic. Confidence: 0.7
+- Wants cache mutations reflected immediately in the UI (optimistic updates, not refetch-after-write blanketing), actively disliking stale-state flashes such as a deleted item briefly reappearing. Confidence: 0.65
+- Prefers driving third-party services through installed MCP integrations (e.g. Vercel MCP) rather than shelling out to the vendor's CLI. Confidence: 0.55
+- Hosts/deploys projects on Vercel and expects the agent to own the entire deploy lifecycle end-to-end (create project, import/detected git repo, add env vars, trigger deploy, confirm the live URL) from a single terse instruction. Confidence: 0.6
+- Wants the deployed/production app to run on live production credentials (e.g. Clerk live keys), treating test/dev keys as acceptable only for local development; supplies the live keys expecting them swapped in. Confidence: 0.5

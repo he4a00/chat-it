@@ -1,0 +1,76 @@
+{
+  "categories": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "previous_7_days": "Previous 7 Days",
+    "older": "Older"
+  },
+  "search": {
+    "placeholder": "Search sessions...",
+    "aria": "Search previous chat sessions",
+    "clear": "Clear search",
+    "empty": {
+      "title": "No chats found",
+      "description": "No chats matching \"{{query}}\""
+    }
+  },
+  "history": {
+    "empty": "Your chat history with Shawky will appear here"
+  },
+  "rename": {
+    "save": "Save title",
+    "cancel": "Cancel rename"
+  },
+  "options": "Session options",
+  "menu": {
+    "chat": "Chat",
+    "rename": "Rename",
+    "duplicate": "Duplicate",
+    "copyLink": "Copy link",
+    "danger": "Danger",
+    "delete": "Delete"
+  },
+  "toast": {
+    "linkCopied": "Link copied",
+    "linkCopyFailed": "Couldn't copy the link"
+  },
+  "delete": {
+    "title": "Delete chat?",
+    "description": "This chat and all of its messages will be permanently deleted. This can't be undone."
+  },
+  "progress": {
+    "label": "Your progress",
+    "streak": "{{count}}-day streak"
+  },
+  "preferences": "Preferences",
+  "language": {
+    "title": "Language",
+    "change": "Change language"
+  },
+  "theme": {
+    "toggle": "Toggle dark mode"
+  },
+  "settings": {
+    "loading": "Loading preferences...",
+    "title": "Preferences",
+    "subtitle": "Customize your workspace appearance and interface language.",
+    "theme": {
+      "title": "Appearance & Dark Mode",
+      "description": "Select your preferred color mode for the chat workspace and sidebar.",
+      "light": "Light",
+      "lightDescription": "Crisp STEM high-contrast daytime interface",
+      "dark": "Dark",
+      "darkDescription": "Obsidian dark mode for focused night studying",
+      "system": "System",
+      "systemDescription": "Automatically matches your device settings"
+    },
+    "language": {
+      "title": "Interface Language",
+      "description": "Choose the primary language and reading direction for Shawky.",
+      "english": "English",
+      "englishDescription": "Left-to-right (LTR) default layout",
+      "arabic": "العربية",
+      "arabicDescription": "Right-to-left (RTL) layout"
+    }
+  }
+}

@@ -1,79 +1,65 @@
 "use client"
 
 import * as React from "react"
+import { useTranslation } from "react-i18next"
+import {
+  LOCALE_COOKIE,
+  LOCALE_STORAGE_KEY,
+  dirFor,
+  normalizeLocale,
+  type AppLocale,
+} from "@/lib/i18n/settings"
 
-export type AppLanguage = "en" | "ar"
+/** Back-compat alias for existing call-sites. */
+export type AppLanguage = AppLocale
 
-const LANGUAGE_STORAGE_KEY = "shawky_app_language"
+/** Mirrors the choice into the cookie (SSR), localStorage (cross-tab) and the DOM. */
+function persistLocale(locale: AppLocale) {
+  if (typeof document === "undefined") return
 
-let currentLanguage: AppLanguage = "en"
-const listeners = new Set<() => void>()
-
-function notify() {
-  for (const listener of listeners) {
-    listener()
-  }
-}
-
-function applyLanguageToDom(lang: AppLanguage) {
-  if (typeof document !== "undefined") {
-    document.documentElement.lang = lang
-    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr"
-  }
-}
-
-function getClientLanguage(): AppLanguage {
-  if (typeof window === "undefined") return "en"
+  document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; samesite=lax`
   try {
-    const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY)
-    if (saved === "ar" || saved === "en") {
-      currentLanguage = saved
-      return saved
-    }
+    window.localStorage.setItem(LOCALE_STORAGE_KEY, locale)
   } catch {
-    // fallback
+    // ignore
   }
-  return currentLanguage
+
+  document.documentElement.lang = locale
+  document.documentElement.dir = dirFor(locale)
 }
 
+/**
+ * Thin bridge over the i18next instance: `language` reflects the active locale and
+ * `setLanguage` switches it, persisting to the cookie so SSR stays correct.
+ */
 export function useLanguage() {
-  const language = React.useSyncExternalStore(
-    (onStoreChange) => {
-      listeners.add(onStoreChange)
-      const handleStorage = (e: StorageEvent) => {
-        if (
-          e.key === LANGUAGE_STORAGE_KEY &&
-          (e.newValue === "en" || e.newValue === "ar")
-        ) {
-          currentLanguage = e.newValue
-          applyLanguageToDom(currentLanguage)
-          onStoreChange()
-        }
-      }
-      window.addEventListener("storage", handleStorage)
-      return () => {
-        listeners.delete(onStoreChange)
-        window.removeEventListener("storage", handleStorage)
-      }
-    },
-    getClientLanguage,
-    (): AppLanguage => "en"
-  )
+  const { i18n } = useTranslation()
+  const language = normalizeLocale(i18n.resolvedLanguage ?? i18n.language)
 
   React.useEffect(() => {
-    applyLanguageToDom(language)
+    persistLocale(language)
   }, [language])
 
-  const setLanguage = React.useCallback((next: AppLanguage) => {
-    currentLanguage = next
-    try {
-      localStorage.setItem(LANGUAGE_STORAGE_KEY, next)
-    } catch {
-      // ignore
+  // Keep other tabs in sync when the language changes elsewhere.
+  React.useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== LOCALE_STORAGE_KEY) return
+      if (event.newValue === "en" || event.newValue === "ar") {
+        i18n.changeLanguage(event.newValue)
+      }
     }
-    applyLanguageToDom(next)
-    notify()
-  }, [])
+
+    window.addEventListener("storage", handleStorage)
+    return () => window.removeEventListener("storage", handleStorage)
+  }, [i18n])
+
+  const setLanguage = React.useCallback(
+    (next: AppLocale) => {
+      i18n.changeLanguage(next)
+      persistLocale(next)
+    },
+    [i18n],
+  )
 
   return { language, setLanguage }
 }

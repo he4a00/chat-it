@@ -1,9 +1,14 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@clerk/ui/themes/shadcn.css";
 @import "katex/dist/katex.min.css";
+/* Self-hosted IBM Plex Sans Arabic (arabic subset) — no Google CDN, so Arabic
+   can never fall back to an OS font. */
+@import "@fontsource/ibm-plex-sans-arabic/arabic-400.css";
+@import "@fontsource/ibm-plex-sans-arabic/arabic-500.css";
+@import "@fontsource/ibm-plex-sans-arabic/arabic-600.css";
+@import "@fontsource/ibm-plex-sans-arabic/arabic-700.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -55,7 +60,7 @@
     --sidebar-ring: oklch(0.5784 0.2303 263.8862);
     --destructive-foreground: oklch(1.0000 0 0);
     --font-sans: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif;
-    --font-serif: Georgia, serif;
+    --font-serif: var(--font-sans);
     --font-mono: var(--font-sans);
     --shadow-color: #2e6aff;
     --shadow-opacity: 0;
@@ -111,7 +116,7 @@
     --destructive-foreground: oklch(1.0000 0 0);
     --radius: 0.5rem;
     --font-sans: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif;
-    --font-serif: Georgia, serif;
+    --font-serif: var(--font-sans);
     --font-mono: var(--font-sans);
     --shadow-color: #2e6aff;
     --shadow-opacity: 0;
@@ -133,7 +138,7 @@
 
 @theme inline {
     --font-sans: var(--font-sans);
-    --font-heading: var(--font-heading);
+    --font-heading: var(--font-sans);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -173,7 +178,7 @@
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
     --font-mono: var(--font-sans);
-    --font-serif: Georgia, serif;
+    --font-serif: var(--font-sans);
     --radius: 0.5rem;
     --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
     --tracking-tight: calc(var(--tracking-normal) - 0.025em);
@@ -207,14 +212,17 @@
   html,
   body {
     @apply font-sans bg-background text-foreground;
-    font-family: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-family: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif !important;
     letter-spacing: var(--tracking-normal);
   }
   input,
   textarea,
   button,
   select,
+  option,
+  optgroup,
   kbd,
+  samp,
   code,
   pre {
     font-family: inherit;
@@ -229,9 +237,15 @@
   }
 }
 
-/* RTL Arabic typography & KaTeX math isolation */
-[dir="rtl"], [dir="rtl"] * {
-  font-family: var(--font-ibm-plex-sans), 'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+/* RTL Arabic typography & KaTeX math isolation.
+   KaTeX is excluded so math keeps its own fonts in both directions. */
+[dir="rtl"] *:not(.katex, .katex *) {
+  font-family: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif !important;
+}
+
+/* Math glyphs stay KaTeX; only the fallback changes (never Times/serif). */
+.katex {
+  font-family: KaTeX_Main, "IBM Plex Sans Arabic", var(--font-sans), serif;
 }
 
 [dir="rtl"] .katex-display,

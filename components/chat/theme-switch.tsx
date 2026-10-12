@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useTheme } from "next-themes"
+import { useTranslation } from "react-i18next"
 import { MoonIcon, SunIcon } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "cn"
@@ -14,6 +15,7 @@ interface ThemeSwitchProps {
  * Dark-mode toggle: a compact Switch flanked by sun/moon icons.
  */
 export function ThemeSwitch({ className }: ThemeSwitchProps) {
+  const { t } = useTranslation()
   const { resolvedTheme, setTheme } = useTheme()
   const mounted = React.useSyncExternalStore(
     () => () => {},
@@ -36,7 +38,7 @@ export function ThemeSwitch({ className }: ThemeSwitchProps) {
         size="sm"
         checked={isDark}
         onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-        aria-label="Toggle dark mode"
+        aria-label={t("sidebar:theme.toggle")}
       />
       <MoonIcon
         aria-hidden="true"

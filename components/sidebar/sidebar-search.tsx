@@ -45,8 +45,8 @@ export function SidebarSearch({
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={t('searchSessions', 'Search sessions...')}
-        aria-label={t('searchPreviousChatSessions', 'Search previous chat sessions')}
+        placeholder={t("sidebar:search.placeholder")}
+        aria-label={t("sidebar:search.aria")}
         className="h-9 w-full rounded-full border-sidebar-border bg-sidebar/50 pe-8 ps-8.5 text-xs placeholder:text-muted-foreground/70 focus-visible:ring-1 focus-visible:ring-sidebar-ring"
       />
       {value ? (
@@ -59,7 +59,7 @@ export function SidebarSearch({
             inputRef.current?.focus()
           }}
           className="absolute end-1.5 top-1/2 size-6 rounded-full -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          aria-label={t('clearSearch', 'Clear search')}
+          aria-label={t("sidebar:search.clear")}
         >
           <XIcon className="size-3" />
         </Button>

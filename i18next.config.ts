@@ -1,7 +1,12 @@
 const i18nConfig = {
   locales: ["en", "ar"],
   extract: {
-    input: "src/**/*.{js,jsx,ts,tsx}",
+    input: [
+      "app/**/*.{ts,tsx}",
+      "components/**/*.{ts,tsx}",
+      "hooks/**/*.{ts,tsx}",
+      "lib/**/*.{ts,tsx}",
+    ],
     output: "public/locales/{{language}}/{{namespace}}.json",
   },
 }

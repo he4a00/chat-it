@@ -1159,3 +1159,47 @@ This file records architecture decisions, agent conventions, and a running log o
 4. **Trade-off** — the avatar now loads from the Cloudinary CDN (no offline fallback). If that becomes a concern, re-add a small local WebP and use it as an `onError` fallback.
 5. **Verification**: typecheck / lint / build all clean; Cloudinary variants confirmed `200` + `image/webp`.
 
+### [2026-10-11] Caching & Invalidation Pass (TanStack Query + `server/hooks`)
+
+1. **Bug — deleting a chat flashed the deleted chat back in.** Root cause: `ChatShell` always passed the route's `initialMessages`, while `handleNewChat` changed the workspace key immediately. The fresh (empty) workspace therefore mounted with the **deleted chat's** messages until the new RSC payload landed. Secondary cause: every mutation did a blanket `invalidateQueries` refetch in `finally`, which could re-introduce server state mid-flight.
+2. **Fix** — `ChatShell` now passes `initialMessages={activeSessionId ? initialMessages : []}` (never seed a "new chat" with a previous session's messages).
+3. **New client hooks (`server/hooks/`)** — centralized TanStack Query layer:
+   - `use-sessions.ts`: `useSessions`, `useCreateSession`, `useRenameSession`, `useDeleteSession`, `useDuplicateSession`.
+   - `use-learner.ts`: `useLearnerOverview`, `useRefreshLearnerOverview`, `useStartReview`, `useSubmitWidgetState`.
+   - Mutations are **optimistic with rollback** (`onMutate` → `cancelQueries` + snapshot + `setQueryData`; `onError` → restore) instead of blanket post-write invalidation. Create/duplicate merge the server response (`upsertSession`); delete also `removeQueries` for that chat's cached messages; failure surfaces a toast.
+4. **Defaults (`trpc/query-client.ts`)** — `staleTime` 60s, `gcTime` 5m, `retry: 1` with backoff, `refetchOnReconnect: true`, `refetchOnWindowFocus: false`, mutations `retry: 0`.
+5. **Coherence** — widget submissions now invalidate `learner.getOverview` (all four widgets use `useSubmitWidgetState`), so mastery/streak update after practice; the progress panel refetches the overview when opened.
+6. **`cacheComponents` deliberately NOT enabled.** Next 16's Cache Components (`use cache` / PPR) is for caching non-user-specific work; every read here is per-user and auth-scoped (`auth()` + Clerk cookies), so `use cache` can't wrap them (request APIs are disallowed in cached scopes). Enabling the flag would force Suspense boundaries around the dynamic shell across `app/page.tsx`, `app/c/[chatId]/page.tsx` and `app/welcome/page.tsx` for little gain. Revisit if we add genuinely shareable data (e.g. the topic registry).
+7. **Verification**: typecheck / lint / build clean.
+
+### [2026-10-12] Arabic i18n — Phase 1: Foundation (self-hosted fonts + real i18next runtime)
+
+> Plan: `~/.commandcode/plans/shawky-arabic-localization-i18next.md`. Nothing is translated yet — P1 makes i18next actually run and guarantees Arabic can't fall back to an OS font.
+
+1. **Fonts (the hard requirement).** `@fontsource-variable/ibm-plex-sans-arabic` **does not exist** — used `@fontsource/ibm-plex-sans-arabic` and imported its `arabic-{400,500,600,700}` subset CSS in `app/globals.css`. **Removed the Google Fonts `@import`** (previously the *only* reason Arabic rendered; a blocked/failed request dropped Arabic to the OS default). Also:
+   - `--font-serif` was `Georgia, serif` → now `var(--font-sans)`; `--font-heading` was an undefined self-reference → now `var(--font-sans)`.
+   - KaTeX keeps its math fonts, but `.katex` now falls back to IBM Plex (never Times), and KaTeX is **excluded** from the `[dir="rtl"] *` rule that previously overrode `.mathnormal`/`.mathit` in RTL.
+   - Dropped the non-IBM system fallbacks from the base `!important` stack; added `option/optgroup/samp`; `localFont` entries gained `weight: "300 700"`.
+   - **Verified** on the served CSS: `0` googleapis refs, `8` self-hosted Arabic woff2 refs, `11` `IBM Plex Sans Arabic` declarations, `0` Georgia.
+2. **i18next runtime.** `i18n.ts` was imported by **zero** files, so `useTranslation()` only echoed its inline defaults and `i18n.changeLanguage` was a stub. Deleted it; added `lib/i18n/{settings,resources,index,server}.ts` and `components/providers/i18n-provider.tsx`:
+   - Resources are **statically bundled** (dropped `i18next-resources-to-backend`) and each request/mount gets its own `createInstance()` — no cross-request language leakage — supplied through `I18nextProvider` (so `initReactI18next` is deliberately not used).
+   - Locale lives in the **`shawky_lang` cookie**; `app/layout.tsx` is now `async` and reads it via `getLocale()` to set `<html lang dir>`. **Verified** in the SSR HTML: `<html lang="ar" dir="rtl">`.
+   - `hooks/use-language.ts` rewritten as a bridge over the instance + cookie/localStorage, keeping the `{ language, setLanguage }` API and the `AppLanguage` alias so existing call-sites didn't change.
+3. **Catalogs reset.** Deleted the polluted `translation.json` pair; six namespaces (`common`, `sidebar`, `chat`, `widgets`, `learner`, `onboarding`) now live under `public/locales/{en,ar}/` (only `common` seeded so far). `i18next.config.ts` extract input fixed (it pointed at a non-existent `src/**`). Removed the now-unused `i18next-resources-to-backend` and `i18next-browser-languagedetector` deps.
+4. **Verification:** typecheck / lint / build clean; SSR `lang`/`dir` verified; font CDN eliminated. Next: P2 (chrome & shell namespaces).
+
+### [2026-10-12] Arabic i18n — Phase 2: Chrome & Shell (`common`, `sidebar`, `chat`)
+
+1. Authored the `sidebar` + `chat` catalogs (English + Egyptian-flavoured Arabic) and migrated every chrome/shell surface to `t()`:
+   - **sidebar** — `session-list`, `sidebar-header`, `sidebar-search`, `sidebar-footer`, `user-preferences-page`, `language-menu`, `theme-switch`, `mode-icons`.
+   - **chat** — `chat-workspace`, `chat-messages`, `chat-composer`, `chat-empty-state`.
+2. Notable decisions:
+   - Keys are namespaced (`sidebar:…`, `chat:…`, `common:…`) and the inline English defaults were **dropped** so gaps surface via the dev `missingKeyHandler` instead of hiding behind fallbacks.
+   - Config objects became key-based: `CATEGORY_LABELS` → `sidebar:categories.*`; the composer's `TOOL_PRESETS` dropped their `{en,ar}` label/prompt pairs → `chat:composer.presets.<id>.{label,prompt}`; `MATH_SYMBOLS` tooltips → `chat:composer.symbols.*`.
+   - `describeChatError` now takes `t` rather than an `isAr` flag.
+   - Language endonyms (`English`, `العربية`, `LTR`/`RTL`) stay literal — they are never translated.
+   - `mode-icons` alts became `alt=""` + `aria-hidden` (the adjacent label carries the meaning).
+   - Removed the duplicated `i18n.changeLanguage(id); setLanguage(id)` calls — `setLanguage` alone switches and persists.
+   - `lib/session-utils.ts` is **unchanged**: its `isAr` ternaries select a locale *code* (`ar-EG`/`en-US`) for date formatting, not copy. Localised date output remains a follow-up.
+3. **Verification:** typecheck / lint / build clean; an Arabic string confirmed present in the built chunk. The remaining `isAr` ternaries are exactly the P3 (`onboarding-experience`, `progress-panel`) and P4 (4 widgets) targets.
+

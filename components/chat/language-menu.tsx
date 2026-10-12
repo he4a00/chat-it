@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/hooks/use-language"
 
+// Endonyms: a language's own name is never translated.
 const LANGUAGES = [
   { id: "en", label: "English", hint: "LTR" },
   { id: "ar", label: "العربية", hint: "RTL" },
@@ -22,11 +23,10 @@ const LANGUAGES = [
  * Language picker: a globe button opening a dropdown of the supported locales.
  */
 export function LanguageMenu() {
-  const { i18n } = useTranslation()
+  const { t } = useTranslation()
   const { language, setLanguage } = useLanguage()
 
   const choose = (id: "en" | "ar") => {
-    i18n.changeLanguage(id)
     setLanguage(id)
   }
 
@@ -37,7 +37,7 @@ export function LanguageMenu() {
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="Change language"
+            aria-label={t("sidebar:language.change")}
             className="size-6 rounded-full text-muted-foreground hover:bg-background/70 hover:text-foreground"
           >
             <GlobeIcon className="size-3.5" />
@@ -46,7 +46,7 @@ export function LanguageMenu() {
       />
       <DropdownMenuContent align="end" className="min-w-44">
         <DropdownMenuGroup>
-          <DropdownMenuLabel>Language · اللغة</DropdownMenuLabel>
+          <DropdownMenuLabel>{t("sidebar:language.title")}</DropdownMenuLabel>
           {LANGUAGES.map((option) => (
             <DropdownMenuItem key={option.id} onClick={() => choose(option.id)}>
               <span className="flex-1">{option.label}</span>

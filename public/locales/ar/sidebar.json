@@ -1,0 +1,76 @@
+{
+  "categories": {
+    "today": "النهاردة",
+    "yesterday": "امبارح",
+    "previous_7_days": "آخر ٧ أيام",
+    "older": "أقدم"
+  },
+  "search": {
+    "placeholder": "دوّر على محادثة...",
+    "aria": "ابحث في المحادثات السابقة",
+    "clear": "امسح البحث",
+    "empty": {
+      "title": "مفيش نتائج",
+      "description": "مفيش محادثات بالاسم \"{{query}}\""
+    }
+  },
+  "history": {
+    "empty": "هنا هتلاقي محادثاتك القديمة مع شوقي"
+  },
+  "rename": {
+    "save": "حفظ الاسم",
+    "cancel": "إلغاء التعديل"
+  },
+  "options": "خيارات المحادثة",
+  "menu": {
+    "chat": "المحادثة",
+    "rename": "غيّر الاسم",
+    "duplicate": "انسخها",
+    "copyLink": "انسخ الرابط",
+    "danger": "منطقة الخطر",
+    "delete": "حذف"
+  },
+  "toast": {
+    "linkCopied": "تم نسخ الرابط",
+    "linkCopyFailed": "مقدرناش ننسخ الرابط"
+  },
+  "delete": {
+    "title": "تحذف المحادثة؟",
+    "description": "المحادثة دي وكل رسايلها هتتحذف نهائي، ومفيش رجوع."
+  },
+  "progress": {
+    "label": "تقدّمك",
+    "streak": "{{count}} يوم متتالي"
+  },
+  "preferences": "التفضيلات",
+  "language": {
+    "title": "اللغة",
+    "change": "تغيير اللغة"
+  },
+  "theme": {
+    "toggle": "تبديل الوضع الليلي"
+  },
+  "settings": {
+    "loading": "بيتم تحميل التفضيلات...",
+    "title": "التفضيلات",
+    "subtitle": "خصّص شكل مساحة العمل ولغة الواجهة.",
+    "theme": {
+      "title": "المظهر والوضع الليلي",
+      "description": "اختار وضع الألوان اللي يريحك في المحادثة والشريط الجانبي.",
+      "light": "فاتح",
+      "lightDescription": "واجهة نهارية عالية التباين",
+      "dark": "ليلي",
+      "darkDescription": "وضع غامق يركز معاه وقت المذاكرة بالليل",
+      "system": "النظام",
+      "systemDescription": "بيتبع إعدادات جهازك تلقائيًا"
+    },
+    "language": {
+      "title": "لغة الواجهة",
+      "description": "اختار لغة شوقي الأساسية واتجاه القراءة.",
+      "english": "English",
+      "englishDescription": "تخطيط من اليسار لليمين (LTR)",
+      "arabic": "العربية",
+      "arabicDescription": "تخطيط من اليمين لليسار (RTL)"
+    }
+  }
+}

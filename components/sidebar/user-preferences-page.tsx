@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 import { useTranslation } from 'react-i18next'
 
 export function UserPreferencesPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const { theme, setTheme } = useTheme()
   const { language, setLanguage } = useLanguage()
 
@@ -21,7 +21,7 @@ export function UserPreferencesPage() {
   if (!mounted) {
     return (
       <div className="p-6 text-sm text-muted-foreground animate-pulse">
-        {t('loadingPreferences', 'Loading preferences...')}
+        {t("sidebar:settings.loading")}
       </div>
     )
   }
@@ -34,21 +34,21 @@ export function UserPreferencesPage() {
   }> = [
     {
       id: "light",
-      label: t('light', 'Light'),
+      label: t("sidebar:settings.theme.light"),
       icon: SunIcon,
-      description: t('crispStemHighcontrastDaytimeInterface', 'Crisp STEM high-contrast daytime interface'),
+      description: t("sidebar:settings.theme.lightDescription"),
     },
     {
       id: "dark",
-      label: t('dark', 'Dark'),
+      label: t("sidebar:settings.theme.dark"),
       icon: MoonIcon,
-      description: t('obsidianDarkModeForFocusedNightStudying', 'Obsidian dark mode for focused night studying'),
+      description: t("sidebar:settings.theme.darkDescription"),
     },
     {
       id: "system",
-      label: t('system', 'System'),
+      label: t("sidebar:settings.theme.system"),
       icon: LaptopIcon,
-      description: t('automaticallyMatchesYourDeviceSettings', 'Automatically matches your device settings'),
+      description: t("sidebar:settings.theme.systemDescription"),
     },
   ]
 
@@ -60,14 +60,14 @@ export function UserPreferencesPage() {
   }> = [
     {
       id: "en",
-      label: t('english', 'English'),
-      sublabel: t('lefttorightLtrDefaultLayout', 'Left-to-right (LTR) default layout'),
+      label: t("sidebar:settings.language.english"),
+      sublabel: t("sidebar:settings.language.englishDescription"),
       direction: "ltr",
     },
     {
       id: "ar",
-      label: t('key', 'العربية'),
-      sublabel: t('rtl', 'تخطيط من اليمين إلى اليسار (RTL)'),
+      label: t("sidebar:settings.language.arabic"),
+      sublabel: t("sidebar:settings.language.arabicDescription"),
       direction: "rtl",
     },
   ]
@@ -77,10 +77,10 @@ export function UserPreferencesPage() {
       {/* Header */}
       <div className="border-b border-border/80 pb-4">
         <h2 className="text-xl font-bold tracking-tight text-foreground">
-          {t('preferences', 'Preferences')}
+          {t("sidebar:settings.title")}
         </h2>
         <p className="text-xs text-muted-foreground mt-1">
-          {t('customizeYourWorkspaceAppearanceAndInterfaceLanguage', 'Customize your workspace appearance and interface language.')}
+          {t("sidebar:settings.subtitle")}
         </p>
       </div>
 
@@ -89,11 +89,11 @@ export function UserPreferencesPage() {
         <div className="flex items-center gap-2">
           <MoonIcon className="size-4 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">
-            {t('appearanceDarkMode', 'Appearance & Dark Mode')}
+            {t("sidebar:settings.theme.title")}
           </h3>
         </div>
         <p className="text-xs text-muted-foreground">
-          {t('selectYourPreferredColorModeForTheChatWorkspaceAndSidebar', 'Select your preferred color mode for the chat workspace and sidebar.')}
+          {t("sidebar:settings.theme.description")}
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
@@ -146,11 +146,11 @@ export function UserPreferencesPage() {
         <div className="flex items-center gap-2">
           <GlobeIcon className="size-4 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">
-            {t('interfaceLanguage', 'Interface Language')}
+            {t("sidebar:settings.language.title")}
           </h3>
         </div>
         <p className="text-xs text-muted-foreground">
-          {t('chooseThePrimaryLanguageAndReadingDirectionForShawky', 'Choose the primary language and reading direction for Shawky.')}
+          {t("sidebar:settings.language.description")}
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
@@ -161,7 +161,7 @@ export function UserPreferencesPage() {
               <button
                 key={opt.id}
                 type="button"
-                onClick={() => { i18n.changeLanguage(opt.id); setLanguage(opt.id); }}
+                onClick={() => setLanguage(opt.id)}
                 className={cn(
                   "flex items-center justify-between p-3.5 rounded-xl border text-left transition-all duration-150 cursor-pointer",
                   isSelected

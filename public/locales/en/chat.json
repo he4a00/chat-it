@@ -1,0 +1,112 @@
+{
+  "empty": {
+    "greeting": "What shall we solve today, {{name}}?",
+    "subtitle": "Your personal Socratic STEM companion. Choose a mode to start or ask a problem.",
+    "fallbackName": "Learner",
+    "continue": "Continue",
+    "modes": {
+      "learn": "Learn",
+      "flashcards": "Flashcards",
+      "quiz": "Quiz"
+    },
+    "prompts": {
+      "learn": "Teach me a core mathematical concept with intuitive step-by-step Socratic guidance.",
+      "flashcards": "Create an interactive flashcard deck of essential STEM formulas for quick drill and active recall.",
+      "quiz": "Give me an interactive diagnostic quiz challenge on a key STEM topic to test my understanding."
+    },
+    "suggestions": {
+      "derivative": "What is a derivative, intuitively?",
+      "limits": "Explain limits with a simple example.",
+      "vector": "Difference between a vector and a scalar?"
+    }
+  },
+  "header": {
+    "newChat": "New chat",
+    "progressAria": "View your progress",
+    "progressTitle": "Your progress"
+  },
+  "errors": {
+    "quota": {
+      "title": "AI quota reached",
+      "detail": "Today's free AI quota is used up. It resets automatically, so try again a little later."
+    },
+    "session": {
+      "title": "Session expired",
+      "detail": "Please sign in again."
+    },
+    "key": {
+      "title": "AI key not configured",
+      "detail": "The Gemini API key is missing. Check .env.local."
+    },
+    "generic": {
+      "title": "The response failed",
+      "detail": "Something went wrong while generating the reply."
+    }
+  },
+  "composer": {
+    "placeholder": "Ask Shawky about a problem, proof, or theorem...",
+    "toolsTitle": "Quick tools",
+    "toolsLabel": "Tools",
+    "quickStart": "Quick start",
+    "mathTitle": "Toggle Math Symbols",
+    "codeTitle": "Insert a code block",
+    "stop": "Stop generation",
+    "stopSr": "Stop",
+    "send": "Send message",
+    "sendSr": "Send",
+    "presets": {
+      "quiz": {
+        "label": "Quiz",
+        "prompt": "Create me a quiz with 4 multiple-choice questions on "
+      },
+      "flashcards": {
+        "label": "Flashcards",
+        "prompt": "Create a flashcard deck of the key formulas and definitions for "
+      },
+      "math": {
+        "label": "Problem",
+        "prompt": "Give me a step-by-step practice problem on "
+      },
+      "quickcheck": {
+        "label": "Quick check",
+        "prompt": "Give me a quick True/False check on "
+      }
+    },
+    "symbols": {
+      "square": "Square power",
+      "fraction": "Fraction",
+      "sqrt": "Square root",
+      "integral": "Definite integral",
+      "pi": "Pi",
+      "theta": "Theta",
+      "delta": "Delta",
+      "infinity": "Infinity",
+      "approx": "Approximately equal",
+      "sum": "Summation"
+    }
+  },
+  "messages": {
+    "copy": "Copy to clipboard",
+    "helpful": "Helpful",
+    "notHelpful": "Not helpful",
+    "regenerate": "Regenerate response",
+    "thinking": "Shawky is thinking..."
+  },
+  "tools": {
+    "errorTitle": "Something went wrong",
+    "errorDetail": "This interactive element couldn't be generated. Please try again.",
+    "noteCaptured": "Pedagogical note captured",
+    "unknown": "Interactive element: {{name}}",
+    "placeholder": {
+      "quiz": "Shawky is preparing your quiz challenge...",
+      "flashcards": "Shawky is creating your flashcard deck...",
+      "math": "Shawky is structuring the guided math problem...",
+      "quickCheck": "Shawky is preparing the quick check..."
+    },
+    "topicFallback": {
+      "quiz": "Quiz",
+      "flashcards": "Flashcards",
+      "math": "Math Problem"
+    }
+  }
+}

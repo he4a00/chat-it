@@ -7,7 +7,6 @@ import { SidebarFooter } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { UserPreferencesPage } from "./user-preferences-page"
 import { useLearnerOverview } from "@/server/hooks/use-learner"
-import { useLanguage } from "@/hooks/use-language"
 import { useTranslation } from "react-i18next"
 
 interface AppSidebarFooterProps {
@@ -16,8 +15,6 @@ interface AppSidebarFooterProps {
 
 export function AppSidebarFooter({ onOpenProgress }: AppSidebarFooterProps) {
   const { t } = useTranslation()
-  const { language } = useLanguage()
-  const isAr = language === "ar"
 
   // Shares the cache entry seeded by ChatShell — no extra request.
   const { data: overview } = useLearnerOverview()
@@ -40,10 +37,10 @@ export function AppSidebarFooter({ onOpenProgress }: AppSidebarFooterProps) {
               </span>
               <span className="flex min-w-0 flex-col leading-tight">
                 <span className="truncate text-[11px] font-semibold text-sidebar-foreground">
-                  {isAr ? "تقدّمك" : "Your progress"}
+                  {t("sidebar:progress.label")}
                 </span>
                 <span className="truncate text-[10px] text-muted-foreground">
-                  {isAr ? `${streak} يوم متتالي` : `${streak}-day streak`}
+                  {t("sidebar:progress.streak", { count: streak })}
                 </span>
               </span>
             </span>
@@ -71,7 +68,7 @@ export function AppSidebarFooter({ onOpenProgress }: AppSidebarFooterProps) {
             {/* Popover actions (theme + language now live in the chat header) */}
             <UserButton.MenuItems>
               <UserButton.Action
-                label="Preferences"
+                label={t("sidebar:preferences")}
                 labelIcon={<Settings2Icon className="size-4" />}
                 open="preferences"
               />
@@ -79,7 +76,7 @@ export function AppSidebarFooter({ onOpenProgress }: AppSidebarFooterProps) {
 
             {/* Custom Preferences Page inside Clerk UserProfile Modal */}
             <UserButton.UserProfilePage
-              label="Preferences"
+              label={t("sidebar:preferences")}
               labelIcon={<Settings2Icon className="size-4" />}
               url="preferences"
             >
@@ -98,7 +95,7 @@ export function AppSidebarFooter({ onOpenProgress }: AppSidebarFooterProps) {
             className="w-full justify-center h-9 px-3.5 rounded-full border-sidebar-border bg-sidebar hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-xs font-medium text-sidebar-foreground transition-colors shadow-2xs"
           >
             <LogInIcon className="size-3.5 mr-2 text-primary" />
-            <span>{t('signIn', 'Sign In')}</span>
+            <span>{t("common:signIn")}</span>
           </Button>
         </SignInButton>
       </Show>

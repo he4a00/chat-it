@@ -3,7 +3,7 @@
 import * as React from "react"
 import { type UIMessage, isToolUIPart, getToolName } from "ai"
 import { useUser } from "@clerk/nextjs"
-import { useLanguage } from "@/hooks/use-language"
+import { useTranslation } from "react-i18next"
 import {
   MessageScrollerProvider,
   MessageScroller,
@@ -49,8 +49,8 @@ export function ChatMessages({
   onSendFeedback,
 }: ChatMessagesProps) {
   const { user } = useUser()
-  const { language } = useLanguage()
-  const isAr = language === "ar"
+  const { t, i18n } = useTranslation("chat")
+  const isAr = (i18n.resolvedLanguage ?? "en").startsWith("ar")
   const [copiedId, setCopiedId] = React.useState<string | null>(null)
 
   const handleCopy = (id: string, text: string) => {
@@ -206,7 +206,7 @@ export function ChatMessages({
                             size="icon-xs"
                             onClick={() => handleCopy(message.id, fullText)}
                             className="size-7 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
-                            title={isAr ? "نسخ النص" : "Copy to clipboard"}
+                            title={t("messages.copy")}
                           >
                             {copiedId === message.id ? (
                               <Check className="size-3.5 text-emerald-500" />
@@ -225,7 +225,7 @@ export function ChatMessages({
                                 ? "text-emerald-500"
                                 : "text-muted-foreground hover:text-foreground"
                             )}
-                            title={isAr ? "مفيد" : "Helpful"}
+                            title={t("messages.helpful")}
                           >
                             <ThumbsUp className="size-3.5" />
                           </Button>
@@ -240,7 +240,7 @@ export function ChatMessages({
                                 ? "text-rose-500"
                                 : "text-muted-foreground hover:text-foreground"
                             )}
-                            title={isAr ? "غير مفيد" : "Not helpful"}
+                            title={t("messages.notHelpful")}
                           >
                             <ThumbsDown className="size-3.5" />
                           </Button>
@@ -251,7 +251,7 @@ export function ChatMessages({
                               size="icon-xs"
                               onClick={onRegenerate}
                               className="size-7 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
-                              title={isAr ? "إعادة الصياغة" : "Regenerate response"}
+                              title={t("messages.regenerate")}
                             >
                               <RotateCcw className="size-3.5" />
                             </Button>
@@ -269,9 +269,7 @@ export function ChatMessages({
           {showThinkingIndicator && (
             <MessageScrollerItem messageId="thinking-indicator" scrollAnchor>
               <div className="px-1 py-2">
-                <ThinkingIndicator
-                  label={isAr ? "شوقي يفكر ويبني الإجابة..." : "Shawky is thinking..."}
-                />
+                <ThinkingIndicator label={t("messages.thinking")} />
               </div>
             </MessageScrollerItem>
           )}
@@ -299,6 +297,7 @@ function ToolCallWidgetCard({
   isAr: boolean
   onSendFeedback?: (feedback: string) => void
 }) {
+  const { t } = useTranslation("chat")
   const toolName = (getToolName as (p: unknown) => string)(part) || part.type.replace(/^tool-/, "")
   const input = ((part.input || part.output || {}) as Record<string, unknown>)
   const output = (part.output ?? {}) as Record<string, unknown>
@@ -308,13 +307,8 @@ function ToolCallWidgetCard({
     const errorText = (part as { errorText?: string }).errorText
     return (
       <Alert variant="destructive" className="my-2.5">
-        <AlertTitle>{isAr ? "تعذّر تجهيز العنصر" : "Something went wrong"}</AlertTitle>
-        <AlertDescription>
-          {errorText ||
-            (isAr
-              ? "تعذّر توليد هذا العنصر التفاعلي. حاول مرة أخرى."
-              : "This interactive element couldn't be generated. Please try again.")}
-        </AlertDescription>
+        <AlertTitle>{t("tools.errorTitle")}</AlertTitle>
+        <AlertDescription>{errorText || t("tools.errorDetail")}</AlertDescription>
       </Alert>
     )
   }
@@ -329,7 +323,7 @@ function ToolCallWidgetCard({
         </MarkerIcon>
         <MarkerContent className="text-[11px] leading-relaxed text-muted-foreground">
           <span className="font-semibold text-primary">
-            {isAr ? "ملاحظة تربوية مسجّلة" : "Pedagogical note captured"}
+            {t("tools.noteCaptured")}
           </span>
           {topic ? <span className="font-mono"> [{topic}]</span> : null} — {observation}
         </MarkerContent>
@@ -338,7 +332,7 @@ function ToolCallWidgetCard({
   }
 
   if (toolName === "createQuiz") {
-    const topic = String(input.topic || "Quiz")
+    const topic = String(input.topic || t("tools.topicFallback.quiz"))
     const title = input.title ? String(input.title) : undefined
     const rawQuestions = (input.questions || []) as Array<QuizQuestionItem>
 
@@ -358,7 +352,7 @@ function ToolCallWidgetCard({
     if (questionsList.length === 0) {
       return (
         <ToolPlaceholder
-          label={isAr ? "جاري تجهيز الاختبار التفاعلي..." : "Shawky is preparing your quiz challenge..."}
+          label={t("tools.placeholder.quiz")}
         />
       )
     }
@@ -380,13 +374,13 @@ function ToolCallWidgetCard({
   }
 
   if (toolName === "createFlashcardDeck") {
-    const topic = String(input.topic || "Flashcards")
+    const topic = String(input.topic || t("tools.topicFallback.flashcards"))
     const cards = (input.cards || []) as Array<{ id: string; front: string; back: string; conceptTag?: string }>
 
     if (cards.length === 0) {
       return (
         <ToolPlaceholder
-          label={isAr ? "جاري إنشاء البطاقات التعليمية..." : "Shawky is creating your flashcard deck..."}
+          label={t("tools.placeholder.flashcards")}
         />
       )
     }
@@ -414,7 +408,7 @@ function ToolCallWidgetCard({
   }
 
   if (toolName === "createMathProblem") {
-    const topic = String(input.topic || "Math Problem")
+    const topic = String(input.topic || t("tools.topicFallback.math"))
     const problemStatement = String(input.problemStatement || "")
     const steps = (input.steps || []) as Array<{ stepNumber: number; instruction: string; hint?: string }>
     const finalAnswer = String(input.finalAnswer || "")
@@ -424,7 +418,7 @@ function ToolCallWidgetCard({
     if (!problemStatement) {
       return (
         <ToolPlaceholder
-          label={isAr ? "جاري تجهيز المسألة الرياضية الموجهة..." : "Shawky is structuring the guided math problem..."}
+          label={t("tools.placeholder.math")}
         />
       )
     }
@@ -457,7 +451,7 @@ function ToolCallWidgetCard({
     if (!statement) {
       return (
         <ToolPlaceholder
-          label={isAr ? "جاري تحضير سؤال الصواب والخطأ..." : "Shawky is preparing the quick check..."}
+          label={t("tools.placeholder.quickCheck")}
         />
       )
     }
@@ -481,7 +475,7 @@ function ToolCallWidgetCard({
 
   return (
     <div className="my-2.5 rounded-xl border border-border/60 bg-muted/20 p-3.5 font-sans text-xs text-muted-foreground">
-      {isAr ? `عنصر تفاعلي: ${toolName}` : `Interactive element: ${toolName}`}
+      {t("tools.unknown", { name: toolName })}
     </div>
   )
 }

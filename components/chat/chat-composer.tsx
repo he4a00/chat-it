@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useLanguage } from "@/hooks/use-language"
+import { useTranslation } from "react-i18next"
 import { ArrowUp, Square, Pi, Code2, Calculator, CheckCircle2, HelpCircle, Layers, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,60 +24,24 @@ interface ChatComposerProps {
 }
 
 const MATH_SYMBOLS = [
-  { label: "x²", insert: "^{2}", title: "Square power" },
-  { label: "a/b", insert: "\\frac{a}{b}", title: "Fraction" },
-  { label: "√x", insert: "\\sqrt{x}", title: "Square root" },
-  { label: "∫", insert: "\\int_{a}^{b} ", title: "Definite integral" },
-  { label: "π", insert: "\\pi", title: "Pi" },
-  { label: "θ", insert: "\\theta", title: "Theta" },
-  { label: "Δ", insert: "\\Delta", title: "Delta" },
-  { label: "∞", insert: "\\infty", title: "Infinity" },
-  { label: "≈", insert: "\\approx", title: "Approximately equal" },
-  { label: "∑", insert: "\\sum_{i=1}^{n}", title: "Summation" },
+  { label: "x²", insert: "^{2}", titleKey: "composer.symbols.square" },
+  { label: "a/b", insert: "\\frac{a}{b}", titleKey: "composer.symbols.fraction" },
+  { label: "√x", insert: "\\sqrt{x}", titleKey: "composer.symbols.sqrt" },
+  { label: "∫", insert: "\\int_{a}^{b} ", titleKey: "composer.symbols.integral" },
+  { label: "π", insert: "\\pi", titleKey: "composer.symbols.pi" },
+  { label: "θ", insert: "\\theta", titleKey: "composer.symbols.theta" },
+  { label: "Δ", insert: "\\Delta", titleKey: "composer.symbols.delta" },
+  { label: "∞", insert: "\\infty", titleKey: "composer.symbols.infinity" },
+  { label: "≈", insert: "\\approx", titleKey: "composer.symbols.approx" },
+  { label: "∑", insert: "\\sum_{i=1}^{n}", titleKey: "composer.symbols.sum" },
 ]
 
 /** One-tap starters that drop a tool-shaped prompt into the composer. */
 const TOOL_PRESETS = [
-  {
-    id: "quiz",
-    icon: HelpCircle,
-    accent: "text-emerald-500",
-    label: { en: "Quiz", ar: "اختبار" },
-    prompt: {
-      en: "Create me a quiz with 4 multiple-choice questions on ",
-      ar: "أنشئ لي اختباراً من ٤ أسئلة متعددة الخيارات عن ",
-    },
-  },
-  {
-    id: "flashcards",
-    icon: Layers,
-    accent: "text-violet-500",
-    label: { en: "Flashcards", ar: "بطاقات" },
-    prompt: {
-      en: "Create a flashcard deck of the key formulas and definitions for ",
-      ar: "أنشئ مجموعة بطاقات لأهم القوانين والتعريفات في ",
-    },
-  },
-  {
-    id: "math",
-    icon: Calculator,
-    accent: "text-blue-500",
-    label: { en: "Problem", ar: "مسألة" },
-    prompt: {
-      en: "Give me a step-by-step practice problem on ",
-      ar: "أعطني مسألة تدريبية خطوة بخطوة عن ",
-    },
-  },
-  {
-    id: "quickcheck",
-    icon: CheckCircle2,
-    accent: "text-amber-500",
-    label: { en: "Quick check", ar: "صواب/خطأ" },
-    prompt: {
-      en: "Give me a quick True/False check on ",
-      ar: "أعطني سؤال صواب/خطأ سريع عن ",
-    },
-  },
+  { id: "quiz", icon: HelpCircle, accent: "text-emerald-500" },
+  { id: "flashcards", icon: Layers, accent: "text-violet-500" },
+  { id: "math", icon: Calculator, accent: "text-blue-500" },
+  { id: "quickcheck", icon: CheckCircle2, accent: "text-amber-500" },
 ] as const
 
 export function ChatComposer({
@@ -88,8 +52,7 @@ export function ChatComposer({
   onStop,
   className,
 }: ChatComposerProps) {
-  const { language } = useLanguage()
-  const isAr = language === "ar"
+  const { t } = useTranslation("chat")
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
   const [showMathSymbols, setShowMathSymbols] = React.useState(false)
 
@@ -128,7 +91,7 @@ export function ChatComposer({
   }
 
   const handleToolPreset = (preset: (typeof TOOL_PRESETS)[number]) => {
-    const text = preset.prompt[isAr ? "ar" : "en"]
+    const text = t(`composer.presets.${preset.id}.prompt`)
     onInputChange(text)
     const textarea = textareaRef.current
     if (textarea) {
@@ -152,7 +115,7 @@ export function ChatComposer({
               <button
                 key={idx}
                 type="button"
-                title={sym.title}
+                title={t(sym.titleKey)}
                 onClick={() => handleInsertSymbol(sym.insert)}
                 className="shrink-0 px-2 py-0.5 rounded-md hover:bg-muted text-foreground/80 hover:text-foreground text-xs font-mono font-medium border border-border/30 transition-colors"
               >
@@ -170,11 +133,7 @@ export function ChatComposer({
             value={input}
             onChange={(e) => onInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={
-              isAr
-                ? "اسأل شوقي عن مسألة، نظرية، أو برهان... (اضغط Enter للإرسال)"
-                : "Ask Shawky about a problem, proof, or theorem..."
-            }
+            placeholder={t("composer.placeholder")}
             className="w-full resize-none bg-transparent text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none min-h-[38px] max-h-[180px] font-sans"
           />
         </div>
@@ -189,23 +148,23 @@ export function ChatComposer({
                 render={
                   <button
                     type="button"
-                    title={isAr ? "أدوات سريعة" : "Quick tools"}
+                    title={t("composer.toolsTitle")}
                     className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors border-border/40 bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground"
                   >
                     <Sparkles className="size-3.5" />
-                    <span className="text-[11px]">{isAr ? "أدوات" : "Tools"}</span>
+                    <span className="text-[11px]">{t("composer.toolsLabel")}</span>
                   </button>
                 }
               />
               <DropdownMenuContent align="start" side="top" className="min-w-52">
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel>{isAr ? "ابدأ سريعاً" : "Quick start"}</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t("composer.quickStart")}</DropdownMenuLabel>
                   {TOOL_PRESETS.map((preset) => {
                     const Icon = preset.icon
                     return (
                       <DropdownMenuItem key={preset.id} onClick={() => handleToolPreset(preset)}>
                         <Icon className={cn("size-3.5 mr-2", preset.accent)} />
-                        <span>{preset.label[isAr ? "ar" : "en"]}</span>
+                        <span>{t(`composer.presets.${preset.id}.label`)}</span>
                       </DropdownMenuItem>
                     )
                   })}
@@ -223,7 +182,7 @@ export function ChatComposer({
                   ? "bg-primary/15 text-primary border-primary/30"
                   : "bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border-border/40",
               )}
-              title={isAr ? "شريط الرموز الرياضية" : "Toggle Math Symbols"}
+              title={t("composer.mathTitle")}
             >
               <Pi className="size-3.5" />
               <span className="font-mono text-[11px]">fx Math</span>
@@ -234,7 +193,7 @@ export function ChatComposer({
               type="button"
               onClick={() => handleInsertSymbol("```\n\n```", 4)}
               className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border border-border/40 bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              title={isAr ? "إدراج كتلة كود" : "Insert a code block"}
+              title={t("composer.codeTitle")}
             >
               <Code2 className="size-3.5" />
               <span className="font-mono text-[11px]">Code</span>
@@ -254,10 +213,10 @@ export function ChatComposer({
                 variant="destructive"
                 onClick={onStop}
                 className="size-8 rounded-full shadow-xs"
-                title={isAr ? "إيقاف التوليد" : "Stop generation"}
+                title={t("composer.stop")}
               >
                 <Square className="size-3.5 fill-current" />
-                <span className="sr-only">Stop</span>
+                <span className="sr-only">{t("composer.stopSr")}</span>
               </Button>
             ) : (
               <Button
@@ -266,10 +225,10 @@ export function ChatComposer({
                 disabled={!input.trim()}
                 onClick={() => onSubmit()}
                 className="size-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-30 shadow-[0_2px_10px_rgba(46,103,255,0.35)] transition-all"
-                title={isAr ? "إرسال" : "Send message"}
+                title={t("composer.send")}
               >
                 <ArrowUp className="size-4" />
-                <span className="sr-only">Send</span>
+                <span className="sr-only">{t("composer.sendSr")}</span>
               </Button>
             )}
           </div>

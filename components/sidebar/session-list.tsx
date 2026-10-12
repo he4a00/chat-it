@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTranslation } from "react-i18next"
 import {
   AtomIcon,
   CalculatorIcon,
@@ -53,7 +54,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ChatSession, SessionCategory } from "@/types/session"
 import { cn } from "@/lib/utils"
-import { useLanguage } from "@/hooks/use-language"
 
 interface SessionListProps {
   sessions: ChatSession[]
@@ -73,13 +73,6 @@ const CATEGORY_ORDER: SessionCategory[] = [
   "previous_7_days",
   "older",
 ]
-
-const CATEGORY_LABELS: Record<SessionCategory, { en: string; ar: string }> = {
-  today: { en: "Today", ar: "اليوم" },
-  yesterday: { en: "Yesterday", ar: "أمس" },
-  previous_7_days: { en: "Previous 7 Days", ar: "آخر ٧ أيام" },
-  older: { en: "Older", ar: "أقدم" },
-}
 
 function getSubjectIcon(subject?: string) {
   switch (subject) {
@@ -107,8 +100,7 @@ export function SessionList({
   onDuplicateSession,
   onClearSearch,
 }: SessionListProps) {
-  const { language } = useLanguage()
-  const isAr = language === "ar"
+  const { t } = useTranslation("sidebar")
   const [editingSessionId, setEditingSessionId] = React.useState<string | null>(null)
   const [editTitle, setEditTitle] = React.useState("")
   const [pendingDelete, setPendingDelete] = React.useState<ChatSession | null>(null)
@@ -116,8 +108,8 @@ export function SessionList({
   const handleCopyLink = (id: string) => {
     const url = `${window.location.origin}/c/${id}`
     navigator.clipboard.writeText(url).then(
-      () => notify.success(isAr ? "تم نسخ الرابط" : "Link copied"),
-      () => notify.error(isAr ? "تعذّر نسخ الرابط" : "Couldn't copy the link"),
+      () => notify.success(t("toast.linkCopied")),
+      () => notify.error(t("toast.linkCopyFailed")),
     )
   }
 
@@ -188,12 +180,10 @@ export function SessionList({
             </div>
             <div className="space-y-1">
               <p className="text-xs font-medium text-sidebar-foreground">
-                {isAr ? "لا توجد نتائج" : "No chats found"}
+                {t("search.empty.title")}
               </p>
               <p className="text-[11px] text-muted-foreground max-w-[180px] truncate font-sans">
-                {isAr
-                  ? `لا توجد محادثات تطابق "${searchQuery.trim()}"`
-                  : `No chats matching "${searchQuery.trim()}"`}
+                {t("search.empty.description", { query: searchQuery.trim() })}
               </p>
             </div>
             <Button
@@ -202,7 +192,7 @@ export function SessionList({
               onClick={onClearSearch}
               className="mt-1 h-7 text-xs text-primary hover:text-primary hover:bg-primary/10 rounded-full font-medium"
             >
-              {isAr ? "مسح البحث" : "Clear search"}
+              {t("search.clear")}
             </Button>
           </div>
         ) : (
@@ -212,9 +202,7 @@ export function SessionList({
               <ClockIcon className="size-4" />
             </div>
             <p className="text-[11px] text-muted-foreground/70 leading-relaxed font-sans max-w-[170px]">
-              {isAr
-                ? "ستظهر محادثاتك السابقة مع شوقي هنا"
-                : "Your chat history with Shawky will appear here"}
+              {t("history.empty")}
             </p>
           </div>
         )
@@ -226,7 +214,7 @@ export function SessionList({
           return (
             <SidebarGroup key={category} className="p-0 py-1.5">
               <SidebarGroupLabel className="h-6 px-2 text-[11px] font-semibold text-muted-foreground/80">
-                {isAr ? CATEGORY_LABELS[category].ar : CATEGORY_LABELS[category].en}
+                {t(`categories.${category}`)}
               </SidebarGroupLabel>
 
               <SidebarGroupContent>
@@ -254,7 +242,7 @@ export function SessionList({
                               variant="ghost"
                               size="icon-xs"
                               onClick={() => handleSaveRename(session.id)}
-                              aria-label={isAr ? "حفظ العنوان" : "Save title"}
+                              aria-label={t("rename.save")}
                               className="size-6 text-primary hover:bg-primary/10"
                             >
                               <CheckIcon className="size-3" />
@@ -263,7 +251,7 @@ export function SessionList({
                               variant="ghost"
                               size="icon-xs"
                               onClick={handleCancelRename}
-                              aria-label={isAr ? "إلغاء التعديل" : "Cancel rename"}
+                              aria-label={t("rename.cancel")}
                               className="size-6 text-muted-foreground hover:bg-sidebar-accent"
                             >
                               <XIcon className="size-3" />
@@ -308,7 +296,7 @@ export function SessionList({
                                 render={
                                   <SidebarMenuAction
                                     showOnHover
-                                    aria-label={isAr ? "خيارات المحادثة" : "Session options"}
+                                    aria-label={t("options")}
                                     className="text-muted-foreground/60 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/80 transition-colors size-6"
                                   >
                                     <MoreHorizontalIcon className="size-3.5" />
@@ -317,7 +305,7 @@ export function SessionList({
                               />
                               <DropdownMenuContent side="right" align="start" className="min-w-44 text-xs">
                                 <DropdownMenuGroup>
-                                  <DropdownMenuLabel>{isAr ? "المحادثة" : "Chat"}</DropdownMenuLabel>
+                                  <DropdownMenuLabel>{t("menu.chat")}</DropdownMenuLabel>
                                   <DropdownMenuItem
                                     onClick={(e) => {
                                       e.stopPropagation()
@@ -325,7 +313,7 @@ export function SessionList({
                                     }}
                                   >
                                     <PencilIcon className="size-3.5 mr-2" />
-                                    <span>{isAr ? "إعادة تسمية" : "Rename"}</span>
+                                    <span>{t("menu.rename")}</span>
                                   </DropdownMenuItem>
                                   {onDuplicateSession ? (
                                     <DropdownMenuItem
@@ -335,7 +323,7 @@ export function SessionList({
                                       }}
                                     >
                                       <CopyPlusIcon className="size-3.5 mr-2" />
-                                      <span>{isAr ? "تكرار" : "Duplicate"}</span>
+                                      <span>{t("menu.duplicate")}</span>
                                     </DropdownMenuItem>
                                   ) : null}
                                   <DropdownMenuItem
@@ -345,13 +333,13 @@ export function SessionList({
                                     }}
                                   >
                                     <LinkIcon className="size-3.5 mr-2" />
-                                    <span>{isAr ? "نسخ الرابط" : "Copy link"}</span>
+                                    <span>{t("menu.copyLink")}</span>
                                   </DropdownMenuItem>
                                 </DropdownMenuGroup>
 
                                 <DropdownMenuSeparator />
                                 <DropdownMenuGroup>
-                                  <DropdownMenuLabel>{isAr ? "منطقة الخطر" : "Danger"}</DropdownMenuLabel>
+                                  <DropdownMenuLabel>{t("menu.danger")}</DropdownMenuLabel>
                                   <DropdownMenuItem
                                     variant="destructive"
                                     onClick={(e) => {
@@ -360,7 +348,7 @@ export function SessionList({
                                     }}
                                   >
                                     <Trash2Icon className="size-3.5 mr-2" />
-                                    <span>{isAr ? "حذف" : "Delete"}</span>
+                                    <span>{t("menu.delete")}</span>
                                   </DropdownMenuItem>
                                 </DropdownMenuGroup>
                               </DropdownMenuContent>
@@ -385,15 +373,11 @@ export function SessionList({
       >
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
-            <AlertDialogTitle>{isAr ? "حذف المحادثة؟" : "Delete chat?"}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {isAr
-                ? "سيتم حذف هذه المحادثة وكل رسائلها نهائيًا. لا يمكن التراجع."
-                : "This chat and all of its messages will be permanently deleted. This can't be undone."}
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("delete.title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("delete.description")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{isAr ? "إلغاء" : "Cancel"}</AlertDialogCancel>
+            <AlertDialogCancel>{t("common:cancel")}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               onClick={() => {
@@ -401,7 +385,7 @@ export function SessionList({
                 setPendingDelete(null)
               }}
             >
-              {isAr ? "حذف" : "Delete"}
+              {t("common:delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
