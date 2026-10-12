@@ -613,7 +613,7 @@ export function QuizWidget({
               onClick={handlePrev}
               className="text-xs"
             >
-              <ChevronLeft className="size-4 me-1" />
+              <ChevronLeft className="size-4 me-1 rtl:rotate-180" />
               {t("quiz.previous")}
             </Button>
 
@@ -627,7 +627,7 @@ export function QuizWidget({
                   className="text-xs font-medium"
                 >
                   <span>{t("quiz.next")}</span>
-                  <ChevronRight className="size-4 ms-1" />
+                  <ChevronRight className="size-4 ms-1 rtl:rotate-180" />
                 </Button>
               ) : (
                 <Button

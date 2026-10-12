@@ -39,3 +39,5 @@
 - Prefers driving third-party services through installed MCP integrations (e.g. Vercel MCP) rather than shelling out to the vendor's CLI. Confidence: 0.55
 - Hosts/deploys projects on Vercel and expects the agent to own the entire deploy lifecycle end-to-end (create project, import/detected git repo, add env vars, trigger deploy, confirm the live URL) from a single terse instruction. Confidence: 0.6
 - Wants the deployed/production app to run on live production credentials (e.g. Clerk live keys), treating test/dev keys as acceptable only for local development; supplies the live keys expecting them swapped in. Confidence: 0.5
+- When adding RTL/Arabic support, expects correct bidirectional layout parity across every surface (sidebar, chat, all screens) — translating strings is not enough; nothing may be visually broken in either direction. Confidence: 0.75
+- Verification must include the actual rendered UI, not just passing typecheck/lint/build — a green build alongside a visibly broken layout (misapplied/absent fonts, broken direction) is treated as failure. Confidence: 0.7

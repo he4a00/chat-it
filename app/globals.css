@@ -59,7 +59,7 @@
     --sidebar-border: oklch(0.90 0 0);
     --sidebar-ring: oklch(0.5784 0.2303 263.8862);
     --destructive-foreground: oklch(1.0000 0 0);
-    --font-sans: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif;
+    --font-sans: var(--font-ibm-plex-sans, "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif);
     --font-serif: var(--font-sans);
     --font-mono: var(--font-sans);
     --shadow-color: #2e6aff;
@@ -115,7 +115,7 @@
     --sidebar-ring: oklch(0.5784 0.2303 263.8862);
     --destructive-foreground: oklch(1.0000 0 0);
     --radius: 0.5rem;
-    --font-sans: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif;
+    --font-sans: var(--font-ibm-plex-sans, "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif);
     --font-serif: var(--font-sans);
     --font-mono: var(--font-sans);
     --shadow-color: #2e6aff;
@@ -212,7 +212,7 @@
   html,
   body {
     @apply font-sans bg-background text-foreground;
-    font-family: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif !important;
+    font-family: var(--font-ibm-plex-sans, "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif) !important;
     letter-spacing: var(--tracking-normal);
   }
   input,
@@ -240,7 +240,7 @@
 /* RTL Arabic typography & KaTeX math isolation.
    KaTeX is excluded so math keeps its own fonts in both directions. */
 [dir="rtl"] *:not(.katex, .katex *) {
-  font-family: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif !important;
+  font-family: var(--font-ibm-plex-sans, "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif) !important;
 }
 
 /* Math glyphs stay KaTeX; only the fallback changes (never Times/serif). */
@@ -271,13 +271,13 @@
 .cl-headerSubtitle,
 .cl-profileSectionTitle,
 .cl-navbarButton {
-  font-family: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif !important;
+  font-family: var(--font-ibm-plex-sans, "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif) !important;
 }
 
 /* Strict IBM Plex Sans enforcement for sidebar elements */
 [data-slot="sidebar"],
 [data-slot="sidebar"] * {
-  font-family: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif !important;
+  font-family: var(--font-ibm-plex-sans, "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif) !important;
 }
 
 /* Clerk UserButton inside Sidebar Footer */
@@ -319,7 +319,7 @@
   padding: 0 !important;
   font-size: 0.8125rem !important;
   font-weight: 400 !important;
-  font-family: var(--font-ibm-plex-sans), "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif !important;
+  font-family: var(--font-ibm-plex-sans, "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif) !important;
   color: var(--sidebar-foreground) !important;
 }
 

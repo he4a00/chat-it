@@ -280,7 +280,7 @@ export function SessionList({
                                     : "text-muted-foreground/80 group-hover/btn:text-sidebar-accent-foreground"
                                 )}
                               />
-                              <span className="truncate flex-1 text-left">
+                              <span className="truncate flex-1 text-start">
                                 {session.title}
                               </span>
                               {session.timestamp ? (
@@ -312,7 +312,7 @@ export function SessionList({
                                       handleStartRename(session)
                                     }}
                                   >
-                                    <PencilIcon className="size-3.5 mr-2" />
+                                    <PencilIcon className="size-3.5 me-2" />
                                     <span>{t("menu.rename")}</span>
                                   </DropdownMenuItem>
                                   {onDuplicateSession ? (
@@ -322,7 +322,7 @@ export function SessionList({
                                         onDuplicateSession(session.id)
                                       }}
                                     >
-                                      <CopyPlusIcon className="size-3.5 mr-2" />
+                                      <CopyPlusIcon className="size-3.5 me-2" />
                                       <span>{t("menu.duplicate")}</span>
                                     </DropdownMenuItem>
                                   ) : null}
@@ -332,7 +332,7 @@ export function SessionList({
                                       handleCopyLink(session.id)
                                     }}
                                   >
-                                    <LinkIcon className="size-3.5 mr-2" />
+                                    <LinkIcon className="size-3.5 me-2" />
                                     <span>{t("menu.copyLink")}</span>
                                   </DropdownMenuItem>
                                 </DropdownMenuGroup>
@@ -347,7 +347,7 @@ export function SessionList({
                                       setPendingDelete(session)
                                     }}
                                   >
-                                    <Trash2Icon className="size-3.5 mr-2" />
+                                    <Trash2Icon className="size-3.5 me-2" />
                                     <span>{t("menu.delete")}</span>
                                   </DropdownMenuItem>
                                 </DropdownMenuGroup>

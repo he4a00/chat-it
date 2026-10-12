@@ -212,7 +212,7 @@ export function FlashcardDeckWidget({
             onClick={handlePrev}
             className="rounded-full text-xs h-8 px-3 gap-1"
           >
-            <ChevronLeft className="size-3.5" />
+            <ChevronLeft className="size-3.5 rtl:rotate-180" />
             <span className="hidden sm:inline">{t("flashcard.prev")}</span>
           </Button>
 
@@ -240,7 +240,7 @@ export function FlashcardDeckWidget({
             className="rounded-full text-xs h-8 px-3 gap-1"
           >
             <span className="hidden sm:inline">{t("flashcard.next")}</span>
-            <ChevronRight className="size-3.5" />
+            <ChevronRight className="size-3.5 rtl:rotate-180" />
           </Button>
         </div>
       </div>

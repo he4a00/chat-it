@@ -1220,3 +1220,26 @@ This file records architecture decisions, agent conventions, and a running log o
    - Result headlines (perfect / great / good) and counters (`questionCounter`, `jumpTo`, `resultSubtitle`) are key-based.
 3. **Verification:** typecheck / lint / build clean. **No `isAr ? "…" : "…"` copy ternaries remain anywhere** in the app — only two intentional non-copy uses: the RTL slide-direction helper in `onboarding-experience` and the `ar-EG`/`en-US` locale *code* in `lib/session-utils.ts`.
 
+### [2026-10-12] Fix: Arabic Font Never Applied + RTL Layout Breakage
+
+1. **Arabic rendered in a system font — root cause found and proven.**
+   - `next/font/local` auto-generates a metric-adjusted fallback face (`ibmPlexSans Fallback`) declared as `src: local(<system font>)` with **no `unicode-range`**. On Windows, OS font-linking lets that system font resolve Arabic glyphs, so the per-glyph cascade stopped there and `"IBM Plex Sans Arabic"` (next in the list) was **never reached**.
+   - Measured in headless Edge at 32px/700: Arabic through the app stack = **128.44px**, but `"IBM Plex Sans Arabic"` alone = **160.17px**. The Arabic woff2s were being served (200, ~43 KB) and loaded — they were simply never used.
+   - **Fix (`app/layout.tsx`)**: `adjustFontFallback: false` (Next skips generating that face only when strictly `false`) plus an explicit `fallback: ["'IBM Plex Sans Arabic'", "'IBM Plex Sans'", "sans-serif"]`.
+   - **Verified after the fix**: app stack = **160.17px** == the Arabic face alone, in both LTR and RTL; `ibmPlexSans Fallback` gone from the computed stack and from `document.fonts`.
+   - `app/globals.css`: the six font stacks became `var(--font-ibm-plex-sans, "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif)` — the variable now carries the fallbacks itself.
+
+2. **RTL: the sidebar never flipped.**
+   - The vendored shadcn `Sidebar` positions **physically** (`data-[side=left]:left-0` / `data-[side=right]:right-0`) and defaults to `side="left"`, so in RTL the panel rendered on the left while the reserved gap sat on the right.
+   - **Fix**: `AppSidebar` now passes `side={i18n.dir() === "rtl" ? "right" : "left"}`; its border became logical (`border-e`).
+
+3. **Logical-property sweep (38 files)** — physical → logical so everything mirrors with `dir`:
+   - `ml-/mr-/pl-/pr-` → `ms-/me-/ps-/pe-`; `text-left|right` → `text-start|end`; `rounded-l/r-` → `rounded-s/e-`.
+   - Positional fixes: dialog/sheet/alert close buttons, dropdown/select/combobox/context-menu indicator gutters, menubar check gutter, avatar badge, calendar cell fades, alert accent bar, sidebar sub-menu border + group action + menu badge, scroll-area vertical border.
+   - Deliberately untouched: `left-1/2 -translate-x-1/2` centering (direction-agnostic) and `data-[side=…]:border-*` (already side-conditional).
+   - Applied with a throwaway Node script (deleted) rather than PowerShell, to avoid the earlier cp1252 mojibake trap.
+
+4. **Directional icons mirrored** via `rtl:rotate-180`: quiz + flashcard Prev/Next chevrons, `PanelLeftIcon` (sidebar trigger), submenu chevrons (dropdown/context-menu), breadcrumb separator, calendar month chevrons, carousel arrows, pagination arrows.
+
+5. **Verification**: typecheck / lint / build clean. Temp probe route (`app/font-check`) and both sweep scripts removed. A hard refresh may be needed to drop the browser's cached `@font-face`/CSS.
+

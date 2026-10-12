@@ -107,7 +107,7 @@ export function UserPreferencesPage() {
                 type="button"
                 onClick={() => setTheme(opt.id)}
                 className={cn(
-                  "flex flex-col items-start p-3 rounded-xl border text-left transition-all duration-150 cursor-pointer relative",
+                  "flex flex-col items-start p-3 rounded-xl border text-start transition-all duration-150 cursor-pointer relative",
                   isSelected
                     ? "border-primary bg-primary/5 text-primary shadow-2xs ring-1 ring-primary/30"
                     : "border-border bg-card/60 hover:bg-accent/50 hover:border-border text-foreground"
@@ -163,7 +163,7 @@ export function UserPreferencesPage() {
                 type="button"
                 onClick={() => setLanguage(opt.id)}
                 className={cn(
-                  "flex items-center justify-between p-3.5 rounded-xl border text-left transition-all duration-150 cursor-pointer",
+                  "flex items-center justify-between p-3.5 rounded-xl border text-start transition-all duration-150 cursor-pointer",
                   isSelected
                     ? "border-primary bg-primary/5 text-primary shadow-2xs ring-1 ring-primary/30"
                     : "border-border bg-card/60 hover:bg-accent/50 hover:border-border text-foreground"
@@ -184,7 +184,7 @@ export function UserPreferencesPage() {
                 </div>
 
                 {isSelected && (
-                  <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ml-2">
+                  <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ms-2">
                     <CheckIcon className="size-2.5 stroke-[3]" />
                   </span>
                 )}

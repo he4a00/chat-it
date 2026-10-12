@@ -37,6 +37,12 @@ const ibmPlexSans = localFont({
   ],
   variable: "--font-ibm-plex-sans",
   display: "swap",
+  // Next's auto-generated metric fallback ("ibmPlexSans Fallback") is a locally
+  // installed system font. Declared without a unicode-range, OS font-linking lets
+  // it claim Arabic glyphs, so the cascade never reaches "IBM Plex Sans Arabic".
+  // Dropping it and declaring the fallbacks explicitly keeps Arabic on IBM Plex.
+  adjustFontFallback: false,
+  fallback: ["'IBM Plex Sans Arabic'", "'IBM Plex Sans'", "sans-serif"],
 })
 
 export default async function RootLayout({

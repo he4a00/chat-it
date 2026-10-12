@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTranslation } from "react-i18next"
 import { Sidebar, SidebarRail } from "@/components/ui/sidebar"
 import { AppSidebarHeader } from "./sidebar-header"
 import { SessionList } from "./session-list"
@@ -37,10 +38,13 @@ export function AppSidebar({
   onOpenProgress,
   ...props
 }: AppSidebarProps) {
+  const { i18n } = useTranslation()
+
   return (
     <Sidebar
+      side={i18n.dir() === "rtl" ? "right" : "left"}
       collapsible="offcanvas"
-      className="border-r border-sidebar-border/80 bg-sidebar text-sidebar-foreground shadow-xs"
+      className="border-e border-sidebar-border/80 bg-sidebar text-sidebar-foreground shadow-xs"
       {...props}
     >
       <AppSidebarHeader

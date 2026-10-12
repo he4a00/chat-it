@@ -163,7 +163,7 @@ export function ChatComposer({
                     const Icon = preset.icon
                     return (
                       <DropdownMenuItem key={preset.id} onClick={() => handleToolPreset(preset)}>
-                        <Icon className={cn("size-3.5 mr-2", preset.accent)} />
+                        <Icon className={cn("size-3.5 me-2", preset.accent)} />
                         <span>{t(`composer.presets.${preset.id}.label`)}</span>
                       </DropdownMenuItem>
                     )

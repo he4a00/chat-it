@@ -61,7 +61,7 @@ export function AppSidebarFooter({ onOpenProgress }: AppSidebarFooterProps) {
                 userButtonBox: "order-1 shrink-0 flex items-center m-0 p-0",
                 userButtonAvatarBox: "size-8 rounded-full shadow-2xs shrink-0",
                 userButtonOuterIdentifier:
-                  "order-2 text-xs font-normal font-sans text-sidebar-foreground truncate text-left flex-1 m-0 p-0",
+                  "order-2 text-xs font-normal font-sans text-sidebar-foreground truncate text-start flex-1 m-0 p-0",
               },
             }}
           >
@@ -94,7 +94,7 @@ export function AppSidebarFooter({ onOpenProgress }: AppSidebarFooterProps) {
             size="sm"
             className="w-full justify-center h-9 px-3.5 rounded-full border-sidebar-border bg-sidebar hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-xs font-medium text-sidebar-foreground transition-colors shadow-2xs"
           >
-            <LogInIcon className="size-3.5 mr-2 text-primary" />
+            <LogInIcon className="size-3.5 me-2 text-primary" />
             <span>{t("common:signIn")}</span>
           </Button>
         </SignInButton>
