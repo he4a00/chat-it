@@ -100,7 +100,7 @@ export function SessionList({
   onDuplicateSession,
   onClearSearch,
 }: SessionListProps) {
-  const { t } = useTranslation("sidebar")
+  const { t, i18n } = useTranslation("sidebar")
   const [editingSessionId, setEditingSessionId] = React.useState<string | null>(null)
   const [editTitle, setEditTitle] = React.useState("")
   const [pendingDelete, setPendingDelete] = React.useState<ChatSession | null>(null)
@@ -303,7 +303,11 @@ export function SessionList({
                                   </SidebarMenuAction>
                                 }
                               />
-                              <DropdownMenuContent side="right" align="start" className="min-w-44 text-xs">
+                              <DropdownMenuContent
+                                side={i18n.dir() === "rtl" ? "left" : "right"}
+                                align="start"
+                                className="min-w-44 text-xs"
+                              >
                                 <DropdownMenuGroup>
                                   <DropdownMenuLabel>{t("menu.chat")}</DropdownMenuLabel>
                                   <DropdownMenuItem

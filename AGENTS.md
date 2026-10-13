@@ -63,7 +63,13 @@ This file records architecture decisions, agent conventions, and a running log o
 2. **Component Conventions**:
    - Use existing shadcn components in `components/ui/` rather than rolling custom markup.
    - For form layouts, use `FieldGroup` + `Field`.
-   - Use semantic theme tokens (`bg-background`, `bg-primary`, `text-muted-foreground`), never raw Tailwind colors (e.g. `bg-blue-500`).
+   - Use semantic theme tokens (`bg-background`, `bg-primary`, `text-muted-foreground`) for **all surfaces, structure, borders, and typography**. Never reach for a raw Tailwind palette color to *style* something (e.g. `bg-slate-800`, `text-orange-300`).
+   - **Exception — the state-feedback tint palette.** Answer/validation state may use a fixed, closed set of raw tints, because the VTRON token set has no `success`/`caution` equivalents. This is an intentional, documented decision (see `[2026-10-11] Character Avatar & Visual Mode Assets` in the Activity Log), not drift. Only these meanings are allowed:
+     - `emerald` → correct / answered-right / strength (`text-emerald-600 dark:text-emerald-400`)
+     - `rose` → incorrect / destructive feedback (`text-rose-600 dark:text-rose-400`)
+     - `amber` → caution, hint, "needs review" (`text-amber-900 dark:text-amber-200`)
+     - `purple` → Flashcards mode accent
+   - Tints must be used **only** for that meaning (no `blue` for "correct", no swapping hues for decoration), at low alpha (`/5`–`/15`) with a matching `/20`–`/30` border, and never on a primary surface or as body text. Prefer `text-foreground` + the tint as the accent. Do not introduce new palette hues or solid steps (`bg-emerald-600`) without adding a real token first.
    - Use `cn()` from `@/lib/utils` or `cn` for class merging.
 3. **Verification Before Handover**:
    - Always run `npm run lint` and `npm run typecheck` to confirm 0 errors.
@@ -1271,3 +1277,26 @@ This file records architecture decisions, agent conventions, and a running log o
    - In RTL, unchecked thumb stays 1px inset from the right track border (aligned next to the Sun icon), and checked thumb slides left 1px inset from the left track border (aligned next to the Moon icon).
 
 3. **Verification**: typecheck (`tsc --noEmit`) and lint passed with 0 errors.
+
+### [2026-10-13] Docs: AGENTS.md Audit + Rule 2 Reconciled With Actual Practice
+
+1. **Trigger** — a full audit of `AGENTS.md` against the live tree. Most of it held up; one rule was contradicted by the code.
+
+2. **Audit results (all passing):**
+   - Tree clean; last log entry matched HEAD (`3d6f158`), so the log is not stale.
+   - Next.js agent-rules block valid: `next@16.3.8` with docs present at `node_modules/next/dist/docs`.
+   - `npm run typecheck` → 0 errors; `npm run lint` → 0 errors, 0 warnings.
+   - **Rule 5 (typography) holds in rendered output**: all 22 `font-mono` usages still render IBM Plex Sans, because `--font-mono` and `--font-serif` map to `var(--font-sans)` in `:root`, `.dark`, and `@theme inline`. The classes *look* like monospace but are not.
+   - **Design-rules sweep held**: 0 remaining `uppercase` / `tracking-*` / `rounded-none` anywhere in `components/`.
+
+3. **The one contradiction — Rule 2 vs. reality.** Rule 2 read *"never use raw Tailwind colors (e.g. `bg-blue-500`)"*, but there are **33 usages across 6 files** (`quiz-widget` 10, `quick-check-widget` 8, `progress-panel` 5, `math-problem-widget` 4, `chat-empty-state` 3, `flashcard-deck-widget` 3). This is **not** rot — `[2026-10-11] Character Avatar & Visual Mode Assets` records it as a deliberate choice ("subtle dark-mode-tuned semantic tints"), because the VTRON token set has no `success`/`caution` equivalents. The rule text was simply never amended, so every future agent would flag intentional, correct code as a violation.
+
+4. **Fix (docs only, no code touched)** — Rule 2 is now two-part:
+   - Semantic tokens are **required** for all surfaces, structure, borders, and typography; raw palette colors for *styling* (`bg-slate-800`, `text-orange-300`) remain banned.
+   - A closed **state-feedback tint palette** is explicitly permitted, with fixed meanings (`emerald` = correct/strength, `rose` = incorrect, `amber` = caution/hint/needs-review, `purple` = Flashcards mode accent), constrained to low alpha (`/5`–`/15`) with a matching `/20`–`/30` border, never on a primary surface or as body text, and no new hues or solid steps without first adding a real token.
+
+5. **Known follow-ups noted, deliberately not changed** (would require a theme migration + visual regression pass):
+   - `components/widgets/quiz-widget.tsx` uses two solid steps — `bg-emerald-600 text-white` and `bg-rose-600 text-white` on the stepper badges. `text-white` is not a semantic token, and solid steps are now out of bounds for the tint exception. These predate this entry.
+   - Migrating to real tokens (`--success`, `--warning`, `--mode-flashcards`) remains the clean end-state if the tint palette keeps growing.
+
+6. **Verification**: typecheck / lint clean; no source files modified — `AGENTS.md` only.
