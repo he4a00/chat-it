@@ -39,7 +39,6 @@ export function ThemeSwitch({ className }: ThemeSwitchProps) {
         checked={isDark}
         onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
         aria-label={t("sidebar:theme.toggle")}
-        className="rtl:-scale-x-100"
       />
       <MoonIcon
         aria-hidden="true"

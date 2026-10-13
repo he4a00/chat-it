@@ -1258,3 +1258,16 @@ This file records architecture decisions, agent conventions, and a running log o
 
 5. **Verification**: typecheck / lint / build clean; temp probes (`app/radius-check`, `app/header-check`) removed.
 
+
+### [2026-10-13] Fix: RTL Switch Thumb Positioning (Theme Switch & Base Switch Primitive)
+
+1. **Theme Switch thumb broke out of track in RTL.** Previously, `rtl:-scale-x-100` was placed on `<Switch>` in `components/chat/theme-switch.tsx`. Because `SwitchPrimitive.Root` is an `inline-flex` container whose items align to the inline-start (right edge in RTL), flipping the element with `-scale-x-100` while the thumb was translated with positive `translateX` pushed the thumb completely outside the pill to the left (overlapping the moon icon).
+
+2. **Proper RTL support added in shadcn switch primitive (`components/ui/switch.tsx`):**
+   - Removed the improper `className="rtl:-scale-x-100"` from `components/chat/theme-switch.tsx`.
+   - Added native direction variants to `SwitchPrimitive.Thumb` in `components/ui/switch.tsx`:
+     - Unchecked: `data-unchecked:translate-x-0.25 rtl:data-unchecked:-translate-x-0.25`
+     - Checked: `data-checked:translate-x-[calc(100%+2px)] rtl:data-checked:-translate-x-[calc(100%+2px)]`
+   - In RTL, unchecked thumb stays 1px inset from the right track border (aligned next to the Sun icon), and checked thumb slides left 1px inset from the left track border (aligned next to the Moon icon).
+
+3. **Verification**: typecheck (`tsc --noEmit`) and lint passed with 0 errors.
